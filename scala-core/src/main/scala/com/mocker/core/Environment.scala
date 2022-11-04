@@ -1,4 +1,4 @@
-package com.mocker.gateway
+package com.mocker.core
 
 import com.typesafe.config.{Config, ConfigFactory}
 

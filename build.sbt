@@ -17,9 +17,13 @@ lazy val scalaCommonDependencies = Seq(
   "ch.qos.logback" % "logback-classic" % "1.4.4",
 )
 
-lazy val gateway = (project in file("gateway")).settings {
-  libraryDependencies ++= scalaCommonDependencies ++ zioDependencies
+lazy val scalaCore = (project in file("scala-core")).settings {
+  libraryDependencies ++= scalaCommonDependencies
 }
+
+lazy val gateway = (project in file("gateway"))
+  .dependsOn(scalaCore)
+  .settings(libraryDependencies ++= zioDependencies)
 
 lazy val mq = (project in file("mq"))
 
