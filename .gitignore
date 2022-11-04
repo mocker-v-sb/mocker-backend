@@ -6,3 +6,4 @@ op/
 metals.sbt
 target/
 .bsp/
+.DS_Store
