@@ -1,6 +1,6 @@
 package com.mocker.gateway
 
-import com.mocker.core.{Environment, ServerAddress}
+import com.mocker.common.{Environment, ServerAddress}
 import com.mocker.gateway.routes._
 import zhttp.http._
 import zhttp.service.Server
