@@ -1,6 +1,6 @@
 package com.mocker.gateway.routes
 
-import com.mocker.common.Environment
+import com.mocker.common.utils.Environment
 import zhttp.http.{Http, Path, Request, Response}
 import zio.ZIO
 
