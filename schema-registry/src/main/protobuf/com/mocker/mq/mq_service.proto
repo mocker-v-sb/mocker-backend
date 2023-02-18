@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package com.mocker.mq;
+
+message CreateTopicRequest {
+  string topic_name = 1;
+}
+
+message CreateTopicResponse {}
+
+message SendMessageRequest {
+  string content = 1;
+
+  int32 repeat = 2;
+}
+
+message SendMessageResponse {}
+
+service MqMocker {
+  rpc CreateTopic(CreateTopicRequest) returns (CreateTopicResponse);
+
+  rpc SendMessage(SendMessageRequest) returns (SendMessageResponse);
+}

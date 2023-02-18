@@ -1,4 +1,4 @@
-package com.mocker.common
+package com.mocker.common.utils
 
 import com.typesafe.config.{Config, ConfigFactory}
 

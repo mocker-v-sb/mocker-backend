@@ -1,16 +1,13 @@
 package com.mocker.gateway
 
-import com.mocker.common.{Environment, ServerAddress}
+import com.mocker.common.utils.{Environment, ServerAddress}
 import com.mocker.gateway.routes._
 import zhttp.http._
 import zhttp.service.Server
 import zio._
 
 object Main extends ZIOAppDefault {
-  val serverAddress: ServerAddress = ServerAddress(
-    Environment.conf.getInt("gateway-server.port"),
-    Environment.conf.getString("gateway-server.address")
-  )
+  val serverAddress: ServerAddress = ServerAddress(Environment.conf.getString("gateway-server.address"), Environment.conf.getInt("gateway-server.port"))
 
   val handlers: Seq[Handler] = Seq(
     MockRestApiHandler,
