@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+package com.mocker.rest;
+
+service RestMocker {
+  // CRUD for services
+  rpc createService(CreateMockRequest) returns (CreateServiceResponse);
+  rpc deleteService(DeleteServiceRequest) returns (DeleteServiceResponse);
+  rpc updateService(UpdateServiceRequest) returns (UpdateServiceResponse);
+  rpc getService(GetServiceRequest) returns (GetServiceResponse);
+
+  // CRUD for mocks
+  rpc createMock(CreateMockRequest) returns (CreateMockResponse);
+  rpc deleteMock(DeleteMockRequest) returns (DeleteMockResponse);
+  rpc updateMock(UpdateMockRequest) returns (UpdateMockResponse);
+  rpc getMock(GetMockRequest) returns (GetMockResponse);
+
+  // Services features
+  rpc getAllServices(GetAllServicesRequest) returns (GetAllServicesResponse);
+  rpc getServiceMocks(GetServiceMocksRequest) returns (GetServiceMocksResponse);
+
+  // Mocks features
+}
+
+// CRUD for services models
+
+message CreateServiceRequest {}
+
+message CreateServiceResponse {}
+
+message DeleteServiceRequest {}
+
+message DeleteServiceResponse {}
+
+message UpdateServiceRequest {}
+
+message UpdateServiceResponse {}
+
+message GetServiceRequest {}
+
+message GetServiceResponse {}
+
+// CRUD for mocks models
+
+message CreateMockRequest {}
+
+message CreateMockResponse {}
+
+message DeleteMockRequest {}
+
+message DeleteMockResponse {}
+
+message UpdateMockRequest {}
+
+message UpdateMockResponse {}
+
+message GetMockRequest {}
+
+message GetMockResponse {}
+
+// Services features models
+
+message GetAllServicesRequest {}
+
+message GetAllServicesResponse {}
+
+message GetServiceMocksRequest {}
+
+message GetServiceMocksResponse {}

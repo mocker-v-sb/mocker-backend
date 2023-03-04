@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-package com.mocker.rest;
-
-message CreateMockRequest {}
-
-message CreateMockResponse {}
