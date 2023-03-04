@@ -2,4 +2,4 @@ import Dependencies._
 
 name := "common"
 
-libraryDependencies ++= (logging :+ typesafeConfig)
+libraryDependencies ++= (logging ++ slick :+ typesafeConfig)
