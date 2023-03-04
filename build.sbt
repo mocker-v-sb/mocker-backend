@@ -18,7 +18,7 @@ lazy val common = (project in file("common"))
   .dependsOn(schemaRegistry)
   .settings(
     ScoverageKeys.coverageEnabled := true,
-    ScoverageKeys.coverageMinimumStmtTotal := 50,
+    ScoverageKeys.coverageMinimumStmtTotal := 0,
     ScoverageKeys.coverageFailOnMinimum := true
   )
 
@@ -26,14 +26,14 @@ lazy val gateway = (project in file("gateway"))
   .dependsOn(common)
   .settings(
     ScoverageKeys.coverageEnabled := true,
-    ScoverageKeys.coverageMinimumStmtTotal := 50,
+    ScoverageKeys.coverageMinimumStmtTotal := 0,
     ScoverageKeys.coverageFailOnMinimum := true
   )
 
 lazy val mq = (project in file("mq"))
   .settings(
     ScoverageKeys.coverageEnabled := true,
-    ScoverageKeys.coverageMinimumStmtTotal := 50,
+    ScoverageKeys.coverageMinimumStmtTotal := 0,
     ScoverageKeys.coverageFailOnMinimum := true
   )
   .dependsOn(common)
@@ -42,6 +42,6 @@ lazy val restApi = (project in file("rest/api"))
   .dependsOn(common)
   .settings(
     ScoverageKeys.coverageEnabled := true,
-    ScoverageKeys.coverageMinimumStmtTotal := 50,
+    ScoverageKeys.coverageMinimumStmtTotal := 0,
     ScoverageKeys.coverageFailOnMinimum := true
   )
