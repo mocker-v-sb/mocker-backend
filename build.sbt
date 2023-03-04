@@ -1,3 +1,5 @@
+import scoverage.ScoverageKeys
+
 name := "mocker"
 
 version := "0.1"
@@ -6,7 +8,9 @@ ThisBuild / scalaVersion := "2.13.10"
 
 lazy val root = (project in file("."))
   .settings(
-    libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.15" % Test
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.15" % Test,
+    ScoverageKeys.coverageMinimumStmtTotal := 100,
+    ScoverageKeys.coverageFailOnMinimum := false
   )
   .aggregate(schemaRegistry, common, gateway, mq, restApi)
 
