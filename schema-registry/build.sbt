@@ -3,7 +3,7 @@ Compile / PB.targets := Seq(
   scalapb.zio_grpc.ZioCodeGenerator -> (Compile / sourceManaged).value / "scalapb"
 )
 
-Compile / PB.protoSources  := Seq(
+Compile / PB.protoSources := Seq(
   (ThisBuild / baseDirectory).value / "schema-registry" / "src" / "main" / "protobuf"
 )
 

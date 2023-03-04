@@ -20,6 +20,7 @@ case class KafkaManager(adminClient: AdminClient, kafkaClient: Producer) extends
 }
 
 object KafkaManager {
+
   def layer: ZLayer[AdminClient with Producer, Nothing, KafkaManager] = {
     ZLayer.fromZIO {
       for {

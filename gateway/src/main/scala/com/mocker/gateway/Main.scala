@@ -7,7 +7,9 @@ import zhttp.service.Server
 import zio._
 
 object Main extends ZIOAppDefault {
-  val serverAddress: ServerAddress = ServerAddress(Environment.conf.getString("gateway-server.address"), Environment.conf.getInt("gateway-server.port"))
+
+  val serverAddress: ServerAddress =
+    ServerAddress(Environment.conf.getString("gateway-server.address"), Environment.conf.getInt("gateway-server.port"))
 
   val handlers: Seq[Handler] = Seq(
     MockRestApiHandler,

@@ -4,7 +4,7 @@ import com.mocker.common.utils.{Environment, ServerAddress}
 import com.mocker.mq.mq_service.ZioMqService.ZMqMocker
 import com.mocker.mq.adapters.{KafkaManager, MqMockerService}
 import scalapb.zio_grpc.{RequestContext, Server, ServerLayer, ServiceList}
-import zio.{ZLayer, durationInt}
+import zio.{durationInt, ZLayer}
 import zio.kafka.admin.{AdminClient, AdminClientSettings}
 import zio.kafka.producer.{Producer, ProducerSettings}
 
@@ -37,7 +37,7 @@ object Main extends zio.ZIOAppDefault {
     AdminClientSettings(
       List("localhost:29092"),
       closeTimeout = 30.seconds,
-      properties = Map[String, AnyRef](),
+      properties = Map[String, AnyRef]()
     )
   )
 
