@@ -1,3 +1,12 @@
 package com.mocker.rest.dao
 
-trait ServiceActions {}
+import com.mocker.rest.model.Service
+import slick.dbio.DBIO
+
+trait ServiceActions {
+  def get(serviceId: Long): DBIO[Option[Service]]
+  def getAll: DBIO[Seq[Service]]
+  def upsert(service: Service): DBIO[Unit]
+
+  def delete(serviceId: Long): DBIO[Unit]
+}

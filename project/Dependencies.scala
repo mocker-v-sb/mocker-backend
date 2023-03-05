@@ -27,7 +27,7 @@ object Dependencies {
 
   lazy val slick = Seq(
     "com.typesafe.slick" %% "slick" % "3.4.1",
-    "org.slf4j" % "slf4j-nop" % "2.0.5"
+    "io.scalac" %% "zio-slick-interop" % "0.6.0"
   )
 
 }
