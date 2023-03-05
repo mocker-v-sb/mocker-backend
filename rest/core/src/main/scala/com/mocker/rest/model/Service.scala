@@ -1,3 +1,12 @@
 package com.mocker.rest.model
 
-case class Service()
+import java.time.Instant
+
+case class Service(
+    id: Long,
+    name: String,
+    url: Option[String],
+    createTime: Instant,
+    updateTime: Instant,
+    expirationTime: Option[Instant]
+)

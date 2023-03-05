@@ -1,16 +1,23 @@
 package com.mocker.rest.manager
 
-import slick.jdbc.JdbcBackend.{Database => SlickDatabase}
+import com.mocker.rest.dao.ServiceActions
+import com.mocker.rest.dao.mysql.MySqlServiceActions
+import slick.interop.zio.DatabaseProvider
 import zio.{ZIO, ZLayer}
-case class RestMockerManager(restMockerDatabase: SlickDatabase) {}
+
+import scala.concurrent.ExecutionContext
+case class RestMockerManager(restMockerDbProvider: DatabaseProvider, act: ServiceActions) {
+
+  private val dbLayer = ZLayer.succeed(restMockerDbProvider)
+}
 
 object RestMockerManager {
 
-  def layer: ZLayer[SlickDatabase, Nothing, RestMockerManager] = {
+  def layer(implicit ec: ExecutionContext): ZLayer[DatabaseProvider, Nothing, RestMockerManager] = {
     ZLayer.fromZIO {
       for {
-        restMockerDatabase <- ZIO.service[SlickDatabase]
-      } yield RestMockerManager(restMockerDatabase)
+        restMockerDatabase <- ZIO.service[DatabaseProvider]
+      } yield RestMockerManager(restMockerDatabase, MySqlServiceActions())
     }
   }
 }
