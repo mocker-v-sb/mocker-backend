@@ -76,7 +76,6 @@ class MySqlServiceActionsSpec
       val dataSource = createDataSource(mysqlContainer)
       val db = JdbcBackend.Database.forDataSource(ds = dataSource, None)
 
-
       val service = Iterator.continually(serviceGen.sample).flatten.toSeq.head
       db.run(serviceActions.upsert(service)).futureValue
       db.run(serviceActions.getAll).futureValue shouldBe Seq(service)
