@@ -30,4 +30,19 @@ object Dependencies {
     "io.scalac" %% "zio-slick-interop" % "0.6.0"
   )
 
+  object TestContainers {
+    lazy val testcontainersScalaVersion = "0.40.12"
+
+    lazy val libraries = Seq(
+      "com.dimafeng" %% "testcontainers-scala-scalatest" % testcontainersScalaVersion,
+      "com.dimafeng" %% "testcontainers-scala-mysql" % testcontainersScalaVersion
+    )
+  }
+
+  lazy val scalaCheck = "org.scalacheck" %% "scalacheck" % "1.17.0"
+
+  lazy val scalaTest = "org.scalatest" %% "scalatest" % "3.2.15"
+
+  lazy val mySqlConnector = "mysql" % "mysql-connector-java" % "8.0.32"
+
 }
