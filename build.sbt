@@ -36,7 +36,7 @@ lazy val mq = (project in file("mq"))
   .dependsOn(common)
 
 lazy val restApi = (project in file("rest/api"))
-  .dependsOn(restCore)
+  .dependsOn(restCore % "compile->compile;test->test")
   .settings(
     ScoverageKeys.coverageEnabled := true,
     ScoverageKeys.coverageMinimumStmtTotal := 0,
