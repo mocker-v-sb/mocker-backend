@@ -1,6 +1,6 @@
 package com.mocker.rest.model
 
-import java.time.Instant
+import java.sql.Timestamp
 
 case class Service(
     id: Long,
@@ -8,7 +8,7 @@ case class Service(
     path: String,
     url: Option[String],
     description: Option[String],
-    createTime: Instant,
-    updateTime: Instant,
-    expirationTime: Option[Instant]
+    createTime: Timestamp,
+    updateTime: Timestamp,
+    expirationTime: Option[Timestamp]
 )

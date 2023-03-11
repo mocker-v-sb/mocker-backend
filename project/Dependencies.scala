@@ -39,12 +39,10 @@ object Dependencies {
     )
   }
 
-  lazy val scalaCheck = "org.scalacheck" %% "scalacheck" % "1.14.1"
+  lazy val scalaCheck = "org.scalacheck" %% "scalacheck" % "1.17.0"
 
   lazy val scalaTest = "org.scalatest" %% "scalatest" % "3.2.15"
 
   lazy val mySqlConnector = "mysql" % "mysql-connector-java" % "8.0.32"
-
-  lazy val hickari = "com.zaxxer" % "HikariCP-java6" % "2.3.13"
 
 }

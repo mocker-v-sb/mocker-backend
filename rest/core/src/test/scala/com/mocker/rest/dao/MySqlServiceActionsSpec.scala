@@ -4,9 +4,9 @@ import com.dimafeng.testcontainers.MySQLContainer
 import com.dimafeng.testcontainers.scalatest.TestContainerForEach
 import com.mocker.rest.dao.mysql.MySqlServiceActions
 import com.mocker.rest.gen.ServiceGen
-import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.testcontainers.utility.DockerImageName
 import slick.jdbc.JdbcBackend
@@ -20,6 +20,9 @@ class MySqlServiceActionsSpec
     with Matchers
     with ScalaFutures
     with ServiceGen {
+
+  implicit override def patienceConfig: PatienceConfig =
+    PatienceConfig(timeout = Span(1, Seconds), interval = Span(500, Millis))
 
   override val containerDef: MySQLContainer.Def = MySQLContainer.Def(
     dockerImageName = DockerImageName.parse("mysql:8.0.31")
@@ -55,6 +58,7 @@ class MySqlServiceActionsSpec
         |);
         |""".stripMargin)
     createTableStatement.execute()
+    connection.close()
     mySqlContainer
   }
 
@@ -62,52 +66,40 @@ class MySqlServiceActionsSpec
 
     val serviceActions = MySqlServiceActions()
 
-    def createDataSource(container: Containers) = {
-      val config = new HikariConfig()
-      config.setPoolName(container.databaseName)
-      config.setDriverClassName(container.driverClassName)
-      config.setJdbcUrl(container.jdbcUrl)
-      config.setUsername(container.username)
-      config.setPassword(container.password)
-      new HikariDataSource(config)
-    }
+    def initDatabase(containers: Containers) =
+      JdbcBackend.Database.forURL(
+        url = containers.container.getJdbcUrl,
+        user = containers.container.getUsername,
+        password = containers.container.getPassword
+      )
 
     "insert non-existing values" in withContainers { mysqlContainer =>
-      val dataSource = createDataSource(mysqlContainer)
-      val db = JdbcBackend.Database.forDataSource(ds = dataSource, None)
+      val db = initDatabase(mysqlContainer)
 
-      val service = Iterator.continually(serviceGen.sample).flatten.toSeq.head
+      val service = Iterator.continually(serviceGen.sample).take(1).flatten.toSeq.head
       db.run(serviceActions.upsert(service)).futureValue
-      db.run(serviceActions.getAll).futureValue shouldBe Seq(service)
-
-      dataSource.close()
+      db.run(serviceActions.getAll).futureValue.toList shouldBe Seq(service)
     }
 
     "update existing values" in withContainers { mysqlContainer =>
-      val dataSource = createDataSource(mysqlContainer)
-      val db = JdbcBackend.Database.forDataSource(ds = dataSource, None)
+      val db = initDatabase(mysqlContainer)
 
-      val service = Iterator.continually(serviceGen.sample).flatten.toSeq.head
+      val service = Iterator.continually(serviceGen.sample).take(1).flatten.toSeq.head
       db.run(serviceActions.upsert(service)).futureValue
       val updatedService = service.copy(name = service.name + "-1")
       db.run(serviceActions.upsert(updatedService)).futureValue
 
-      db.run(serviceActions.getAll).futureValue shouldBe Seq(updatedService)
-
-      dataSource.close()
+      db.run(serviceActions.getAll).futureValue.toList shouldBe Seq(updatedService)
     }
 
     "delete values" in withContainers { mysqlContainer =>
-      val dataSource = createDataSource(mysqlContainer)
-      val db = JdbcBackend.Database.forDataSource(ds = dataSource, None)
+      val db = initDatabase(mysqlContainer)
 
-      val service = Iterator.continually(serviceGen.sample).flatten.toSeq.head
+      val service = Iterator.continually(serviceGen.sample).take(1).flatten.toSeq.head
       db.run(serviceActions.upsert(service)).futureValue
       db.run(serviceActions.delete(service.id)).futureValue
 
-      db.run(serviceActions.getAll).futureValue shouldBe Seq.empty
-
-      dataSource.close()
+      db.run(serviceActions.getAll).futureValue.toList shouldBe Seq.empty
     }
   }
 }

@@ -4,10 +4,18 @@ import com.mocker.common.gen.BasicGenerators
 import com.mocker.rest.model.Service
 import org.scalacheck.Gen
 
-import java.time.Instant
+import java.sql.Timestamp
+import java.time.{Instant, ZoneId}
+import java.time.format.DateTimeFormatter
 import scala.concurrent.duration._
 
 trait ServiceGen extends BasicGenerators {
+
+  private val PATTERN_FORMAT = "yyyy-MM-dd HH:mm:ss"
+
+  private val formatter: DateTimeFormatter = DateTimeFormatter
+    .ofPattern(PATTERN_FORMAT)
+    .withZone(ZoneId.systemDefault())
 
   def serviceGen: Gen[Service] =
     for {
@@ -23,8 +31,8 @@ trait ServiceGen extends BasicGenerators {
       path = path,
       url = Some(url),
       description = Some(description),
-      createTime = Instant.now(),
-      updateTime = Instant.now(),
-      expirationTime = Some(Instant.now().plusMillis(ttl.toMillis))
+      createTime = Timestamp.valueOf(formatter.format(Instant.now())),
+      updateTime = Timestamp.valueOf(formatter.format(Instant.now())),
+      expirationTime = Some(Timestamp.valueOf(formatter.format(Instant.now().plusMillis(ttl.toMillis))))
     )
 }
