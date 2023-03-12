@@ -21,8 +21,8 @@ jobs:
         with:
           fail_ci_if_error: true
       - name: "Telegram notification"    
-      - uses: appleboy/telegram
-      - with:
+        uses: appleboy/telegram
+        with:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
   lint:
