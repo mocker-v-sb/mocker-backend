@@ -20,7 +20,8 @@ jobs:
         uses: codecov/codecov-action@v2
         with:
           fail_ci_if_error: true
-      - name: "Telegram notification"    
+      - name: "CI failed telegram message"
+        if: ${{ failure() }}
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
