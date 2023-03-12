@@ -6,26 +6,10 @@ import "google/protobuf/wrappers.proto";
 import "google/protobuf/timestamp.proto";
 
 service RestMocker {
-  // CRUD for services
   rpc createService(CreateServiceRequest) returns (CreateServiceResponse);
-  rpc deleteService(DeleteServiceRequest) returns (DeleteServiceResponse);
-  rpc updateService(UpdateServiceRequest) returns (UpdateServiceResponse);
-  rpc getService(GetServiceRequest) returns (GetServiceResponse);
 
-  // CRUD for mocks
-  rpc createMock(CreateMockRequest) returns (CreateMockResponse);
-  rpc deleteMock(DeleteMockRequest) returns (DeleteMockResponse);
-  rpc updateMock(UpdateMockRequest) returns (UpdateMockResponse);
-  rpc getMock(GetMockRequest) returns (GetMockResponse);
-
-  // Services features
-  rpc getAllServices(GetAllServicesRequest) returns (GetAllServicesResponse);
-  rpc getServiceMocks(GetServiceMocksRequest) returns (GetServiceMocksResponse);
-
-  // Mocks features
+  rpc createModel(CreateModelRequest) returns (CreateModelResponse);
 }
-
-// CRUD for services models
 
 message CreateServiceRequest {
   string name = 1;
@@ -37,42 +21,11 @@ message CreateServiceRequest {
 
 message CreateServiceResponse {}
 
-message DeleteServiceRequest {}
+message CreateModelRequest {
+  string service_path = 1;
+  string name = 2;
+  google.protobuf.StringValue description = 3;
+  string schema = 4;
+}
 
-message DeleteServiceResponse {}
-
-message UpdateServiceRequest {}
-
-message UpdateServiceResponse {}
-
-message GetServiceRequest {}
-
-message GetServiceResponse {}
-
-// CRUD for mocks models
-
-message CreateMockRequest {}
-
-message CreateMockResponse {}
-
-message DeleteMockRequest {}
-
-message DeleteMockResponse {}
-
-message UpdateMockRequest {}
-
-message UpdateMockResponse {}
-
-message GetMockRequest {}
-
-message GetMockResponse {}
-
-// Services features models
-
-message GetAllServicesRequest {}
-
-message GetAllServicesResponse {}
-
-message GetServiceMocksRequest {}
-
-message GetServiceMocksResponse {}
+message CreateModelResponse {}

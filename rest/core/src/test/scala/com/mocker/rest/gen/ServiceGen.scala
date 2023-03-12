@@ -31,7 +31,7 @@ trait ServiceGen extends BasicGenerators {
       path = path,
       url = Some(url),
       description = Some(description),
-      createTime = Timestamp.valueOf(formatter.format(Instant.now())),
+      creationTime = Timestamp.valueOf(formatter.format(Instant.now())),
       updateTime = Timestamp.valueOf(formatter.format(Instant.now())),
       expirationTime = Some(Timestamp.valueOf(formatter.format(Instant.now().plusMillis(ttl.toMillis))))
     )

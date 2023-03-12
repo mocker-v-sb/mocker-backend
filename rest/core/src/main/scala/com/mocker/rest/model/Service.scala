@@ -8,7 +8,7 @@ case class Service(
     path: String,
     url: Option[String],
     description: Option[String],
-    createTime: Timestamp,
+    creationTime: Timestamp,
     updateTime: Timestamp,
     expirationTime: Option[Timestamp]
 )

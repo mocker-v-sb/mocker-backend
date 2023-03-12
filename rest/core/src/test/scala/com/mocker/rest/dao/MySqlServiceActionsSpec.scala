@@ -48,7 +48,7 @@ class MySqlServiceActionsSpec
         |    `path`            VARCHAR(128) NOT NULL,
         |    `url`             VARCHAR(128) NULL,
         |    `description`     VARCHAR(128) NULL,
-        |    `create_time`     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        |    `creation_time`   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
         |    `update_time`     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
         |    `expiration_time` TIMESTAMP    NULL     DEFAULT NULL,
         |    PRIMARY KEY (`id`),
