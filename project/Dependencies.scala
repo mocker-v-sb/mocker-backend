@@ -45,4 +45,6 @@ object Dependencies {
 
   lazy val mySqlConnector = "mysql" % "mysql-connector-java" % "8.0.32"
 
+  lazy val scalaMock = "org.scalamock" %% "scalamock" % "5.1.0"
+
 }

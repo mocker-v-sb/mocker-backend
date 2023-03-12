@@ -4,6 +4,7 @@ import com.mocker.common.utils.{Environment, ServerAddress}
 import com.mocker.rest.api.RestMockerService
 import com.mocker.rest.manager.RestMockerManager
 import com.mocker.rest.rest_service.ZioRestService.ZRestMocker
+import io.grpc.protobuf.services.ProtoReflectionService
 import scalapb.zio_grpc.{RequestContext, Server, ServerLayer, ServiceList}
 import slick.interop.zio.DatabaseProvider
 import zio.{Scope, ZIO, ZIOAppArgs, ZLayer}
@@ -27,7 +28,9 @@ object Main extends zio.ZIOAppDefault {
   private val serviceList = ServiceList.addFromEnvironment[ZRestMocker[RequestContext]]
 
   private val serverLayer = ServerLayer.fromServiceList(
-    io.grpc.ServerBuilder.forPort(restServerAddress.port),
+    io.grpc.ServerBuilder
+      .forPort(restServerAddress.port)
+      .addService(ProtoReflectionService.newInstance()),
     serviceList
   )
 

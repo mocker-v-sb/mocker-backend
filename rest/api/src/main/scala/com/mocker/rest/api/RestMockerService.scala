@@ -1,13 +1,22 @@
 package com.mocker.rest.api
 
 import com.mocker.rest.manager.RestMockerManager
+import com.mocker.rest.model.Service
 import com.mocker.rest.rest_service._
 import com.mocker.rest.rest_service.ZioRestService.RestMocker
 import io.grpc.Status
 import zio.{ZIO, ZLayer}
 
+import java.sql.Timestamp
+import java.time.Instant
+
 case class RestMockerService(restMockerManager: RestMockerManager) extends RestMocker {
-  override def createService(request: CreateMockRequest): ZIO[Any, Status, CreateServiceResponse] = ???
+  override def createService(request: CreateServiceRequest): ZIO[Any, Status, CreateServiceResponse] = {
+    restMockerManager
+      .createService(convertCreateServiceRequest(request))
+      .mapError(Status.fromThrowable)
+      .map(_ => CreateServiceResponse())
+  }
 
   override def deleteService(request: DeleteServiceRequest): ZIO[Any, Status, DeleteServiceResponse] = ???
 
@@ -26,6 +35,18 @@ case class RestMockerService(restMockerManager: RestMockerManager) extends RestM
   override def getAllServices(request: GetAllServicesRequest): ZIO[Any, Status, GetAllServicesResponse] = ???
 
   override def getServiceMocks(request: GetServiceMocksRequest): ZIO[Any, Status, GetServiceMocksResponse] = ???
+
+  private def convertCreateServiceRequest(request: CreateServiceRequest): Service = {
+    Service(
+      name = request.name,
+      path = request.path,
+      url = request.url,
+      description = request.description,
+      createTime = Timestamp.from(Instant.now()),
+      updateTime = Timestamp.from(Instant.now()),
+      expirationTime = request.expirationTime.map(t => Timestamp.from(t.asJavaInstant))
+    )
+  }
 }
 
 object RestMockerService {

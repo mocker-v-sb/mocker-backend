@@ -2,9 +2,12 @@ syntax = "proto3";
 
 package com.mocker.rest;
 
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/timestamp.proto";
+
 service RestMocker {
   // CRUD for services
-  rpc createService(CreateMockRequest) returns (CreateServiceResponse);
+  rpc createService(CreateServiceRequest) returns (CreateServiceResponse);
   rpc deleteService(DeleteServiceRequest) returns (DeleteServiceResponse);
   rpc updateService(UpdateServiceRequest) returns (UpdateServiceResponse);
   rpc getService(GetServiceRequest) returns (GetServiceResponse);
@@ -24,7 +27,13 @@ service RestMocker {
 
 // CRUD for services models
 
-message CreateServiceRequest {}
+message CreateServiceRequest {
+  string name = 1;
+  string path = 2;
+  google.protobuf.StringValue url = 3;
+  google.protobuf.StringValue description = 4;
+  google.protobuf.Timestamp expiration_time = 5;
+}
 
 message CreateServiceResponse {}
 

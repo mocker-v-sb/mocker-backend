@@ -3,7 +3,7 @@ package com.mocker.rest.model
 import java.sql.Timestamp
 
 case class Service(
-    id: Long,
+    id: Long = 0,
     name: String,
     path: String,
     url: Option[String],
