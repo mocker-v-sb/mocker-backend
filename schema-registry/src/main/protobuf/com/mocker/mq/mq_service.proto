@@ -21,7 +21,7 @@ message CreateTopicResponse {
 }
 
 message SendMessageRequest {
-  BrokerInfoContainer broker_info_container = 1;
+  BrokerResponseContainer broker_info_container = 1;
 
   int32 repeat = 10;
 }
@@ -33,7 +33,7 @@ message SendMessageResponse {
 }
 
 message GetMessagesRequest {
-  BrokerInfoContainer broker_meta = 1;
+  BrokerRequestContainer broker_request = 1;
 
   enum ValueParseType {
     PLAIN = 0;
@@ -44,7 +44,7 @@ message GetMessagesRequest {
 }
 
 message GetMessagesResponse {
-  repeated BrokerInfoContainer messages = 1;
+  repeated BrokerResponseContainer messages = 1;
 }
 
 message GetTopicsRequest {
@@ -66,7 +66,13 @@ message GetTopicsResponse {
   }
 }
 
-message BrokerInfoContainer {
+message BrokerRequestContainer {
+  BrokerType broker_type = 1;
+
+  string topic = 2;
+}
+
+message BrokerResponseContainer {
   oneof container {
     KafkaContainer kafka_container = 1;
     RabbitMqContainer rabbit_mq_container = 2;

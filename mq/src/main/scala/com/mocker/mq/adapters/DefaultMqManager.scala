@@ -1,23 +1,25 @@
 package com.mocker.mq.adapters
 
 import com.mocker.common.utils.ServerAddress
-import com.mocker.mq.mq_service.BrokerInfoContainer.Container
+import com.mocker.mq.mq_service.BrokerResponseContainer.Container
+import com.mocker.mq.mq_service.GetTopicsResponse.Topics
 import com.mocker.mq.mq_service.KafkaEvent.Value
-import com.mocker.mq.mq_service._
+import com.mocker.mq.mq_service.{BrokerType => ProtoBrokerType, _}
 import com.mocker.mq.ports.MqManager
-import com.mocker.mq.utils.BrokerManagerException._
 import com.mocker.mq.utils.{BrokerManagerException, BrokerType, KafkaController}
+import io.grpc.Status
 import org.apache.kafka.clients.producer.RecordMetadata
 import zio.kafka.admin.AdminClient
-import zio.kafka.consumer.Consumer
+import zio.kafka.consumer.{Consumer, ConsumerSettings, Subscription}
 import zio.kafka.producer.Producer
 import zio.kafka.serde.Serde
 import zio.{IO, UIO, ZIO, ZLayer}
 
 case class DefaultMqManager(kafkaController: KafkaController) extends MqManager {
+  lazy val kafkaConsumerSettings: ConsumerSettings = ConsumerSettings(List(kafkaController.address))
   override def createTopic(request: CreateTopicRequest): IO[BrokerManagerException, CreateTopicResponse] = {
     def topicCreationException: BrokerManagerException =
-      BrokerManagerException.CouldNotCreateTopic(request.topicName, BrokerType.Kafka)
+      BrokerManagerException.couldNotCreateTopic(request.topicName, BrokerType.Kafka, Status.INTERNAL)
     for {
       newTopic <- newTopic(request.topicName)
       _ <- kafkaController.adminClient.createTopic(newTopic).orElseFail(topicCreationException)
@@ -36,54 +38,104 @@ case class DefaultMqManager(kafkaController: KafkaController) extends MqManager 
   }
 
   override def sendMessage(request: SendMessageRequest): IO[BrokerManagerException, SendMessageResponse] = {
-    def errorBuilder(topicName: String, brokerType: BrokerType = BrokerType.Unknown, reason: String): BrokerManagerException.CouldNotSendEvent =
-      BrokerManagerException.CouldNotSendEvent(topicName, brokerType, reason)
+    def errorBuilder(
+        topicName: String,
+        brokerType: BrokerType = BrokerType.Unknown,
+        reason: String,
+        grpcStatus: Status
+    ): BrokerManagerException =
+      BrokerManagerException.couldNotSendEvent(topicName, brokerType, reason, grpcStatus)
 
-    def kafkaErrorBuilder(topicName: String, reason: String): BrokerManagerException.CouldNotSendEvent =
-      errorBuilder(topicName, BrokerType.Kafka, reason)
+    def kafkaErrorBuilder(
+        topicName: String,
+        reason: String,
+        grpcStatus: Status
+    ): BrokerManagerException =
+      errorBuilder(topicName, BrokerType.Kafka, reason, grpcStatus)
     for {
-      meta <- request.brokerInfoContainer match {
+      _ <- request.brokerInfoContainer match {
         case Some(payload) =>
           payload.container match {
             case Container.KafkaContainer(container) => sendKafkaEvent(container, kafkaErrorBuilder)
             case Container.RabbitMqContainer(_) =>
-              ZIO.fail(errorBuilder("UNKNOWN", BrokerType.RabbitMQ, "RabbitMq is not supported yet"))
-            case Container.Empty => ZIO.fail(kafkaErrorBuilder("UNKNOWN", "Missing Container"))
+              ZIO.fail(
+                errorBuilder("UNKNOWN", BrokerType.RabbitMQ, "RabbitMq is not supported yet", Status.UNIMPLEMENTED)
+              )
+            case Container.Empty => ZIO.fail(kafkaErrorBuilder("UNKNOWN", "Missing Container", Status.INVALID_ARGUMENT))
           }
-        case None => ZIO.fail(kafkaErrorBuilder("UNKNOWN", "Missing Payload"))
+        case None => ZIO.fail(kafkaErrorBuilder("UNKNOWN", "Missing Payload", Status.INVALID_ARGUMENT))
       }
     } yield SendMessageResponse(success = true)
   }
 
-  override def getMessages(request: GetMessagesRequest): IO[CouldNotReadFromTopic, GetMessagesResponse] = {
-    def errorBuilder(topicName: String, brokerType: BrokerType = BrokerType.Unknown, reason: String): BrokerManagerException.CouldNotReadFromTopic =
-      BrokerManagerException.CouldNotReadFromTopic(topicName, brokerType, reason)
+  override def getMessages(request: GetMessagesRequest): IO[BrokerManagerException, GetMessagesResponse] = {
+    def errorBuilder(
+        topicName: String,
+        brokerType: BrokerType = BrokerType.Unknown,
+        reason: String,
+        grpcStatus: Status
+    ): BrokerManagerException =
+      BrokerManagerException.couldNotReadFromTopic(topicName, brokerType, reason, grpcStatus)
 
-    def kafkaErrorBuilder(topicName: String, reason: String): BrokerManagerException.CouldNotReadFromTopic =
-      errorBuilder(topicName, BrokerType.Kafka, reason)
+    def kafkaErrorBuilder(
+        topicName: String,
+        reason: String,
+        grpcStatus: Status
+    ): BrokerManagerException =
+      errorBuilder(topicName, BrokerType.Kafka, reason, grpcStatus)
 
     for {
-      _ <- request.brokerMeta match {
-        case Some(meta) => meta.container match {
-          case Container.KafkaContainer(container) => container.content match {
-            case Some(event) => ???
-            case None => ZIO.fail(kafkaErrorBuilder("UNKNOWN", "Missing Container"))
+      _ <- request.brokerRequest match {
+        case Some(meta) =>
+          meta.brokerType match {
+            case ProtoBrokerType.BROKER_TYPE_KAFKA =>
+              val consumer = ZLayer.scoped(Consumer.make(kafkaConsumerSettings.withProperty("max.poll.records", "10")))
+              Consumer
+                .subscribeAnd(Subscription.topics(meta.topic))
+                .plainStream(Serde.string, Serde.string)
+                .map(_.offset)
+                .aggregateAsync(Consumer.offsetBatches)
+                .mapZIO(_.commit)
+                .runCollect
+                .map(_.toList)
+                .provideLayer(consumer)
+                .mapError(
+                  err => kafkaErrorBuilder(meta.topic, s"Consumer failed with: ${err.getMessage}", Status.INTERNAL)
+                )
+
+            case ProtoBrokerType.BROKER_TYPE_RABBITMQ =>
+              ZIO.fail(
+                errorBuilder(meta.topic, BrokerType.RabbitMQ, s"RabbitMq is not supported yet", Status.UNIMPLEMENTED)
+              )
+            case ProtoBrokerType.BROKER_TYPE_UNDEFINED =>
+              ZIO.fail(kafkaErrorBuilder(meta.topic, s"Broker type undefined", Status.INVALID_ARGUMENT))
+            case ProtoBrokerType.Unrecognized(unrecognizedValue) =>
+              ZIO.fail(
+                kafkaErrorBuilder(meta.topic, s"Unrecognized broker type: $unrecognizedValue", Status.INVALID_ARGUMENT)
+              )
           }
-          case Container.RabbitMqContainer(_) => ZIO.fail(errorBuilder("UNKNOWN", BrokerType.RabbitMQ, "RabbitMq is not supported yet"))
-          case Container.Empty => ZIO.fail(kafkaErrorBuilder("UNKNOWN", "Missing Container"))
-        }
-        case None => ZIO.fail(kafkaErrorBuilder("UNKNOWN", "Missing Payload"))
+        case None => ZIO.fail(kafkaErrorBuilder("UNKNOWN", "Missing Payload", Status.INVALID_ARGUMENT))
       }
     } yield GetMessagesResponse.defaultInstance
   }
+
+  def getTopics(request: GetTopicsRequest): IO[BrokerManagerException, GetTopicsResponse] =
+    for {
+      topics <- kafkaController.adminClient.listTopics().mapError { error =>
+        BrokerManagerException.couldNotGetTopicsList(
+          BrokerType.Kafka,
+          s"List topics request failed due to: ${error.getStackTrace.mkString("\n")}"
+        )
+      }
+    } yield GetTopicsResponse().withTopicsFlat(Topics(topics.values.map(_.name).toList))
 
   private def newTopic(topicName: String): UIO[AdminClient.NewTopic] =
     ZIO.succeed(AdminClient.NewTopic(topicName, 1, 1))
 
   private def sendKafkaEvent(
       container: KafkaContainer,
-      errorBuilder: (String, String) => BrokerManagerException.CouldNotSendEvent
-  ): IO[BrokerManagerException.CouldNotSendEvent, RecordMetadata] = {
+      errorBuilder: (String, String, Status) => BrokerManagerException
+  ): IO[BrokerManagerException, RecordMetadata] = {
     container.content match {
       case Some(content) =>
         content.value match {
@@ -97,25 +149,24 @@ case class DefaultMqManager(kafkaController: KafkaController) extends MqManager 
                 valueSerializer = Serde.string
               )
               .mapError { error =>
-                errorBuilder(container.topic, error.getMessage)
+                errorBuilder(container.topic, error.getMessage, Status.INTERNAL)
               }
-          case Value.Empty => ZIO.fail(errorBuilder(container.topic, "Missing Value"))
+          case Value.Empty => ZIO.fail(errorBuilder(container.topic, "Missing Value", Status.INVALID_ARGUMENT))
         }
-      case None => ZIO.fail(errorBuilder(container.topic, "Missing Content"))
+      case None => ZIO.fail(errorBuilder(container.topic, "Missing Content", Status.INVALID_ARGUMENT))
     }
   }
 }
 
 object DefaultMqManager {
 
-  def layer: ZLayer[AdminClient with Producer with Consumer with ServerAddress, Nothing, DefaultMqManager] = {
+  def layer: ZLayer[AdminClient with Producer with ServerAddress, Nothing, DefaultMqManager] = {
     ZLayer.fromZIO {
       for {
         adminClient <- ZIO.service[AdminClient]
         producer <- ZIO.service[Producer]
-        consumer <- ZIO.service[Consumer]
         brokerAddress <- ZIO.service[ServerAddress]
-        kafkaController = KafkaController(adminClient, producer, consumer, brokerAddress)
+        kafkaController = KafkaController(adminClient, producer, brokerAddress)
       } yield DefaultMqManager(kafkaController)
     }
   }

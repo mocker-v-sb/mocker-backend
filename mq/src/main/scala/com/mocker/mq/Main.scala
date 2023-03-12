@@ -3,10 +3,11 @@ package com.mocker.mq
 import com.mocker.common.utils.{Environment, ServerAddress}
 import com.mocker.mq.mq_service.ZioMqService.ZMqMocker
 import com.mocker.mq.adapters.{DefaultMqManager, MqMockerService}
+import io.grpc.ServerBuilder
+import io.grpc.protobuf.services.ProtoReflectionService
 import scalapb.zio_grpc.{RequestContext, Server, ServerLayer, ServiceList}
 import zio.{durationInt, ZLayer}
 import zio.kafka.admin.{AdminClient, AdminClientSettings}
-import zio.kafka.consumer.{Consumer, ConsumerSettings}
 import zio.kafka.producer.{Producer, ProducerSettings}
 
 object Main extends zio.ZIOAppDefault {
@@ -24,19 +25,15 @@ object Main extends zio.ZIOAppDefault {
   val serviceList = ServiceList.addFromEnvironment[ZMqMocker[RequestContext]]
 
   val serverLayer = ServerLayer.fromServiceList(
-    io.grpc.ServerBuilder.forPort(mqServerAddress.port),
+    ServerBuilder
+      .forPort(mqServerAddress.port)
+      .addService(ProtoReflectionService.newInstance()),
     serviceList
   )
 
   val kafkaProducer = ZLayer.scoped(
     Producer.make(
       ProducerSettings(List(kafkaAddress))
-    )
-  )
-
-  val kafkaConsumer = ZLayer.scoped(
-    Consumer.make(
-      ConsumerSettings(List(kafkaAddress))
     )
   )
 
@@ -52,7 +49,6 @@ object Main extends zio.ZIOAppDefault {
     adminClientSettings,
     AdminClient.live,
     kafkaProducer,
-    kafkaConsumer,
     ZLayer.succeed(kafkaAddress),
     DefaultMqManager.layer,
     MqMockerService.layer,
