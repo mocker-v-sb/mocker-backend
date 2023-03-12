@@ -19,6 +19,9 @@ case class MySqlServiceActions()(implicit ec: ExecutionContext) extends ServiceA
   override def get(serviceId: Long): DBIO[Option[Service]] =
     table.filter(_.id === serviceId).result.headOption
 
+  override def get(path: String): DBIO[Option[Service]] =
+    table.filter(_.path === path).result.headOption
+
   override def getAll: DBIO[Seq[Service]] =
     table.result
 
