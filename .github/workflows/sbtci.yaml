@@ -19,7 +19,7 @@ jobs:
         with:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          message:|
+          message: |
             ${{ github.actor }} created a PR:
             Repository: ${{ github.repository }}
             See changes: ${{ steps.pr-url.outputs.url }} 
