@@ -11,6 +11,18 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
+      - name: Pull Request URL
+        uses: kceb/pull-request-url-action@v2
+
+      - name: "Telegram PR created notification"    
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message:|
+            ${{ github.actor }} created a PR:
+            Repository: ${{ github.repository }}
+            See changes: ${{ steps.pr-url.outputs.url }} 
       - uses: actions/checkout@v2
       - name: Run tests
         run: sbt coverage test
