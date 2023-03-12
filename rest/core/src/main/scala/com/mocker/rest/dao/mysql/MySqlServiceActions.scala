@@ -37,17 +37,12 @@ object MySqlServiceActions {
   class ServiceTable(tag: Tag) extends Table[Service](tag, "service") {
 
     def id: Rep[Long] = column[Long]("id", O.PrimaryKey)
-
     def name: Rep[String] = column[String]("name")
     def path: Rep[String] = column[String]("path", O.Unique)
-
     def url: Rep[Option[String]] = column[Option[String]]("url")
     def description: Rep[Option[String]] = column[Option[String]]("description")
-
-    def createTime: Rep[Timestamp] = column("create_time", NotNull, O.SqlType("TIMESTAMP"))
-
+    def createTime: Rep[Timestamp] = column("creation_time", NotNull, O.SqlType("TIMESTAMP"))
     def updateTime: Rep[Timestamp] = column("update_time", NotNull, O.SqlType("TIMESTAMP"))
-
     def expirationTime: Rep[Option[Timestamp]] = column("expiration_time", O.SqlType("TIMESTAMP"))
 
     override def * : ProvenShape[Service] =
