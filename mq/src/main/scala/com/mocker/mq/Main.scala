@@ -6,7 +6,7 @@ import com.mocker.mq.adapters.{KafkaManager, MqMockerService}
 import scalapb.zio_grpc.{RequestContext, Server, ServerLayer, ServiceList}
 import zio.{durationInt, ZLayer}
 import zio.kafka.admin.{AdminClient, AdminClientSettings}
-import zio.kafka.producer.{Producer, ProducerSettings}
+import zio.kafka.producer.{Producer}
 
 object Main extends zio.ZIOAppDefault {
 
