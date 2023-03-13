@@ -46,7 +46,7 @@ trait RestMockerTestBase extends BeforeAndAfterEach with TestContainerForAll wit
     val path = "sql/deleteTables.sql"
     val action = SqlScript.statementsFromFile(path) match {
       case Some(statements) => DBIO.sequence(statements.map(s => sqlu"#$s"))
-      case None => DBIO.failed(new RuntimeException(s"Can't load script at $path"))
+      case None             => DBIO.failed(new RuntimeException(s"Can't load script at $path"))
     }
     db.foreach(_.run(action).futureValue)
   }

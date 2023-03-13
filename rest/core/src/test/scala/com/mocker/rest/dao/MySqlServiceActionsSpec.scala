@@ -10,11 +10,7 @@ import org.testcontainers.utility.DockerImageName
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class MySqlServiceActionsSpec
-    extends AnyWordSpecLike
-    with Matchers
-    with ServiceGen
-    with RestMockerTestBase {
+class MySqlServiceActionsSpec extends AnyWordSpecLike with Matchers with ServiceGen with RestMockerTestBase {
 
   implicit override def patienceConfig: PatienceConfig =
     PatienceConfig(timeout = Span(1, Seconds), interval = Span(500, Millis))
