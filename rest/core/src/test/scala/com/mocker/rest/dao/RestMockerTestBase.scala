@@ -4,6 +4,7 @@ import com.dimafeng.testcontainers.MySQLContainer
 import com.dimafeng.testcontainers.scalatest.TestContainerForAll
 import com.mocker.common.utils.SqlScript
 import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.{BeforeAndAfterEach, Suite}
 import org.testcontainers.utility.DockerImageName
 import slick.dbio.DBIO
@@ -12,6 +13,9 @@ import slick.jdbc.MySQLProfile.api._
 
 trait RestMockerTestBase extends BeforeAndAfterEach with TestContainerForAll with ScalaFutures {
   self: Suite =>
+
+  implicit override def patienceConfig: PatienceConfig =
+    PatienceConfig(timeout = Span(10, Seconds), interval = Span(500, Millis))
 
   protected var db: Option[JdbcBackend.DatabaseDef] = None
 

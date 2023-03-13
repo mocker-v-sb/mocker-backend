@@ -15,6 +15,9 @@ case class MySqlModelActions()(implicit ec: ExecutionContext) extends ModelActio
 
   private lazy val table = TableQuery[ModelTable]
 
+  override def getAll(serviceId: Long): DBIO[Seq[Model]] =
+    table.filter(_.serviceId === serviceId).result
+
   override def upsert(model: Model): DBIO[Unit] =
     table.insertOrUpdate(model).map(_ => ())
 }

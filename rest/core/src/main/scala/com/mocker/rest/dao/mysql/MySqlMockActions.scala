@@ -16,11 +16,18 @@ case class MySqlMockActions()(implicit ec: ExecutionContext) extends MockActions
 
   private lazy val table = TableQuery[MockTable]
 
-  override def get(path: String): DBIO[Option[Mock]] =
-    table.filter(_.path === path).result.headOption
+  override def get(serviceId: Long, path: String): DBIO[Option[Mock]] =
+    table
+      .filter(_.serviceId === serviceId)
+      .filter(_.path === path)
+      .result
+      .headOption
 
   override def upsert(mock: Mock): DBIO[Unit] =
     table.insertOrUpdate(mock).map(_ => ())
+
+  override def getAll(serviceId: Long): DBIO[Seq[Mock]] =
+    table.filter(_.serviceId === serviceId).result
 }
 
 object MySqlMockActions {

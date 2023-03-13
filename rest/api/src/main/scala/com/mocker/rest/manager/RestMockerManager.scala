@@ -2,7 +2,7 @@ package com.mocker.rest.manager
 
 import com.mocker.rest.dao.mysql.{MySqlMockActions, MySqlModelActions, MySqlServiceActions}
 import com.mocker.rest.dao.{MockActions, ModelActions, ServiceActions}
-import com.mocker.rest.errors.{ServiceExistsException, ServiceNotExistsException}
+import com.mocker.rest.errors.{MockExistsException, ServiceExistsException, ServiceNotExistsException}
 import com.mocker.rest.model.{Mock, Model, Service}
 import slick.dbio.DBIO
 import slick.interop.zio.DatabaseProvider
@@ -47,6 +47,7 @@ case class RestMockerManager(
   def createMock(servicePath: String, mock: Mock): ZIO[Any, Throwable, Unit] = {
     for {
       service <- checkServiceExists(servicePath)
+      _ <- checkMockNotExists(service, mock)
       mockId = service.lastMockId + 1
       _ <- ZIO
         .fromDBIO(
@@ -76,6 +77,16 @@ case class RestMockerManager(
       dbService <- ZIO.fromDBIO(serviceActions.get(service.path)).provide(dbLayer)
       _ <- if (dbService.isDefined)
         ZIO.fail(ServiceExistsException(service.path))
+      else
+        ZIO.succeed()
+    } yield ()
+  }
+
+  private def checkMockNotExists(service: Service, mock: Mock) = {
+    for {
+      dbMock <- ZIO.fromDBIO(mockActions.get(service.id, mock.path)).provide(dbLayer)
+      _ <- if (dbMock.isDefined)
+        ZIO.fail(MockExistsException(servicePath = service.path, mockPath = mock.path))
       else
         ZIO.succeed()
     } yield ()

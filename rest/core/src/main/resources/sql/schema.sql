@@ -44,6 +44,6 @@ CREATE TABLE `mock`
     `creation_time`     TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`, `service_id`),
     CONSTRAINT `mock_ibfk_1` FOREIGN KEY (`service_id`) REFERENCES `service` (`id`) ON DELETE CASCADE,
-    CONSTRAINT `mock_ibfk_2` FOREIGN KEY (`request_model_id`) REFERENCES `model` (`id`),
-    CONSTRAINT `mock_ibfk_3` FOREIGN KEY (`response_model_id`) REFERENCES `model` (`id`)
+    CONSTRAINT `mock_ibfk_2` FOREIGN KEY (`request_model_id`, `service_id`) REFERENCES `model` (`id`, `service_id`),
+    CONSTRAINT `mock_ibfk_3` FOREIGN KEY (`response_model_id`, `service_id`) REFERENCES `model` (`id`, `service_id`)
 );

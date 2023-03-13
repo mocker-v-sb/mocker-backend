@@ -11,12 +11,6 @@ import scala.concurrent.duration._
 
 trait ServiceGen extends BasicGenerators {
 
-  private val PATTERN_FORMAT = "yyyy-MM-dd HH:mm:ss"
-
-  private val formatter: DateTimeFormatter = DateTimeFormatter
-    .ofPattern(PATTERN_FORMAT)
-    .withZone(ZoneId.systemDefault())
-
   def serviceGen: Gen[Service] =
     for {
       id <- Gen.posNum[Long]
@@ -31,8 +25,8 @@ trait ServiceGen extends BasicGenerators {
       path = path,
       url = Some(url),
       description = Some(description),
-      creationTime = Timestamp.valueOf(formatter.format(Instant.now())),
-      updateTime = Timestamp.valueOf(formatter.format(Instant.now())),
-      expirationTime = Some(Timestamp.valueOf(formatter.format(Instant.now().plusMillis(ttl.toMillis))))
+      creationTime = Timestamp.valueOf(dateTimeFormatter.format(Instant.now())),
+      updateTime = Timestamp.valueOf(dateTimeFormatter.format(Instant.now())),
+      expirationTime = Some(Timestamp.valueOf(dateTimeFormatter.format(Instant.now().plusMillis(ttl.toMillis))))
     )
 }
