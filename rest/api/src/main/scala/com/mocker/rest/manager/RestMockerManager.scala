@@ -1,18 +1,21 @@
 package com.mocker.rest.manager
 
-import com.mocker.rest.dao.{ModelActions, ServiceActions}
-import com.mocker.rest.dao.mysql.{MySqlModelActions, MySqlServiceActions}
+import com.mocker.rest.dao.mysql.{MySqlMockActions, MySqlModelActions, MySqlServiceActions}
+import com.mocker.rest.dao.{MockActions, ModelActions, ServiceActions}
 import com.mocker.rest.errors.{ServiceExistsException, ServiceNotExistsException}
-import com.mocker.rest.model.{Model, Service}
+import com.mocker.rest.model.{Mock, Model, Service}
+import slick.dbio.DBIO
 import slick.interop.zio.DatabaseProvider
 import slick.interop.zio.syntax._
+import slick.jdbc.MySQLProfile.api._
 import zio.{ZIO, ZLayer}
 
 import scala.concurrent.ExecutionContext
 case class RestMockerManager(
     restMockerDbProvider: DatabaseProvider,
     serviceActions: ServiceActions,
-    modelActions: ModelActions
+    modelActions: ModelActions,
+    mockActions: MockActions
 ) {
 
   private val dbLayer = ZLayer.succeed(restMockerDbProvider)
@@ -26,19 +29,46 @@ case class RestMockerManager(
 
   def createModel(servicePath: String, model: Model): ZIO[Any, Throwable, Unit] = {
     for {
-      serviceId <- checkServiceExists(servicePath)
-      _ <- ZIO.fromDBIO(modelActions.upsert(model.copy(serviceId = serviceId))).provide(dbLayer)
+      service <- checkServiceExists(servicePath)
+      modelId = service.lastModelId + 1
+      _ <- ZIO
+        .fromDBIO(
+          DBIO
+            .seq(
+              modelActions.upsert(model.copy(id = modelId, serviceId = service.id)),
+              serviceActions.upsert(service.copy(lastModelId = modelId))
+            )
+            .transactionally
+        )
+        .provide(dbLayer)
+    } yield ()
+  }
+
+  def createMock(servicePath: String, mock: Mock): ZIO[Any, Throwable, Unit] = {
+    for {
+      service <- checkServiceExists(servicePath)
+      mockId = service.lastMockId + 1
+      _ <- ZIO
+        .fromDBIO(
+          DBIO
+            .seq(
+              mockActions.upsert(mock.copy(id = mockId, serviceId = service.id)),
+              serviceActions.upsert(service.copy(lastMockId = mockId))
+            )
+            .transactionally
+        )
+        .provide(dbLayer)
     } yield ()
   }
 
   private def checkServiceExists(path: String) = {
     for {
       dbService <- ZIO.fromDBIO(serviceActions.get(path)).provide(dbLayer)
-      serviceId <- dbService match {
-        case Some(service) => ZIO.succeed(service.id)
-        case None          => ZIO.fail(ServiceNotExistsException(path)) //
+      service <- dbService match {
+        case Some(service) => ZIO.succeed(service)
+        case None          => ZIO.fail(ServiceNotExistsException(path))
       }
-    } yield serviceId
+    } yield service
   }
 
   private def checkServiceNotExists(service: Service) = {
@@ -58,7 +88,7 @@ object RestMockerManager {
     ZLayer.fromZIO {
       for {
         restMockerDatabase <- ZIO.service[DatabaseProvider]
-      } yield RestMockerManager(restMockerDatabase, MySqlServiceActions(), MySqlModelActions())
+      } yield RestMockerManager(restMockerDatabase, MySqlServiceActions(), MySqlModelActions(), MySqlMockActions())
     }
   }
 }

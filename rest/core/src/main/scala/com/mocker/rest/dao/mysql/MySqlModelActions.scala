@@ -15,9 +15,6 @@ case class MySqlModelActions()(implicit ec: ExecutionContext) extends ModelActio
 
   private lazy val table = TableQuery[ModelTable]
 
-  override def get(serviceId: Long, modelId: Long): DBIO[Option[Model]] =
-    table.filter(_.serviceId === serviceId).filter(_.id === modelId).result.headOption
-
   override def upsert(model: Model): DBIO[Unit] =
     table.insertOrUpdate(model).map(_ => ())
 }
@@ -26,7 +23,7 @@ object MySqlModelActions {
 
   class ModelTable(tag: Tag) extends Table[Model](tag, "model") {
 
-    def id: Rep[Long] = column[Long]("id", O.AutoInc)
+    def id: Rep[Long] = column[Long]("id")
     def serviceId: Rep[Long] = column[Long]("service_id")
     def name: Rep[String] = column[String]("name")
     def description: Rep[Option[String]] = column[Option[String]]("description")

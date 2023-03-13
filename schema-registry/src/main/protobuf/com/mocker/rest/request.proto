@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package com.mocker.rest;
+
+import "scalapb/scalapb.proto";
+
+option (scalapb.options) = {
+  preserve_unknown_fields: false
+};
+
+enum Method {
+  GET = 0;
+  POST = 1;
+  PUT = 2;
+  DELETE = 3;
+  PATCH = 4;
+}
+
+message Header {
+  string name = 1;
+  string value = 2;
+}
