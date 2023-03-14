@@ -11,22 +11,22 @@ case class MqMockerService(brokerManager: MqManager) extends MqMocker {
   override def createTopic(request: CreateTopicRequest): IO[Status, CreateTopicResponse] =
     (for {
       res <- brokerManager.createTopic(request)
-    } yield res).tapError(err => Console.printError(err.msg).ignore).mapError(_.grpcStatus)
+    } yield res).tapError(err => Console.printError(err.msg).ignoreLogged).mapError(_.grpcStatus)
 
   override def sendMessage(request: SendMessageRequest): IO[Status, SendMessageResponse] =
     (for {
       res <- brokerManager.sendMessage(request)
-    } yield res).tapError(err => Console.printError(err.msg).ignore).mapError(_.grpcStatus)
+    } yield res).tapError(err => Console.printError(err.msg).ignoreLogged).mapError(_.grpcStatus)
 
   override def getMessages(request: GetMessagesRequest): IO[Status, GetMessagesResponse] =
     (for {
       res <- brokerManager.getMessages(request)
-    } yield res).tapError(err => Console.printError(err.msg).ignore).mapError(_.grpcStatus)
+    } yield res).tapError(err => Console.printError(err.msg).ignoreLogged).mapError(_.grpcStatus)
 
   override def getTopics(request: GetTopicsRequest): IO[Status, GetTopicsResponse] =
     (for {
       res <- brokerManager.getTopics(request)
-    } yield res).tapError(err => Console.printError(err.msg).ignore).mapError(_.grpcStatus)
+    } yield res).tapError(err => Console.printError(err.msg).ignoreLogged).mapError(_.grpcStatus)
 }
 
 object MqMockerService {

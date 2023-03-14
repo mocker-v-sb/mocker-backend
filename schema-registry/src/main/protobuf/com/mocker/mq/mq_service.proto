@@ -21,7 +21,7 @@ message CreateTopicResponse {
 }
 
 message SendMessageRequest {
-  BrokerResponseContainer broker_info_container = 1;
+  BrokerInfoContainer broker_info_container = 1;
 
   int32 repeat = 10;
 }
@@ -44,7 +44,7 @@ message GetMessagesRequest {
 }
 
 message GetMessagesResponse {
-  repeated BrokerResponseContainer messages = 1;
+  repeated BrokerInfoContainer messages = 1;
 }
 
 message GetTopicsRequest {
@@ -72,7 +72,7 @@ message BrokerRequestContainer {
   string topic = 2;
 }
 
-message BrokerResponseContainer {
+message BrokerInfoContainer {
   oneof container {
     KafkaContainer kafka_container = 1;
     RabbitMqContainer rabbit_mq_container = 2;

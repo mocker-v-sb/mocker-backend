@@ -1,7 +1,7 @@
 package com.mocker.mq.adapters
 
 import com.mocker.common.utils.ServerAddress
-import com.mocker.mq.mq_service.BrokerResponseContainer.Container
+import com.mocker.mq.mq_service.BrokerInfoContainer.Container
 import com.mocker.mq.mq_service.GetTopicsResponse.Topics
 import com.mocker.mq.mq_service.KafkaEvent.Value
 import com.mocker.mq.mq_service.{BrokerType => ProtoBrokerType, _}
