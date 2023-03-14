@@ -4,11 +4,14 @@ package com.mocker.rest;
 
 import "google/protobuf/wrappers.proto";
 import "google/protobuf/timestamp.proto";
+import "com/mocker/rest/request.proto";
 
 service RestMocker {
   rpc createService(CreateServiceRequest) returns (CreateServiceResponse);
 
   rpc createModel(CreateModelRequest) returns (CreateModelResponse);
+
+  rpc createMock(CreateMockRequest) returns (CreateMockResponse);
 }
 
 message CreateServiceRequest {
@@ -29,3 +32,19 @@ message CreateModelRequest {
 }
 
 message CreateModelResponse {}
+
+message CreateMockRequest {
+  string service_path = 1;
+  string name = 2;
+  google.protobuf.StringValue description = 3;
+  string path = 4;
+  Method method = 5;
+  google.protobuf.Int64Value request_model_id = 6;
+  google.protobuf.Int64Value response_model_id = 7;
+  repeated Header request_headers = 8;
+  repeated Header response_headers = 9;
+  repeated string query_params = 10;
+  repeated string path_params = 11;
+}
+
+message CreateMockResponse {}

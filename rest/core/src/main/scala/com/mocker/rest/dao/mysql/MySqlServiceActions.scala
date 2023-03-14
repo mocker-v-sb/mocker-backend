@@ -44,8 +44,10 @@ object MySqlServiceActions {
     def createTime: Rep[Timestamp] = column("creation_time", NotNull, O.SqlType("TIMESTAMP"))
     def updateTime: Rep[Timestamp] = column("update_time", NotNull, O.SqlType("TIMESTAMP"))
     def expirationTime: Rep[Option[Timestamp]] = column("expiration_time", O.SqlType("TIMESTAMP"))
+    def lastModelId: Rep[Long] = column[Long]("last_model_id")
+    def lastMockId: Rep[Long] = column[Long]("last_mock_id")
 
     override def * : ProvenShape[Service] =
-      (id, name, path, url, description, createTime, updateTime, expirationTime) <> ((Service.apply _).tupled, Service.unapply)
+      (id, name, path, url, description, createTime, updateTime, expirationTime, lastModelId, lastMockId) <> ((Service.apply _).tupled, Service.unapply)
   }
 }

@@ -21,6 +21,13 @@ case class RestMockerService(restMockerManager: RestMockerManager) extends RestM
       .mapError(Status.fromThrowable)
       .map(_ => CreateModelResponse())
   }
+
+  override def createMock(request: CreateMockRequest): ZIO[Any, Status, CreateMockResponse] = {
+    restMockerManager
+      .createMock(request.servicePath, convertCreateMockRequest(request))
+      .mapError(Status.fromThrowable)
+      .map(_ => CreateMockResponse())
+  }
 }
 
 object RestMockerService {
