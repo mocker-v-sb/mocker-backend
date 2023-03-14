@@ -15,7 +15,7 @@ lazy val common = (project in file("common"))
   .dependsOn(schemaRegistry)
   .settings(
     ScoverageKeys.coverageEnabled := true,
-    ScoverageKeys.coverageMinimumStmtTotal := 0,
+    ScoverageKeys.coverageMinimumStmtTotal := 80,
     ScoverageKeys.coverageFailOnMinimum := true
   )
 
