@@ -4,7 +4,7 @@ import zhttp.http.Method.{GET, POST}
 import zhttp.http._
 import zio.ZIO
 
-object MockRestApiHandler extends Handler {
+object MockRestApiHandler {
   val prefix: Path = !! / "rest"
 
   lazy val routes: Http[Any, Throwable, Request, Response] = Http.collectZIO[Request] {

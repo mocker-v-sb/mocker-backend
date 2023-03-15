@@ -1,14 +1,14 @@
 package com.mocker.models.mq.requests
 
-import com.mocker.models.mq.BrokerType
+import com.mocker.models.mq.ScalaBrokerType
 import com.mocker.mq.mq_service.GetMessagesRequest.ValueParseType
 import com.mocker.mq.mq_service.{BrokerRequestContainer, GetMessagesRequest => ProtoGetMessagesRequest}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}
 
-case class GetMessagesRequest(brokerType: String, topicName: String, number: Int = 5) {
+case class GetMessagesRequest(brokerType: String, topicName: String, repeat: Int = 5) {
 
   def toMessage: Either[String, ProtoGetMessagesRequest] = {
-    BrokerType.getBrokerType(brokerType) match {
+    ScalaBrokerType.getBrokerType(brokerType) match {
       case Right(bt) =>
         val brokerRequestContainer = BrokerRequestContainer(
           brokerType = bt,
