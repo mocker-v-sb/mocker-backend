@@ -12,6 +12,8 @@ service RestMocker {
   rpc createModel(CreateModelRequest) returns (CreateModelResponse);
 
   rpc createMock(CreateMockRequest) returns (CreateMockResponse);
+
+  rpc createMockStaticResponse(CreateMockStaticResponseRequest) returns (CreateMockStaticResponseResponse);
 }
 
 message CreateServiceRequest {
@@ -41,10 +43,23 @@ message CreateMockRequest {
   Method method = 5;
   google.protobuf.Int64Value request_model_id = 6;
   google.protobuf.Int64Value response_model_id = 7;
-  repeated Header request_headers = 8;
-  repeated Header response_headers = 9;
+  repeated string request_headers = 8;
+  repeated string response_headers = 9;
   repeated string query_params = 10;
   repeated string path_params = 11;
 }
 
 message CreateMockResponse {}
+
+message CreateMockStaticResponseRequest {
+  int64 mock_id = 1;
+  string name = 2;
+  int32 status_code = 3;
+  repeated KVPair request_headers = 4;
+  repeated KVPair response_headers = 5;
+  repeated KVPair query_params = 6;
+  repeated KVPair path_params = 7;
+  string response_content = 8;
+}
+
+message CreateMockStaticResponseResponse {}

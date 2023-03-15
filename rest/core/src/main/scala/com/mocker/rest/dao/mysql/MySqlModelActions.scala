@@ -26,13 +26,11 @@ object MySqlModelActions {
 
   class ModelTable(tag: Tag) extends Table[Model](tag, "model") {
 
-    def id: Rep[Long] = column[Long]("id")
+    def id: Rep[Long] = column[Long]("id", O.PrimaryKey, O.AutoInc)
     def serviceId: Rep[Long] = column[Long]("service_id")
     def name: Rep[String] = column[String]("name")
     def description: Rep[Option[String]] = column[Option[String]]("description")
     def createTime: Rep[Timestamp] = column("creation_time", NotNull, O.SqlType("TIMESTAMP"))
-
-    def pk = primaryKey("pk_m", (id, serviceId))
 
     override def * : ProvenShape[Model] =
       (id, serviceId, name, description, createTime) <> ((Model.apply _).tupled, Model.unapply)

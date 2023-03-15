@@ -1,6 +1,6 @@
 package com.mocker.rest.model
 
-import com.mocker.rest.request.{Header, Method}
+import com.mocker.rest.request.Method
 
 import java.sql.Timestamp
 
@@ -13,8 +13,8 @@ case class Mock(
     method: Method,
     requestModelId: Option[Long],
     responseModelId: Option[Long],
-    requestHeaders: Seq[Header],
-    responseHeaders: Seq[Header],
+    requestHeaders: Seq[String],
+    responseHeaders: Seq[String],
     queryParams: Seq[String],
     pathParams: Seq[String],
     creationTime: Timestamp

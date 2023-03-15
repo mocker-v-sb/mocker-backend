@@ -16,7 +16,7 @@ enum Method {
   PATCH = 4;
 }
 
-message Header {
+message KVPair {
   string name = 1;
   string value = 2;
 }

@@ -5,6 +5,7 @@ import slick.dbio.DBIO
 
 trait MockActions {
   def get(serviceId: Long, path: String): DBIO[Option[Mock]]
+  def get(mockId: Long): DBIO[Option[Mock]]
 
   def getAll(serviceId: Long): DBIO[Seq[Mock]]
 
