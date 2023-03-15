@@ -10,7 +10,5 @@ case class Service(
     description: Option[String],
     creationTime: Timestamp,
     updateTime: Timestamp,
-    expirationTime: Option[Timestamp],
-    lastModelId: Long = 0,
-    lastMockId: Long = 0
+    expirationTime: Option[Timestamp]
 )
