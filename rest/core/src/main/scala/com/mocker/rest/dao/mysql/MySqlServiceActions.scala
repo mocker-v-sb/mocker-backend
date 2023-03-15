@@ -2,11 +2,11 @@ package com.mocker.rest.dao.mysql
 
 import com.mocker.rest.dao.ServiceActions
 import com.mocker.rest.dao.mysql.MySqlServiceActions.ServiceTable
-import com.mocker.rest.model.Service
+import com.mocker.rest.model.{Service, ServiceStats}
 import slick.dbio.DBIO
-import slick.lifted.Tag
+import slick.jdbc.GetResult
 import slick.jdbc.MySQLProfile.api._
-import slick.lifted.ProvenShape
+import slick.lifted.{ProvenShape, Tag}
 import slick.sql.SqlProfile.ColumnOption.NotNull
 
 import java.sql.Timestamp
@@ -15,6 +15,31 @@ import scala.concurrent.ExecutionContext
 case class MySqlServiceActions()(implicit ec: ExecutionContext) extends ServiceActions {
 
   private lazy val table = TableQuery[ServiceTable]
+
+  implicit val getServiceStatsResult: GetResult[ServiceStats] = GetResult(
+    r => ServiceStats(Service(r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<), r.<<, r.<<)
+  )
+
+  override def getWithStats: DBIO[Seq[ServiceStats]] = {
+    sql"""SELECT
+        service.*,
+        COUNT(mock.id),
+        COUNT(model.id)
+    FROM
+        service LEFT JOIN mock ON service.id = mock.service_id LEFT JOIN model on service.id = model.service_id
+    GROUP BY service.id;""".as[ServiceStats]
+  }
+
+  override def search(query: String): DBIO[Seq[ServiceStats]] = {
+    sql"""SELECT
+        service.*,
+        COUNT(mock.id),
+        COUNT(model.id)
+    FROM
+        service LEFT JOIN mock ON service.id = mock.service_id LEFT JOIN model on service.id = model.service_id
+    WHERE service.path LIKE '%$query% OR service.name LIKE '%$query%''
+    GROUP BY service.id;""".as[ServiceStats]
+  }
 
   override def get(serviceId: Long): DBIO[Option[Service]] =
     table.filter(_.id === serviceId).result.headOption

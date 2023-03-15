@@ -2,7 +2,9 @@ package com.mocker.rest.dao.mysql
 
 import com.mocker.rest.dao.ModelActions
 import com.mocker.rest.dao.mysql.MySqlModelActions.ModelTable
+import com.mocker.rest.dao.implicits.MySqlImplicits._
 import com.mocker.rest.model.Model
+import play.api.libs.json.JsValue
 import slick.dbio.DBIO
 import slick.jdbc.MySQLProfile.api._
 import slick.lifted.{ProvenShape, Tag}
@@ -14,6 +16,9 @@ import scala.concurrent.ExecutionContext
 case class MySqlModelActions()(implicit ec: ExecutionContext) extends ModelActions {
 
   private lazy val table = TableQuery[ModelTable]
+
+  override def get(serviceId: Long, modelId: Long): DBIO[Option[Model]] =
+    table.filter(_.serviceId === serviceId).filter(_.id === modelId).result.headOption
 
   override def getAll(serviceId: Long): DBIO[Seq[Model]] =
     table.filter(_.serviceId === serviceId).result
@@ -30,9 +35,10 @@ object MySqlModelActions {
     def serviceId: Rep[Long] = column[Long]("service_id")
     def name: Rep[String] = column[String]("name")
     def description: Rep[Option[String]] = column[Option[String]]("description")
+    def schema: Rep[JsValue] = column("schema")
     def createTime: Rep[Timestamp] = column("creation_time", NotNull, O.SqlType("TIMESTAMP"))
 
     override def * : ProvenShape[Model] =
-      (id, serviceId, name, description, createTime) <> ((Model.apply _).tupled, Model.unapply)
+      (id, serviceId, name, description, schema, createTime) <> ((Model.apply _).tupled, Model.unapply)
   }
 }

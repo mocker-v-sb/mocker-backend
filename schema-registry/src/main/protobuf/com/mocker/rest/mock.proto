@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package com.mocker.rest;
+
+import "google/protobuf/wrappers.proto";
+import "scalapb/scalapb.proto";
+import "com/mocker/rest/request.proto";
+
+option (scalapb.options) = {
+  preserve_unknown_fields: false
+};
+
+message MockSnippet {
+  int64 mockId = 1;
+  string name = 2;
+  google.protobuf.StringValue description = 3;
+  string path = 4;
+  Method method = 5;
+}

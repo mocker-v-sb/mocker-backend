@@ -16,6 +16,12 @@ case class MySqlMockResponseActions()(implicit ec: ExecutionContext) extends Moc
 
   private lazy val table = TableQuery[MockResponseTable]
 
+  override def get(mockId: Long, responseId: Long): DBIO[Option[MockResponse]] =
+    table.filter(_.mockId === mockId).filter(_.id === responseId).result.headOption
+
+  override def getAll(mockId: Long): DBIO[Seq[MockResponse]] =
+    table.filter(_.mockId === mockId).result
+
   override def upsert(mockResponse: MockResponse): DBIO[Unit] =
     table.insertOrUpdate(mockResponse).map(_ => ())
 }
