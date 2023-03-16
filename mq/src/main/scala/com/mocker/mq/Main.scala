@@ -13,8 +13,8 @@ import zio.kafka.producer.{Producer, ProducerSettings}
 object Main extends zio.ZIOAppDefault {
 
   val mqServerAddress = ServerAddress(
-    Environment.conf.getString("mq-server.address"),
-    Environment.conf.getInt("mq-server.port")
+    Environment.conf.getString("mq-server-server.address"),
+    Environment.conf.getInt("mq-server-server.port")
   )
 
   val kafkaAddress = ServerAddress(

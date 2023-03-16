@@ -21,7 +21,7 @@ message CreateTopicResponse {
 }
 
 message SendMessageRequest {
-  BrokerResponseContainer broker_info_container = 1;
+  BrokerInfoContainer broker_info_container = 1;
 
   int32 repeat = 10;
 }
@@ -44,7 +44,7 @@ message GetMessagesRequest {
 }
 
 message GetMessagesResponse {
-  repeated BrokerResponseContainer messages = 1;
+  repeated BrokerInfoContainer messages = 1;
 }
 
 message GetTopicsRequest {
@@ -52,18 +52,12 @@ message GetTopicsRequest {
 }
 
 message GetTopicsResponse {
-  message Topics {
-    repeated string topics = 1;
-  }
+  repeated Queue queues = 1;
+}
 
-  message TopicsGrouped {
-    map<string, Topics> topic_groups = 1;
-  }
-
-  oneof topics {
-    TopicsGrouped topics_grouped = 1;
-    Topics topics_flat = 2;
-  }
+message Queue {
+  BrokerType broker_type = 1;
+  string topic_name = 2;
 }
 
 message BrokerRequestContainer {
@@ -72,7 +66,7 @@ message BrokerRequestContainer {
   string topic = 2;
 }
 
-message BrokerResponseContainer {
+message BrokerInfoContainer {
   oneof container {
     KafkaContainer kafka_container = 1;
     RabbitMqContainer rabbit_mq_container = 2;
