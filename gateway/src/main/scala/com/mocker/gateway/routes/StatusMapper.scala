@@ -4,6 +4,7 @@ import io.grpc.{Status => GrpcStatus}
 import zhttp.http.{Status => HttpStatus}
 
 object StatusMapper {
+
   def grpc2Http(grpcStatus: GrpcStatus): HttpStatus = {
     if (grpcStatus.getCode == GrpcStatus.OK.getCode) HttpStatus.Ok
     else if (grpcStatus.getCode == GrpcStatus.INVALID_ARGUMENT.getCode) HttpStatus.BadRequest

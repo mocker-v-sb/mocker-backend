@@ -1,8 +1,13 @@
 package com.mocker.clients
 
-import com.mocker.models.mq.requests.{CreateTopicRequest => ScalaCreateTopicRequest, GetMessagesRequest => ScalaGetMessagesRequest, SendMessageRequest => ScalaSendMessageRequest}
+import com.mocker.models.mq.requests.{
+  CreateTopicRequest => ScalaCreateTopicRequest,
+  GetMessagesRequest => ScalaGetMessagesRequest,
+  GetTopicsRequest => ScalaGetTopicsRequest,
+  SendMessageRequest => ScalaSendMessageRequest
+}
 import com.mocker.mq.mq_service.ZioMqService.MqMockerClient
-import com.mocker.mq.mq_service.{CreateTopicResponse, GetMessagesResponse, SendMessageResponse}
+import com.mocker.mq.mq_service.{CreateTopicResponse, GetMessagesResponse, GetTopicsResponse, SendMessageResponse}
 import io.grpc.Status
 import zio.{Console, ZIO}
 
@@ -32,4 +37,11 @@ object MqMockerClientService {
       }
     } yield resp
 
+  def getTopics(request: ScalaGetTopicsRequest): ZIO[MqMockerClient.Service, Status, GetTopicsResponse] =
+    for {
+      resp <- request.toMessage match {
+        case Right(message) => MqMockerClient.getTopics(message)
+        case Left(error)    => Console.printError(error).ignoreLogged *> ZIO.fail(Status.INVALID_ARGUMENT)
+      }
+    } yield resp
 }

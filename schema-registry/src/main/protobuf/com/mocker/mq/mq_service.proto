@@ -52,18 +52,12 @@ message GetTopicsRequest {
 }
 
 message GetTopicsResponse {
-  message Topics {
-    repeated string topics = 1;
-  }
+  repeated Queue queues = 1;
+}
 
-  message TopicsGrouped {
-    map<string, Topics> topic_groups = 1;
-  }
-
-  oneof topics {
-    TopicsGrouped topics_grouped = 1;
-    Topics topics_flat = 2;
-  }
+message Queue {
+  BrokerType broker_type = 1;
+  string topic_name = 2;
 }
 
 message BrokerRequestContainer {
