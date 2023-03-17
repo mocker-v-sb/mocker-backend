@@ -18,6 +18,7 @@ trait ModelGen extends BasicGenerators {
       id = id,
       name = name,
       description = Some(description),
+      schema = "{}",
       creationTime = Timestamp.valueOf(dateTimeFormatter.format(Instant.now()))
     )
 }

@@ -24,6 +24,15 @@ object RestMockerException {
   def mockNotExists(mockId: Long): RestMockerException =
     RestMockerException(s"Mock with id $mockId does not exists", Status.NOT_FOUND)
 
+  def modelNotExists(servicePath: String, modelId: Long): RestMockerException =
+    RestMockerException(s"Model with id $modelId does not exists for service $servicePath", Status.NOT_FOUND)
+
+  def mockNotExists(servicePath: String, mockId: Long): RestMockerException =
+    RestMockerException(s"Mock with id $mockId does not exists for service $servicePath", Status.NOT_FOUND)
+
+  def responseNotExists(mockId: Long, responseId: Long): RestMockerException =
+    RestMockerException(s"Response with id $responseId does not exists for mock $mockId", Status.NOT_FOUND)
+
   def invalidMockResponse(mockPath: String, name: String): RestMockerException =
     RestMockerException(
       s"Mock response $name contains invalid arguments for mock at path $mockPath",

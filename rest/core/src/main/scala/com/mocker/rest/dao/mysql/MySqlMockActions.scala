@@ -26,6 +26,8 @@ case class MySqlMockActions()(implicit ec: ExecutionContext) extends MockActions
   override def get(mockId: Long): DBIO[Option[Mock]] =
     table.filter(_.id === mockId).result.headOption
 
+  override def get(serviceId: Long, mockId: Long): DBIO[Option[Mock]] =
+    table.filter(_.serviceId === serviceId).filter(_.id === mockId).result.headOption
   override def upsert(mock: Mock): DBIO[Unit] =
     table.insertOrUpdate(mock).map(_ => ())
 
@@ -41,7 +43,7 @@ object MySqlMockActions {
     def serviceId: Rep[Long] = column[Long]("service_id")
     def name: Rep[String] = column[String]("name")
     def description: Rep[Option[String]] = column[Option[String]]("description")
-    def path: Rep[String] = column[String]("path")
+    def path: Rep[String] = column[String]("path", O.Unique)
     def method: Rep[Method] = column("method")
     def requestModelId: Rep[Option[Long]] = column[Long]("request_model_id")
     def responseModelId: Rep[Option[Long]] = column[Long]("response_model_id")

@@ -5,7 +5,6 @@ import com.mocker.rest.dao.implicits.MySqlImplicits._
 import com.mocker.rest.dao.mysql.MySqlMockResponseActions.MockResponseTable
 import com.mocker.rest.model.MockResponse
 import com.mocker.rest.request.KVPair
-import play.api.libs.json.JsValue
 import slick.dbio.DBIO
 import slick.jdbc.MySQLProfile.api._
 import slick.lifted.{ProvenShape, Rep, Tag}
@@ -15,6 +14,12 @@ import scala.concurrent.ExecutionContext
 case class MySqlMockResponseActions()(implicit ec: ExecutionContext) extends MockResponseActions {
 
   private lazy val table = TableQuery[MockResponseTable]
+
+  override def get(mockId: Long, responseId: Long): DBIO[Option[MockResponse]] =
+    table.filter(_.mockId === mockId).filter(_.id === responseId).result.headOption
+
+  override def getAll(mockId: Long): DBIO[Seq[MockResponse]] =
+    table.filter(_.mockId === mockId).result
 
   override def upsert(mockResponse: MockResponse): DBIO[Unit] =
     table.insertOrUpdate(mockResponse).map(_ => ())
@@ -32,7 +37,7 @@ object MySqlMockResponseActions {
     def responseHeaders: Rep[Seq[KVPair]] = column("response_headers")
     def pathParams: Rep[Seq[KVPair]] = column("path_params")
     def queryParams: Rep[Seq[KVPair]] = column("query_params")
-    def response: Rep[JsValue] = column("response")
+    def response: Rep[String] = column[String]("response")
 
     override def * : ProvenShape[MockResponse] =
       (

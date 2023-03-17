@@ -1,20 +1,14 @@
 package com.mocker.rest.api
 
 import com.mocker.rest.model.{Mock, MockResponse, Model, Service}
-import com.mocker.rest.rest_service.{
-  CreateMockRequest,
-  CreateMockStaticResponseRequest,
-  CreateModelRequest,
-  CreateServiceRequest
-}
-import play.api.libs.json.Json
+import com.mocker.rest.rest_service._
 
 import java.sql.Timestamp
 import java.time.Instant
 
-object Converters {
+object RequestConverters {
 
-  def convertCreateServiceRequest(request: CreateServiceRequest): Service = {
+  def convertCreateServiceRequest(request: CreateService.Request): Service = {
     Service(
       name = request.name,
       path = request.path,
@@ -26,15 +20,16 @@ object Converters {
     )
   }
 
-  def convertCreateModelRequest(request: CreateModelRequest): Model = {
+  def convertCreateModelRequest(request: CreateModel.Request): Model = {
     Model(
       name = request.name,
       description = request.description,
+      schema = request.schema,
       creationTime = Timestamp.from(Instant.now())
     )
   }
 
-  def convertCreateMockRequest(request: CreateMockRequest): Mock = {
+  def convertCreateMockRequest(request: CreateMock.Request): Mock = {
     Mock(
       name = request.name,
       description = request.description,
@@ -50,7 +45,7 @@ object Converters {
     )
   }
 
-  def convertCreateMockResponseRequest(request: CreateMockStaticResponseRequest): MockResponse = {
+  def convertCreateMockResponseRequest(request: CreateMockStaticResponse.Request): MockResponse = {
     MockResponse(
       mockId = request.mockId,
       name = request.name,
@@ -59,7 +54,7 @@ object Converters {
       responseHeaders = request.responseHeaders,
       queryParams = request.queryParams,
       pathParams = request.pathParams,
-      response = Json.parse(request.responseContent)
+      response = request.responseContent
     )
   }
 

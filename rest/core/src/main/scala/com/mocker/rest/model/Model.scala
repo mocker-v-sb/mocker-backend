@@ -7,5 +7,6 @@ case class Model(
     serviceId: Long = 0,
     name: String,
     description: Option[String],
+    schema: String,
     creationTime: Timestamp
 )

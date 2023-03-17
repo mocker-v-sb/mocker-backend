@@ -47,6 +47,4 @@ object Dependencies {
 
   lazy val scalaMock = "org.scalamock" %% "scalamock" % "5.1.0"
 
-  lazy val playJson = "com.typesafe.play" %% "play-json" % "2.9.4"
-
 }
