@@ -2,7 +2,6 @@ package com.mocker.rest.api
 
 import com.mocker.rest.model.{Mock, MockResponse, Model, Service}
 import com.mocker.rest.rest_service._
-import play.api.libs.json.Json
 
 import java.sql.Timestamp
 import java.time.Instant
@@ -25,7 +24,7 @@ object RequestConverters {
     Model(
       name = request.name,
       description = request.description,
-      schema = Json.parse(request.schema),
+      schema = request.schema,
       creationTime = Timestamp.from(Instant.now())
     )
   }
@@ -55,7 +54,7 @@ object RequestConverters {
       responseHeaders = request.responseHeaders,
       queryParams = request.queryParams,
       pathParams = request.pathParams,
-      response = Json.parse(request.responseContent)
+      response = request.responseContent
     )
   }
 

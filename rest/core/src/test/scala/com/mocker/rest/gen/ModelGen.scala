@@ -3,7 +3,6 @@ package com.mocker.rest.gen
 import com.mocker.common.gen.BasicGenerators
 import com.mocker.rest.model.Model
 import org.scalacheck.Gen
-import play.api.libs.json.Json
 
 import java.sql.Timestamp
 import java.time.Instant
@@ -19,7 +18,7 @@ trait ModelGen extends BasicGenerators {
       id = id,
       name = name,
       description = Some(description),
-      schema = Json.parse("{}"),
+      schema = "{}",
       creationTime = Timestamp.valueOf(dateTimeFormatter.format(Instant.now()))
     )
 }

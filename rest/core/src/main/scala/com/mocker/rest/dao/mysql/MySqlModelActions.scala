@@ -4,7 +4,6 @@ import com.mocker.rest.dao.ModelActions
 import com.mocker.rest.dao.mysql.MySqlModelActions.ModelTable
 import com.mocker.rest.dao.implicits.MySqlImplicits._
 import com.mocker.rest.model.Model
-import play.api.libs.json.JsValue
 import slick.dbio.DBIO
 import slick.jdbc.MySQLProfile.api._
 import slick.lifted.{ProvenShape, Tag}
@@ -35,7 +34,7 @@ object MySqlModelActions {
     def serviceId: Rep[Long] = column[Long]("service_id")
     def name: Rep[String] = column[String]("name")
     def description: Rep[Option[String]] = column[Option[String]]("description")
-    def schema: Rep[JsValue] = column("schema")
+    def schema: Rep[String] = column[String]("schema")
     def createTime: Rep[Timestamp] = column("creation_time", NotNull, O.SqlType("TIMESTAMP"))
 
     override def * : ProvenShape[Model] =
