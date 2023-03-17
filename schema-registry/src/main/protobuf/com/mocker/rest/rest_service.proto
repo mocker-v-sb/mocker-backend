@@ -15,18 +15,22 @@ service RestMocker {
   rpc getService(GetService.Request) returns (GetService.Response);
   rpc getAllServices(GetAllServices.Request) returns (GetAllServices.Response);
   rpc searchServices(SearchServices.Request) returns (SearchServices.Response);
+  rpc deleteService(DeleteService.Request) returns (DeleteService.Response);
 
   rpc createModel(CreateModel.Request) returns (CreateModel.Response);
   rpc getModel(GetModel.Request) returns (GetModel.Response);
   rpc getAllServiceModels(GetAllServiceModels.Request) returns (GetAllServiceModels.Response);
+  rpc deleteModel(DeleteModel.Request) returns (DeleteModel.Response);
 
   rpc createMock(CreateMock.Request) returns (CreateMock.Response);
   rpc getMock(GetMock.Request) returns (GetMock.Response);
   rpc getAllServiceMocks(GetAllServiceMocks.Request) returns (GetAllServiceMocks.Response);
+  rpc deleteMock(DeleteMock.Request) returns (DeleteMock.Response);
 
   rpc createMockStaticResponse(CreateMockStaticResponse.Request) returns (CreateMockStaticResponse.Response);
   rpc getMockStaticResponse(GetMockStaticResponse.Request) returns (GetMockStaticResponse.Response);
   rpc getAllMockStaticResponses(GetAllMockStaticResponses.Request) returns (GetAllMockStaticResponses.Response);
+  rpc deleteMockStaticResponse(DeleteMockStaticResponse.Request) returns (DeleteMockStaticResponse.Response);
 }
 
 message CreateService {
@@ -79,6 +83,15 @@ message SearchServices {
   }
 }
 
+message DeleteService {
+
+  message Request {
+    string servicePath = 1;
+  }
+
+  message Response {}
+}
+
 message CreateModel{
 
   message Request {
@@ -114,6 +127,16 @@ message GetAllServiceModels {
   message Response {
     repeated ModelSnippet models = 1;
   }
+}
+
+message DeleteModel {
+
+  message Request {
+    string servicePath = 1;
+    int64 modelId = 2;
+  }
+
+  message Response {}
 }
 
 message CreateMock {
@@ -167,6 +190,16 @@ message GetAllServiceMocks {
   }
 }
 
+message DeleteMock {
+
+  message Request {
+    string servicePath = 1;
+    int64 mockId = 2;
+  }
+
+  message Response {}
+}
+
 message CreateMockStaticResponse {
 
   message Request {
@@ -213,4 +246,15 @@ message GetAllMockStaticResponses {
   message Response {
     repeated MockResponseSnippet mock_responses = 1;
   }
+}
+
+message DeleteMockStaticResponse {
+
+  message Request {
+    string servicePath = 1;
+    int64 mockId = 2;
+    int64 responseId = 3;
+  }
+
+  message Response {}
 }

@@ -1,5 +1,6 @@
 package com.mocker.rest.errors
 
+import com.mocker.rest.model.Mock
 import io.grpc.Status
 
 case class RestMockerException(message: String, status: Status) extends RuntimeException(message)
@@ -32,6 +33,12 @@ object RestMockerException {
 
   def responseNotExists(mockId: Long, responseId: Long): RestMockerException =
     RestMockerException(s"Response with id $responseId does not exists for mock $mockId", Status.NOT_FOUND)
+
+  def modelInUse(servicePath: String, mocks: Seq[Mock]): RestMockerException =
+    RestMockerException(
+      s"Service at path $servicePath uses this model in mocks ${mocks.map(_.path).mkString(",")}",
+      Status.FAILED_PRECONDITION
+    )
 
   def invalidMockResponse(mockPath: String, name: String): RestMockerException =
     RestMockerException(

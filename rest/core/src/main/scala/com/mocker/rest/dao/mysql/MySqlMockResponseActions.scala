@@ -23,6 +23,9 @@ case class MySqlMockResponseActions()(implicit ec: ExecutionContext) extends Moc
 
   override def upsert(mockResponse: MockResponse): DBIO[Unit] =
     table.insertOrUpdate(mockResponse).map(_ => ())
+
+  override def delete(mockId: Long, responseId: Long): DBIO[Unit] =
+    table.filter(_.mockId === mockId).filter(_.id === responseId).delete.map(_ => ())
 }
 
 object MySqlMockResponseActions {

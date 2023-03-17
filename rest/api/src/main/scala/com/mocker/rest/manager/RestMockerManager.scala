@@ -5,6 +5,7 @@ import com.mocker.rest.dao.mysql.{MySqlMockActions, MySqlMockResponseActions, My
 import com.mocker.rest.dao.{MockActions, MockResponseActions, ModelActions, ServiceActions}
 import com.mocker.rest.errors.RestMockerException
 import com.mocker.rest.model.{Mock, MockResponse, Model, Service, ServiceStats}
+import com.mocker.rest.utils.RestMockerUtils._
 import slick.interop.zio.DatabaseProvider
 import zio.{IO, URLayer, ZIO, ZLayer}
 
@@ -22,13 +23,13 @@ case class RestMockerManager(
   def createService(service: Service): IO[RestMockerException, Unit] = {
     for {
       _ <- checkServiceNotExists(service)
-      _ <- serviceActions.upsert(service).asZIO(dbLayer).mapError(RestMockerException.internal)
+      _ <- serviceActions.upsert(service).asZIO(dbLayer).run
     } yield ()
   }
 
   def getService(path: String): IO[RestMockerException, Service] = {
     for {
-      dbService <- serviceActions.get(path).asZIO(dbLayer).mapError(RestMockerException.internal)
+      dbService <- serviceActions.get(path).asZIO(dbLayer).run
       service <- dbService match {
         case Some(service) => ZIO.succeed(service)
         case None          => ZIO.fail(RestMockerException.serviceNotExists(path))
@@ -37,11 +38,18 @@ case class RestMockerManager(
   }
 
   def getServicesWithStats: IO[RestMockerException, Seq[ServiceStats]] = {
-    serviceActions.getWithStats.asZIO(dbLayer).mapError(RestMockerException.internal)
+    serviceActions.getWithStats.asZIO(dbLayer).run
   }
 
   def searchServices(query: String): IO[RestMockerException, Seq[ServiceStats]] = {
-    serviceActions.search(query).asZIO(dbLayer).mapError(RestMockerException.internal)
+    serviceActions.search(query).asZIO(dbLayer).run
+  }
+
+  def deleteService(path: String): IO[RestMockerException, Unit] = {
+    for {
+      service <- getService(path)
+      _ <- serviceActions.delete(service.id).asZIO(dbLayer).run
+    } yield ()
   }
 
   def createModel(servicePath: String, model: Model): IO[RestMockerException, Unit] = {
@@ -50,7 +58,7 @@ case class RestMockerManager(
       _ <- modelActions
         .upsert(model.copy(serviceId = service.id))
         .asZIO(dbLayer)
-        .mapError(RestMockerException.internal)
+        .run
     } yield ()
   }
 
@@ -64,15 +72,26 @@ case class RestMockerManager(
   def getAllServiceModels(servicePath: String): IO[RestMockerException, Seq[Model]] = {
     for {
       service <- getService(servicePath)
-      models <- modelActions.getAll(service.id).asZIO(dbLayer).mapError(RestMockerException.internal)
+      models <- modelActions.getAll(service.id).asZIO(dbLayer).run
     } yield models
+  }
+
+  def deleteModel(servicePath: String, modelId: Long): IO[RestMockerException, Unit] = {
+    for {
+      service <- getService(servicePath)
+      existingMocks <- mockActions.findByModel(service.id, modelId).asZIO(dbLayer).run
+      _ <- if (existingMocks.nonEmpty)
+        ZIO.fail(RestMockerException.modelInUse(servicePath, existingMocks))
+      else
+        ZIO.succeed()
+    } yield ()
   }
 
   def createMock(servicePath: String, mock: Mock): IO[RestMockerException, Unit] = {
     for {
       service <- getService(servicePath)
       _ <- checkMockNotExists(service, mock)
-      _ <- mockActions.upsert(mock.copy(serviceId = service.id)).asZIO(dbLayer).mapError(RestMockerException.internal)
+      _ <- mockActions.upsert(mock.copy(serviceId = service.id)).asZIO(dbLayer).run
     } yield ()
   }
 
@@ -86,15 +105,22 @@ case class RestMockerManager(
   def getAllServiceMocks(servicePath: String): IO[RestMockerException, Seq[Mock]] = {
     for {
       service <- getService(servicePath)
-      mocks <- mockActions.getAll(service.id).asZIO(dbLayer).mapError(RestMockerException.internal)
+      mocks <- mockActions.getAll(service.id).asZIO(dbLayer).run
     } yield mocks
+  }
+
+  def deleteMock(servicePath: String, mockId: Long): IO[RestMockerException, Unit] = {
+    for {
+      service <- getService(servicePath)
+      _ <- mockActions.delete(service.id, mockId).asZIO(dbLayer).run
+    } yield ()
   }
 
   def createMockResponse(mockId: Long, mockResponse: MockResponse): IO[RestMockerException, Unit] = {
     for {
       mock <- checkMockExists(mockId)
       _ <- if (isMockResponseValid(mock, mockResponse))
-        mockResponseActions.upsert(mockResponse).asZIO(dbLayer).mapError(RestMockerException.internal)
+        mockResponseActions.upsert(mockResponse).asZIO(dbLayer).run
       else
         ZIO.fail(RestMockerException.invalidMockResponse(mock.path, mockResponse.name))
     } yield ()
@@ -112,8 +138,14 @@ case class RestMockerManager(
     for {
       service <- getService(servicePath)
       mock <- checkMockExists(service, mockId)
-      mockResponses <- mockResponseActions.getAll(mock.id).asZIO(dbLayer).mapError(RestMockerException.internal)
+      mockResponses <- mockResponseActions.getAll(mock.id).asZIO(dbLayer).run
     } yield (mock, mockResponses)
+  }
+
+  def deleteMockStaticResponse(servicePath: String, mockId: Long, responseId: Long): IO[RestMockerException, Unit] = {
+    for {
+      service <- getService(servicePath)
+    } yield ()
   }
 
   private def getMockResponse(mockId: Long, responseId: Long): IO[RestMockerException, MockResponse] = {
@@ -121,7 +153,7 @@ case class RestMockerManager(
       dbResponse <- mockResponseActions
         .get(mockId = mockId, responseId = responseId)
         .asZIO(dbLayer)
-        .mapError(RestMockerException.internal)
+        .run
       result <- dbResponse match {
         case Some(response) => ZIO.succeed(response)
         case None           => ZIO.fail(RestMockerException.responseNotExists(mockId = mockId, responseId = responseId))
@@ -131,7 +163,7 @@ case class RestMockerManager(
 
   private def checkServiceNotExists(service: Service): IO[RestMockerException, Unit] = {
     for {
-      dbService <- serviceActions.get(service.path).asZIO(dbLayer).mapError(RestMockerException.internal)
+      dbService <- serviceActions.get(service.path).asZIO(dbLayer).run
       _ <- if (dbService.isDefined)
         ZIO.fail(RestMockerException.serviceAlreadyExists(service.path))
       else
@@ -141,10 +173,7 @@ case class RestMockerManager(
 
   private def checkModelExists(service: Service, modelId: Long): IO[RestMockerException, Model] = {
     for {
-      dbModel <- modelActions
-        .get(serviceId = service.id, modelId = modelId)
-        .asZIO(dbLayer)
-        .mapError(RestMockerException.internal)
+      dbModel <- modelActions.get(serviceId = service.id, modelId = modelId).asZIO(dbLayer).run
       result <- dbModel match {
         case Some(model) => ZIO.succeed(model)
         case None        => ZIO.fail(RestMockerException.modelNotExists(servicePath = service.path, modelId = modelId))
@@ -154,7 +183,7 @@ case class RestMockerManager(
 
   private def checkMockNotExists(service: Service, mock: Mock): IO[RestMockerException, Unit] = {
     for {
-      dbMock <- mockActions.get(service.id, mock.path).asZIO(dbLayer).mapError(RestMockerException.internal)
+      dbMock <- mockActions.get(service.id, mock.path).asZIO(dbLayer).run
       _ <- if (dbMock.isDefined)
         ZIO.fail(RestMockerException.mockAlreadyExists(servicePath = service.path, mockPath = mock.path))
       else
@@ -164,7 +193,7 @@ case class RestMockerManager(
 
   private def checkMockExists(mockId: Long): IO[RestMockerException, Mock] = {
     for {
-      dbMock <- mockActions.get(mockId).asZIO(dbLayer).mapError(RestMockerException.internal)
+      dbMock <- mockActions.get(mockId).asZIO(dbLayer).run
       mock <- dbMock match {
         case Some(mock) => ZIO.succeed(mock)
         case None       => ZIO.fail(RestMockerException.mockNotExists(mockId))
@@ -174,10 +203,7 @@ case class RestMockerManager(
 
   private def checkMockExists(service: Service, mockId: Long): IO[RestMockerException, Mock] = {
     for {
-      dbMock <- mockActions
-        .get(serviceId = service.id, mockId = mockId)
-        .asZIO(dbLayer)
-        .mapError(RestMockerException.internal)
+      dbMock <- mockActions.get(serviceId = service.id, mockId = mockId).asZIO(dbLayer).run
       result <- dbMock match {
         case Some(mock) => ZIO.succeed(mock)
         case None       => ZIO.fail(RestMockerException.mockNotExists(servicePath = service.path, mockId = mockId))

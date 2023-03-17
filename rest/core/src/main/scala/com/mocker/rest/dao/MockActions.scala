@@ -11,4 +11,8 @@ trait MockActions {
   def getAll(serviceId: Long): DBIO[Seq[Mock]]
 
   def upsert(mock: Mock): DBIO[Unit]
+
+  def findByModel(serviceId: Long, modelId: Long): DBIO[Seq[Mock]]
+
+  def delete(serviceId: Long, mockId: Long): DBIO[Unit]
 }

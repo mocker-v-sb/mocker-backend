@@ -7,4 +7,6 @@ trait MockResponseActions {
   def get(mockId: Long, responseId: Long): DBIO[Option[MockResponse]]
   def getAll(mockId: Long): DBIO[Seq[MockResponse]]
   def upsert(mockResponse: MockResponse): DBIO[Unit]
+
+  def delete(mockId: Long, responseId: Long): DBIO[Unit]
 }

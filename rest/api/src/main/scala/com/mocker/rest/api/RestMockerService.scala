@@ -106,6 +106,36 @@ case class RestMockerService(restMockerManager: RestMockerManager) extends RestM
       .mapError(_.status)
       .map { case (mock, responses) => toGetAllMockStaticResponses(mock, responses) }
   }
+
+  override def deleteService(request: DeleteService.Request): IO[Status, DeleteService.Response] = {
+    restMockerManager
+      .deleteService(request.servicePath)
+      .mapError(_.status)
+      .map(_ => DeleteService.Response())
+  }
+
+  override def deleteModel(request: DeleteModel.Request): ZIO[Any, Status, DeleteModel.Response] = {
+    restMockerManager
+      .deleteModel(request.servicePath, request.modelId)
+      .mapError(_.status)
+      .map(_ => DeleteModel.Response())
+  }
+
+  override def deleteMock(request: DeleteMock.Request): ZIO[Any, Status, DeleteMock.Response] = {
+    restMockerManager
+      .deleteMock(request.servicePath, request.mockId)
+      .mapError(_.status)
+      .map(_ => DeleteMock.Response())
+  }
+
+  override def deleteMockStaticResponse(
+      request: DeleteMockStaticResponse.Request
+  ): ZIO[Any, Status, DeleteMockStaticResponse.Response] = {
+    restMockerManager
+      .deleteMockStaticResponse(request.servicePath, request.mockId, request.responseId)
+      .mapError(_.status)
+      .map(_ => DeleteMockStaticResponse.Response())
+  }
 }
 
 object RestMockerService {
