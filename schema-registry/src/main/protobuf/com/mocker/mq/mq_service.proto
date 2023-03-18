@@ -100,6 +100,15 @@ enum BrokerType {
   BROKER_TYPE_RABBITMQ = 2;
 }
 
+message DeleteTopicRequest {
+  BrokerType broker_type = 1;
+  string topic_name = 2;
+}
+
+message DeleteTopicResponse {
+  bool success = 1;
+}
+
 service MqMocker {
   rpc CreateTopic(CreateTopicRequest) returns (CreateTopicResponse);
 
@@ -108,4 +117,6 @@ service MqMocker {
   rpc GetMessages(GetMessagesRequest) returns (GetMessagesResponse);
 
   rpc GetTopics(GetTopicsRequest) returns (GetTopicsResponse);
+
+  rpc DeleteTopic(DeleteTopicRequest) returns (DeleteTopicResponse);
 }
