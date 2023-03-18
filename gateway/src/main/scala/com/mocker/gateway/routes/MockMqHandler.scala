@@ -90,10 +90,15 @@ object MockMqHandler {
         }).either
         response <- protoResponse match {
           case Right(pResp) =>
-            ZIO.succeed {
-              Response
-                .json(ScalaGetTopicsResponse.fromMessage(pResp).toJson)
+            ScalaGetTopicsResponse.fromMessage(pResp) match {
+              case Right(resp) => ZIO.succeed {
+                Response
+                  .json(resp.toJson
+                )
                 .setStatus(HttpStatus.Ok)
+              }
+              case Left(error) => Console.printError("error", error).ignoreLogged *>
+                ZIO.succeed(Response.status(HttpStatus.InternalServerError))
             }
           case Left(errSt) => ZIO.succeed(Response.status(StatusMapper.grpc2Http(errSt)))
         }
