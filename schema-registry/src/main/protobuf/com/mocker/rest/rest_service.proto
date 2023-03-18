@@ -21,16 +21,19 @@ service RestMocker {
   rpc getModel(GetModel.Request) returns (GetModel.Response);
   rpc getAllServiceModels(GetAllServiceModels.Request) returns (GetAllServiceModels.Response);
   rpc deleteModel(DeleteModel.Request) returns (DeleteModel.Response);
+  rpc deleteAllModels(DeleteAllModels.Request) returns (DeleteAllModels.Response);
 
   rpc createMock(CreateMock.Request) returns (CreateMock.Response);
   rpc getMock(GetMock.Request) returns (GetMock.Response);
   rpc getAllServiceMocks(GetAllServiceMocks.Request) returns (GetAllServiceMocks.Response);
   rpc deleteMock(DeleteMock.Request) returns (DeleteMock.Response);
+  rpc deleteAllMocks(DeleteAllMocks.Request) returns (DeleteAllMocks.Response);
 
   rpc createMockStaticResponse(CreateMockStaticResponse.Request) returns (CreateMockStaticResponse.Response);
   rpc getMockStaticResponse(GetMockStaticResponse.Request) returns (GetMockStaticResponse.Response);
   rpc getAllMockStaticResponses(GetAllMockStaticResponses.Request) returns (GetAllMockStaticResponses.Response);
   rpc deleteMockStaticResponse(DeleteMockStaticResponse.Request) returns (DeleteMockStaticResponse.Response);
+  rpc deleteAllMockStatisResponses(DeleteAllMockStaticResponses.Request) returns (DeleteAllMockStaticResponses.Response);
 }
 
 message CreateService {
@@ -139,6 +142,17 @@ message DeleteModel {
   message Response {}
 }
 
+message DeleteAllModels {
+
+  message Request {
+    string servicePath = 1;
+  }
+
+  message Response {
+
+  }
+}
+
 message CreateMock {
 
   message Request {
@@ -200,6 +214,17 @@ message DeleteMock {
   message Response {}
 }
 
+message DeleteAllMocks {
+
+  message Request {
+    string servicePath = 1;
+  }
+
+  message Response {
+
+  }
+}
+
 message CreateMockStaticResponse {
 
   message Request {
@@ -257,4 +282,16 @@ message DeleteMockStaticResponse {
   }
 
   message Response {}
+}
+
+message DeleteAllMockStaticResponses {
+
+  message Request {
+    string servicePath = 1;
+    int64 mockId = 2;
+  }
+
+  message Response {
+
+  }
 }

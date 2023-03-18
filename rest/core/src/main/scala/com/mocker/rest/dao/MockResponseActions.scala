@@ -9,4 +9,6 @@ trait MockResponseActions {
   def upsert(mockResponse: MockResponse): DBIO[Unit]
 
   def delete(mockId: Long, responseId: Long): DBIO[Unit]
+
+  def deleteAll(mockId: Long): DBIO[Unit]
 }

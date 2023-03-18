@@ -37,7 +37,7 @@ object RestMockerException {
   def modelInUse(servicePath: String, mocks: Seq[Mock]): RestMockerException =
     RestMockerException(
       s"Service at path $servicePath uses this model in mocks ${mocks.map(_.path).mkString(",")}",
-      Status.FAILED_PRECONDITION
+      Status.INVALID_ARGUMENT
     )
 
   def invalidMockResponse(mockPath: String, name: String): RestMockerException =

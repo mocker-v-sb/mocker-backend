@@ -42,6 +42,9 @@ case class MySqlMockActions()(implicit ec: ExecutionContext) extends MockActions
 
   override def delete(serviceId: Long, mockId: Long): DBIO[Unit] =
     table.filter(_.serviceId === serviceId).filter(_.id === mockId).delete.map(_ => ())
+
+  override def deleteAll(serviceId: Long): DBIO[Unit] =
+    table.filter(_.serviceId === serviceId).delete.map(_ => ())
 }
 
 object MySqlMockActions {

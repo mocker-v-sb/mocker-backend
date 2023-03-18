@@ -24,6 +24,12 @@ case class MySqlModelActions()(implicit ec: ExecutionContext) extends ModelActio
 
   override def upsert(model: Model): DBIO[Unit] =
     table.insertOrUpdate(model).map(_ => ())
+
+  override def delete(serviceId: Long, modelId: Long): DBIO[Unit] =
+    table.filter(_.serviceId === serviceId).filter(_.id === modelId).delete.map(_ => ())
+
+  override def deleteAll(serviceId: Long): DBIO[Unit] =
+    table.filter(_.serviceId === serviceId).delete.map(_ => ())
 }
 
 object MySqlModelActions {

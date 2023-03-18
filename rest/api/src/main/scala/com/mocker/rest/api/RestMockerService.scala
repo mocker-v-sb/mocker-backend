@@ -68,7 +68,7 @@ case class RestMockerService(restMockerManager: RestMockerManager) extends RestM
 
   override def getAllServiceModels(
       request: GetAllServiceModels.Request
-  ): ZIO[Any, Status, GetAllServiceModels.Response] = {
+  ): IO[Status, GetAllServiceModels.Response] = {
     restMockerManager
       .getAllServiceModels(request.servicePath)
       .mapError(_.status)
@@ -114,14 +114,14 @@ case class RestMockerService(restMockerManager: RestMockerManager) extends RestM
       .map(_ => DeleteService.Response())
   }
 
-  override def deleteModel(request: DeleteModel.Request): ZIO[Any, Status, DeleteModel.Response] = {
+  override def deleteModel(request: DeleteModel.Request): IO[Status, DeleteModel.Response] = {
     restMockerManager
       .deleteModel(request.servicePath, request.modelId)
       .mapError(_.status)
       .map(_ => DeleteModel.Response())
   }
 
-  override def deleteMock(request: DeleteMock.Request): ZIO[Any, Status, DeleteMock.Response] = {
+  override def deleteMock(request: DeleteMock.Request): IO[Status, DeleteMock.Response] = {
     restMockerManager
       .deleteMock(request.servicePath, request.mockId)
       .mapError(_.status)
@@ -130,11 +130,34 @@ case class RestMockerService(restMockerManager: RestMockerManager) extends RestM
 
   override def deleteMockStaticResponse(
       request: DeleteMockStaticResponse.Request
-  ): ZIO[Any, Status, DeleteMockStaticResponse.Response] = {
+  ): IO[Status, DeleteMockStaticResponse.Response] = {
     restMockerManager
       .deleteMockStaticResponse(request.servicePath, request.mockId, request.responseId)
       .mapError(_.status)
       .map(_ => DeleteMockStaticResponse.Response())
+  }
+
+  override def deleteAllModels(request: DeleteAllModels.Request): IO[Status, DeleteAllModels.Response] = {
+    restMockerManager
+      .deleteAllModels(request.servicePath)
+      .mapError(_.status)
+      .map(_ => DeleteAllModels.Response())
+  }
+
+  override def deleteAllMocks(request: DeleteAllMocks.Request): IO[Status, DeleteAllMocks.Response] = {
+    restMockerManager
+      .deleteAllMocks(request.servicePath)
+      .mapError(_.status)
+      .map(_ => DeleteAllMocks.Response())
+  }
+
+  override def deleteAllMockStatisResponses(
+      request: DeleteAllMockStaticResponses.Request
+  ): IO[Status, DeleteAllMockStaticResponses.Response] = {
+    restMockerManager
+      .deleteAllMockStaticResponses(request.servicePath, request.mockId)
+      .mapError(_.status)
+      .map(_ => DeleteAllMockStaticResponses.Response())
   }
 }
 
