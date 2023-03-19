@@ -8,13 +8,13 @@ import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}
 case class GetTopicsResponse(queues: Seq[Queue])
 
 object GetTopicsResponse {
-  case class Queue(brokerType: String, name: String)
+  case class Queue(brokerType: String, topicName: String)
 
   object Queue {
 
     def fromMessage(message: ProtoQueue): Either[String, Queue] = {
       ScalaBrokerType.fromMessage(message.brokerType) match {
-        case Right(sbt)  => Right(Queue(brokerType = sbt, name = message.topicName))
+        case Right(sbt)  => Right(Queue(brokerType = sbt, topicName = message.topicName))
         case Left(error) => Left(error)
       }
     }

@@ -8,14 +8,14 @@ import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}
 case class GetMessagesResponse(messages: Seq[Event])
 
 object GetMessagesResponse {
-  case class Event(topic: String, key: String, content: String)
+  case class Event(key: String, content: String)
 
   object Event {
 
     def fromMessage(kafkaContainer: KafkaContainer): Either[String, Event] = {
       kafkaContainer.content.map(
         ke =>
-          Event(topic = kafkaContainer.topic, key = ke.key, content = ke.value match {
+          Event(key = ke.key, content = ke.value match {
             case Value.Empty            => "NAN"
             case Value.StringValue(str) => str
           })
