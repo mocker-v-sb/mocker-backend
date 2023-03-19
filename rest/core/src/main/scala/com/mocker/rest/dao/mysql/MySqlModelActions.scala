@@ -2,19 +2,19 @@ package com.mocker.rest.dao.mysql
 
 import com.mocker.rest.dao.ModelActions
 import com.mocker.rest.dao.mysql.MySqlModelActions.ModelTable
-import com.mocker.rest.dao.implicits.MySqlImplicits._
 import com.mocker.rest.model.Model
 import slick.dbio.DBIO
 import slick.jdbc.MySQLProfile.api._
 import slick.lifted.{ProvenShape, Tag}
-import slick.sql.SqlProfile.ColumnOption.NotNull
 
-import java.sql.Timestamp
 import scala.concurrent.ExecutionContext
 
 case class MySqlModelActions()(implicit ec: ExecutionContext) extends ModelActions {
 
   private lazy val table = TableQuery[ModelTable]
+
+  override def get(modelId: Long): DBIO[Option[Model]] =
+    table.filter(_.id === modelId).result.headOption
 
   override def get(serviceId: Long, modelId: Long): DBIO[Option[Model]] =
     table.filter(_.serviceId === serviceId).filter(_.id === modelId).result.headOption

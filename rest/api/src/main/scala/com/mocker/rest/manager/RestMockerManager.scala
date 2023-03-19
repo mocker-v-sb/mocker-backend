@@ -5,6 +5,9 @@ import com.mocker.rest.dao.mysql.{MySqlMockActions, MySqlMockResponseActions, My
 import com.mocker.rest.dao.{MockActions, MockResponseActions, ModelActions, ServiceActions}
 import com.mocker.rest.errors.RestMockerException
 import com.mocker.rest.model._
+import com.mocker.rest.utils.MockMatchers._
+import com.mocker.rest.utils.Orderings._
+import com.mocker.rest.utils.PathUtils._
 import com.mocker.rest.utils.RestMockerUtils._
 import slick.dbio.DBIO
 import slick.interop.zio.DatabaseProvider
@@ -20,6 +23,50 @@ case class RestMockerManager(
 ) {
 
   private val dbLayer = ZLayer.succeed(restMockerDbProvider)
+
+  def getMockResponse(query: MockQuery): IO[RestMockerException, MockQueryResponse] = {
+    for {
+      service <- getService(query.servicePath)
+      allMocks <- mockActions.getAll(service.id).asZIO(dbLayer).run
+      suitableMocks = allMocks.filter(_.matches(query))
+      responses <- DBIO
+        .sequence(suitableMocks.map(mock => mockResponseActions.getAll(mock.id)))
+        .asZIO(dbLayer)
+        .run
+        .map(_.flatten)
+      suitableResponses = suitableMocks
+        .zip(responses)
+        .map {
+          case (mock, response) => (extractPathParams(query.requestPath, mock), response)
+        }
+        .filter {
+          case (pathParams, response) => pathParams.sorted == response.pathParams.sorted && response.matches(query)
+        }
+        .map {
+          case (_, response) => response
+        }
+      result <- chooseMockResponse(suitableMocks, suitableResponses)
+    } yield result
+  }
+
+  private def chooseMockResponse(
+      mocks: Seq[Mock],
+      responses: Seq[MockResponse]
+  ): IO[RestMockerException, MockQueryResponse] = {
+    (mocks.toList, responses.toList) match {
+      case (_, response :: _) => ZIO.succeed(MockQueryResponse.fromMockResponse(response))
+      case (mock :: _, _) =>
+        for {
+          modelOpt <- mock.responseModelId match {
+            case Some(id) => modelActions.get(id).asZIO(dbLayer).run
+            case None     => ZIO.succeed(None)
+          }
+          response = modelOpt.map(model => MockQueryResponse.fromModel(model)).getOrElse(MockQueryResponse.default)
+          result <- ZIO.succeed(response)
+        } yield result
+      case (_, _) => ZIO.fail(RestMockerException.suitableMockNotFound)
+    }
+  }
 
   def createService(service: Service): IO[RestMockerException, Unit] = {
     for {

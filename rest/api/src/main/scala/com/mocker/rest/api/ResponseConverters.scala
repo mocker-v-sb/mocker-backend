@@ -4,7 +4,7 @@ import com.google.protobuf.util.Timestamps
 import com.google.protobuf.timestamp.{Timestamp => GoogleTimestamp}
 import com.mocker.rest.mock.MockSnippet
 import com.mocker.rest.mock_response.MockResponseSnippet
-import com.mocker.rest.model.{Mock, MockResponse, Model, ModelSnippet, Service, ServiceStats}
+import com.mocker.rest.model.{Mock, MockQueryResponse, MockResponse, Model, ModelSnippet, Service, ServiceStats}
 import com.mocker.rest.rest_service._
 import com.mocker.rest.service.ServiceSnippet
 import com.mocker.rest.utils.PathUtils.buildFullPath
@@ -87,6 +87,14 @@ object ResponseConverters {
       name = mockResponse.name,
       statusCode = mockResponse.statusCode,
       fullPath = buildFullPath(mock, mockResponse)
+    )
+  }
+
+  def toGetResponse(queryResponse: MockQueryResponse): GetResponse.Response = {
+    GetResponse.Response(
+      statusCode = queryResponse.statusCode,
+      content = queryResponse.content,
+      headers = queryResponse.headers
     )
   }
 
