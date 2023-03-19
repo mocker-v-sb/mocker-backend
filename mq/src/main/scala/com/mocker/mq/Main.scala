@@ -39,7 +39,7 @@ object Main extends zio.ZIOAppDefault {
 
   val adminClientSettings = ZLayer.succeed(
     AdminClientSettings(
-      List("localhost:29092"),
+      List(kafkaAddress),
       closeTimeout = 30.seconds,
       properties = Map[String, AnyRef]()
     )

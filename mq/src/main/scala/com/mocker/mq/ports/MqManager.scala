@@ -13,4 +13,6 @@ trait MqManager {
   def getMessages(request: GetMessagesRequest): IO[BrokerManagerException, GetMessagesResponse]
 
   def getTopics(request: GetTopicsRequest): IO[BrokerManagerException, GetTopicsResponse]
+
+  def deleteTopic(request: DeleteTopicRequest): IO[BrokerManagerException, DeleteTopicResponse]
 }

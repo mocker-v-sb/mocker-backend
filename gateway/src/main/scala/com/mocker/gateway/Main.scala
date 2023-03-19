@@ -27,7 +27,6 @@ object Main extends ZIOAppDefault {
     )
 
   val routes: Http[MqMockerClient.Service, Throwable, Request, Response] = MockMqHandler.routes
-//    HealthCheckHandler.routes ++
 
   val program: ZIO[Any, Throwable, ExitCode] = for {
     _ <- Console.printLine(s"Starting server on $serverAddress")

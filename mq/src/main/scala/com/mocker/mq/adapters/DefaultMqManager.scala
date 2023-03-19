@@ -172,6 +172,52 @@ case class DefaultMqManager(kafkaController: KafkaController) extends MqManager 
       }
     } yield GetTopicsResponse(queues = topics.values.map(t => Queue(ProtoBrokerType.BROKER_TYPE_KAFKA, t.name)).toSeq)
 
+  def deleteTopic(request: DeleteTopicRequest): IO[BrokerManagerException, DeleteTopicResponse] = {
+
+    for {
+      _ <- request.brokerType match {
+        case ProtoBrokerType.BROKER_TYPE_KAFKA =>
+          ZIO
+            .attempt(kafkaController.adminClient.deleteTopic(request.topicName))
+            .orElseFail(
+              BrokerManagerException.couldNotDeleteTopic(
+                request.topicName,
+                BrokerType.Kafka,
+                "Reason unknown",
+                Status.INTERNAL
+              )
+            )
+        case ProtoBrokerType.BROKER_TYPE_RABBITMQ =>
+          ZIO.fail(
+            BrokerManagerException.couldNotDeleteTopic(
+              request.topicName,
+              BrokerType.Unknown,
+              s"RabbitMQ not supported yet",
+              Status.UNIMPLEMENTED
+            )
+          )
+        case ProtoBrokerType.Unrecognized(unrecognizedValue) =>
+          ZIO.fail(
+            BrokerManagerException.couldNotDeleteTopic(
+              request.topicName,
+              BrokerType.Unknown,
+              s"Unrecognized broker type $unrecognizedValue",
+              Status.INVALID_ARGUMENT
+            )
+          )
+        case _ =>
+          ZIO.fail(
+            BrokerManagerException.couldNotDeleteTopic(
+              request.topicName,
+              BrokerType.Unknown,
+              "Broker type not defined",
+              Status.INVALID_ARGUMENT
+            )
+          )
+      }
+    } yield DeleteTopicResponse(success = true)
+  }
+
   private def newTopic(topicName: String): UIO[AdminClient.NewTopic] =
     ZIO.succeed(AdminClient.NewTopic(topicName, 1, 1))
 

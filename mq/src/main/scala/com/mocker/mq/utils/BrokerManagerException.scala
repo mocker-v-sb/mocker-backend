@@ -38,4 +38,12 @@ object BrokerManagerException {
       grpcStatus: Status
   ): BrokerManagerException =
     BrokerManagerException(s"Could not get $brokerType topics list due to: $reason", grpcStatus)
+
+  def couldNotDeleteTopic(
+      topicName: String,
+      brokerType: BrokerType,
+      reason: String = "Unknown error",
+      grpcStatus: Status
+  ): BrokerManagerException =
+    BrokerManagerException(s"Could not delete $brokerType topic $topicName due to: $reason", grpcStatus)
 }

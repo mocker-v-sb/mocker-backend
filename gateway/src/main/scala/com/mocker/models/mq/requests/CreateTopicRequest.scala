@@ -6,7 +6,7 @@ import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}
 
 case class CreateTopicRequest(brokerType: String, topicName: String) {
 
-  def toProto: Either[String, ProtoCreateTopicRequest] = {
+  def toMessage: Either[String, ProtoCreateTopicRequest] = {
     ScalaBrokerType.getBrokerType(brokerType) match {
       case Right(value) => Right(ProtoCreateTopicRequest(brokerType = value, topicName = topicName))
       case Left(value)  => Left(value)

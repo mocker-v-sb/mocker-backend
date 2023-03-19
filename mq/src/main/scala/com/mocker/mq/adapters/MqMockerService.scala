@@ -27,6 +27,11 @@ case class MqMockerService(brokerManager: MqManager) extends MqMocker {
     (for {
       res <- brokerManager.getTopics(request)
     } yield res).tapError(err => Console.printError(err.msg).ignoreLogged).mapError(_.grpcStatus)
+
+  override def deleteTopic(request: DeleteTopicRequest): ZIO[Any, Status, DeleteTopicResponse] =
+    (for {
+      res <- brokerManager.deleteTopic(request)
+    } yield res).tapError(err => Console.printError(err.msg).ignoreLogged).mapError(_.grpcStatus)
 }
 
 object MqMockerService {
