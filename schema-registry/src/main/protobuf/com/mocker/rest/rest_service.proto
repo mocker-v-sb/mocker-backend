@@ -11,6 +11,8 @@ import "com/mocker/rest/mock.proto";
 import "com/mocker/rest/mock_response.proto";
 
 service RestMocker {
+  rpc getResponse(GetResponse.Request) returns (GetResponse.Response);
+
   rpc createService(CreateService.Request) returns (CreateService.Response);
   rpc getService(GetService.Request) returns (GetService.Response);
   rpc getAllServices(GetAllServices.Request) returns (GetAllServices.Response);
@@ -38,6 +40,24 @@ service RestMocker {
   rpc updateMockStaticResponse(UpdateMockStaticResponse.Request) returns (UpdateMockStaticResponse.Response);
   rpc deleteMockStaticResponse(DeleteMockStaticResponse.Request) returns (DeleteMockStaticResponse.Response);
   rpc deleteAllMockStatisResponses(DeleteAllMockStaticResponses.Request) returns (DeleteAllMockStaticResponses.Response);
+}
+
+message GetResponse {
+
+  message Request {
+    string service_path = 1;
+    string request_path = 2;
+    Method method = 3;
+    google.protobuf.StringValue body = 4;
+    repeated KVPair headers = 5;
+    repeated KVPair query_params = 6;
+  }
+
+  message Response {
+    int32 status_code = 1;
+    string content = 2;
+    repeated KVPair headers = 3;
+  }
 }
 
 message CreateService {

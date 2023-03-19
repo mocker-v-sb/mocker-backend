@@ -1,6 +1,6 @@
 package com.mocker.rest.api
 
-import com.mocker.rest.model.{Mock, MockPatch, MockResponse, Model, Service}
+import com.mocker.rest.model.{Mock, MockPatch, MockQuery, MockResponse, Model, Service}
 import com.mocker.rest.rest_service._
 
 import java.sql.Timestamp
@@ -96,6 +96,17 @@ object RequestConverters {
       queryParams = request.queryParams,
       pathParams = request.pathParams,
       response = request.responseContent
+    )
+  }
+
+  def convertGetResponseRequest(request: GetResponse.Request): MockQuery = {
+    MockQuery(
+      servicePath = request.servicePath,
+      requestPath = request.requestPath,
+      method = request.method,
+      body = request.body,
+      headers = request.headers,
+      queryParams = request.queryParams
     )
   }
 

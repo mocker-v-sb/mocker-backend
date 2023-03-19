@@ -194,6 +194,13 @@ case class RestMockerService(restMockerManager: RestMockerManager) extends RestM
       .mapError(_.status)
       .map(_ => UpdateMockStaticResponse.Response())
   }
+
+  override def getResponse(request: GetResponse.Request): IO[Status, GetResponse.Response] = {
+    restMockerManager
+      .getMockResponse(convertGetResponseRequest(request))
+      .mapError(_.status)
+      .map(toGetResponse)
+  }
 }
 
 object RestMockerService {

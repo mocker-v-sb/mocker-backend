@@ -45,4 +45,7 @@ object RestMockerException {
       s"Mock response $name contains invalid arguments for mock at path $mockPath",
       Status.INVALID_ARGUMENT
     )
+
+  def suitableMockNotFound: RestMockerException =
+    RestMockerException("Could not find suitable mock", Status.NOT_FOUND)
 }
