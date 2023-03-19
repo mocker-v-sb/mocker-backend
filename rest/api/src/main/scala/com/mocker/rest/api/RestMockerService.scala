@@ -18,7 +18,7 @@ case class RestMockerService(restMockerManager: RestMockerManager) extends RestM
 
   override def createModel(request: CreateModel.Request): IO[Status, CreateModel.Response] = {
     restMockerManager
-      .createModel(request.servicePath, convertCreateModelRequest(request))
+      .upsertModel(request.servicePath, convertCreateModelRequest(request))
       .mapError(_.status)
       .map(_ => CreateModel.Response())
   }
@@ -68,7 +68,7 @@ case class RestMockerService(restMockerManager: RestMockerManager) extends RestM
 
   override def getAllServiceModels(
       request: GetAllServiceModels.Request
-  ): ZIO[Any, Status, GetAllServiceModels.Response] = {
+  ): IO[Status, GetAllServiceModels.Response] = {
     restMockerManager
       .getAllServiceModels(request.servicePath)
       .mapError(_.status)
@@ -114,14 +114,14 @@ case class RestMockerService(restMockerManager: RestMockerManager) extends RestM
       .map(_ => DeleteService.Response())
   }
 
-  override def deleteModel(request: DeleteModel.Request): ZIO[Any, Status, DeleteModel.Response] = {
+  override def deleteModel(request: DeleteModel.Request): IO[Status, DeleteModel.Response] = {
     restMockerManager
       .deleteModel(request.servicePath, request.modelId)
       .mapError(_.status)
       .map(_ => DeleteModel.Response())
   }
 
-  override def deleteMock(request: DeleteMock.Request): ZIO[Any, Status, DeleteMock.Response] = {
+  override def deleteMock(request: DeleteMock.Request): IO[Status, DeleteMock.Response] = {
     restMockerManager
       .deleteMock(request.servicePath, request.mockId)
       .mapError(_.status)
@@ -130,11 +130,69 @@ case class RestMockerService(restMockerManager: RestMockerManager) extends RestM
 
   override def deleteMockStaticResponse(
       request: DeleteMockStaticResponse.Request
-  ): ZIO[Any, Status, DeleteMockStaticResponse.Response] = {
+  ): IO[Status, DeleteMockStaticResponse.Response] = {
     restMockerManager
       .deleteMockStaticResponse(request.servicePath, request.mockId, request.responseId)
       .mapError(_.status)
       .map(_ => DeleteMockStaticResponse.Response())
+  }
+
+  override def deleteAllModels(request: DeleteAllModels.Request): IO[Status, DeleteAllModels.Response] = {
+    restMockerManager
+      .deleteAllModels(request.servicePath)
+      .mapError(_.status)
+      .map(_ => DeleteAllModels.Response())
+  }
+
+  override def deleteAllMocks(request: DeleteAllMocks.Request): IO[Status, DeleteAllMocks.Response] = {
+    restMockerManager
+      .deleteAllMocks(request.servicePath)
+      .mapError(_.status)
+      .map(_ => DeleteAllMocks.Response())
+  }
+
+  override def deleteAllMockStatisResponses(
+      request: DeleteAllMockStaticResponses.Request
+  ): IO[Status, DeleteAllMockStaticResponses.Response] = {
+    restMockerManager
+      .deleteAllMockStaticResponses(request.servicePath, request.mockId)
+      .mapError(_.status)
+      .map(_ => DeleteAllMockStaticResponses.Response())
+  }
+
+  override def updateService(request: UpdateService.Request): IO[Status, UpdateService.Response] = {
+    restMockerManager
+      .updateService(request.servicePath, convertUpdateServiceRequest(request))
+      .mapError(_.status)
+      .map(_ => UpdateService.Response())
+  }
+
+  override def updateModel(request: UpdateModel.Request): IO[Status, UpdateModel.Response] = {
+    restMockerManager
+      .upsertModel(request.servicePath, convertUpdateModelRequest(request))
+      .mapError(_.status)
+      .map(_ => UpdateModel.Response())
+  }
+
+  override def updateMock(request: UpdateMock.Request): IO[Status, UpdateMock.Response] = {
+    restMockerManager
+      .updateMock(request.servicePath, request.mockId, convertUpdateMockRequest(request))
+      .mapError(_.status)
+      .map(_ => UpdateMock.Response())
+  }
+
+  override def updateMockStaticResponse(
+      request: UpdateMockStaticResponse.Request
+  ): IO[Status, UpdateMockStaticResponse.Response] = {
+    restMockerManager
+      .updateMockStaticResponse(
+        request.servicePath,
+        request.mockId,
+        request.responseId,
+        convertUpdateMockResponseRequest(request)
+      )
+      .mapError(_.status)
+      .map(_ => UpdateMockStaticResponse.Response())
   }
 }
 

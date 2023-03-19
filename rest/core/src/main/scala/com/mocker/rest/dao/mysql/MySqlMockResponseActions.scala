@@ -26,6 +26,9 @@ case class MySqlMockResponseActions()(implicit ec: ExecutionContext) extends Moc
 
   override def delete(mockId: Long, responseId: Long): DBIO[Unit] =
     table.filter(_.mockId === mockId).filter(_.id === responseId).delete.map(_ => ())
+
+  override def deleteAll(mockId: Long): DBIO[Unit] =
+    table.filter(_.mockId === mockId).delete.map(_ => ())
 }
 
 object MySqlMockResponseActions {

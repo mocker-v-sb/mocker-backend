@@ -37,7 +37,7 @@ case class MySqlServiceActions()(implicit ec: ExecutionContext) extends ServiceA
         COUNT(model.id)
     FROM
         service LEFT JOIN mock ON service.id = mock.service_id LEFT JOIN model on service.id = model.service_id
-    WHERE service.path LIKE '%$query% OR service.name LIKE '%$query%''
+    WHERE service.path LIKE '%#$query%' OR service.name LIKE '%#$query%'
     GROUP BY service.id;""".as[ServiceStats]
   }
 

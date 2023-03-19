@@ -24,6 +24,12 @@ case class MySqlModelActions()(implicit ec: ExecutionContext) extends ModelActio
 
   override def upsert(model: Model): DBIO[Unit] =
     table.insertOrUpdate(model).map(_ => ())
+
+  override def delete(serviceId: Long, modelId: Long): DBIO[Unit] =
+    table.filter(_.serviceId === serviceId).filter(_.id === modelId).delete.map(_ => ())
+
+  override def deleteAll(serviceId: Long): DBIO[Unit] =
+    table.filter(_.serviceId === serviceId).delete.map(_ => ())
 }
 
 object MySqlModelActions {
@@ -35,9 +41,8 @@ object MySqlModelActions {
     def name: Rep[String] = column[String]("name")
     def description: Rep[Option[String]] = column[Option[String]]("description")
     def schema: Rep[String] = column[String]("schema")
-    def createTime: Rep[Timestamp] = column("creation_time", NotNull, O.SqlType("TIMESTAMP"))
 
     override def * : ProvenShape[Model] =
-      (id, serviceId, name, description, schema, createTime) <> ((Model.apply _).tupled, Model.unapply)
+      (id, serviceId, name, description, schema) <> ((Model.apply _).tupled, Model.unapply)
   }
 }

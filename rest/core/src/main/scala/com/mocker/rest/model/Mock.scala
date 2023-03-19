@@ -16,6 +16,13 @@ case class Mock(
     requestHeaders: Seq[String],
     responseHeaders: Seq[String],
     queryParams: Seq[String],
-    pathParams: Seq[String],
-    creationTime: Timestamp
+    pathParams: Seq[String]
+)
+
+case class MockPatch(
+    name: String,
+    description: Option[String],
+    method: Method,
+    requestModelId: Option[Long],
+    responseModelId: Option[Long]
 )

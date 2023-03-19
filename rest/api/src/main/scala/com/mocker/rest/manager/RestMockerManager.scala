@@ -4,8 +4,9 @@ import com.mocker.common.utils.ZIOSlick._
 import com.mocker.rest.dao.mysql.{MySqlMockActions, MySqlMockResponseActions, MySqlModelActions, MySqlServiceActions}
 import com.mocker.rest.dao.{MockActions, MockResponseActions, ModelActions, ServiceActions}
 import com.mocker.rest.errors.RestMockerException
-import com.mocker.rest.model.{Mock, MockResponse, Model, Service, ServiceStats}
+import com.mocker.rest.model._
 import com.mocker.rest.utils.RestMockerUtils._
+import slick.dbio.DBIO
 import slick.interop.zio.DatabaseProvider
 import zio.{IO, URLayer, ZIO, ZLayer}
 
@@ -45,6 +46,17 @@ case class RestMockerManager(
     serviceActions.search(query).asZIO(dbLayer).run
   }
 
+  def updateService(servicePath: String, service: Service): IO[RestMockerException, Unit] = {
+    for {
+      _ <- checkServiceNotExists(service)
+      currentService <- getService(servicePath)
+      _ <- serviceActions
+        .upsert(service.copy(id = currentService.id, creationTime = currentService.creationTime))
+        .asZIO(dbLayer)
+        .run
+    } yield ()
+  }
+
   def deleteService(path: String): IO[RestMockerException, Unit] = {
     for {
       service <- getService(path)
@@ -52,13 +64,10 @@ case class RestMockerManager(
     } yield ()
   }
 
-  def createModel(servicePath: String, model: Model): IO[RestMockerException, Unit] = {
+  def upsertModel(servicePath: String, model: Model): IO[RestMockerException, Unit] = {
     for {
       service <- getService(servicePath)
-      _ <- modelActions
-        .upsert(model.copy(serviceId = service.id))
-        .asZIO(dbLayer)
-        .run
+      _ <- modelActions.upsert(model.copy(serviceId = service.id)).asZIO(dbLayer).run
     } yield ()
   }
 
@@ -83,7 +92,23 @@ case class RestMockerManager(
       _ <- if (existingMocks.nonEmpty)
         ZIO.fail(RestMockerException.modelInUse(servicePath, existingMocks))
       else
-        ZIO.succeed()
+        ZIO.succeed(modelActions.delete(service.id, modelId).asZIO(dbLayer).run)
+    } yield ()
+  }
+
+  def deleteAllModels(servicePath: String): IO[RestMockerException, Unit] = {
+    for {
+      service <- getService(servicePath)
+      models <- modelActions.getAll(service.id).asZIO(dbLayer).run
+      mocks <- DBIO
+        .sequence(models.map(model => mockActions.findByModel(service.id, model.id)))
+        .asZIO(dbLayer)
+        .run
+        .map(_.flatten)
+      _ <- mocks.toList match {
+        case Nil => modelActions.deleteAll(service.id).asZIO(dbLayer).run
+        case _   => ZIO.fail(RestMockerException.modelInUse(servicePath, mocks))
+      }
     } yield ()
   }
 
@@ -109,10 +134,35 @@ case class RestMockerManager(
     } yield mocks
   }
 
+  def updateMock(servicePath: String, mockId: Long, patch: MockPatch): IO[RestMockerException, Unit] = {
+    for {
+      currentMock <- getMock(servicePath, mockId)
+      _ <- mockActions
+        .upsert(
+          currentMock.copy(
+            name = patch.name,
+            description = patch.description,
+            method = patch.method,
+            requestModelId = patch.requestModelId,
+            responseModelId = patch.responseModelId
+          )
+        )
+        .asZIO(dbLayer)
+        .run
+    } yield ()
+  }
+
   def deleteMock(servicePath: String, mockId: Long): IO[RestMockerException, Unit] = {
     for {
       service <- getService(servicePath)
       _ <- mockActions.delete(service.id, mockId).asZIO(dbLayer).run
+    } yield ()
+  }
+
+  def deleteAllMocks(servicePath: String): IO[RestMockerException, Unit] = {
+    for {
+      service <- getService(servicePath)
+      _ <- mockActions.deleteAll(service.id).asZIO(dbLayer).run
     } yield ()
   }
 
@@ -142,9 +192,32 @@ case class RestMockerManager(
     } yield (mock, mockResponses)
   }
 
+  def updateMockStaticResponse(
+      servicePath: String,
+      mockId: Long,
+      responseId: Long,
+      mockResponse: MockResponse
+  ): IO[RestMockerException, Unit] = {
+    for {
+      mock <- getMock(servicePath, mockId)
+      _ <- if (isMockResponseValid(mock, mockResponse))
+        mockResponseActions.upsert(mockResponse.copy(id = responseId)).asZIO(dbLayer).run
+      else
+        ZIO.fail(RestMockerException.invalidMockResponse(mock.path, mockResponse.name))
+    } yield ()
+  }
+
   def deleteMockStaticResponse(servicePath: String, mockId: Long, responseId: Long): IO[RestMockerException, Unit] = {
     for {
-      service <- getService(servicePath)
+      _ <- getService(servicePath)
+      _ <- mockResponseActions.delete(mockId, responseId).asZIO(dbLayer).run
+    } yield ()
+  }
+
+  def deleteAllMockStaticResponses(servicePath: String, mockId: Long): IO[RestMockerException, Unit] = {
+    for {
+      _ <- getService(servicePath)
+      _ <- mockResponseActions.deleteAll(mockId).asZIO(dbLayer).run
     } yield ()
   }
 
