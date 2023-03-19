@@ -18,7 +18,6 @@ CREATE TABLE `model`
     `name`          VARCHAR(128) NOT NULL,
     `description`   VARCHAR(128) NULL,
     `schema`        JSON         NOT NULL,
-    `creation_time` TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     CONSTRAINT `model_ibfk_1` FOREIGN KEY (`service_id`) REFERENCES `service` (`id`) ON DELETE CASCADE
 );
@@ -37,7 +36,6 @@ CREATE TABLE `mock`
     `response_headers`  VARCHAR(2048) NULL,
     `query_params`      VARCHAR(2048) NULL,
     `path_params`       VARCHAR(2048) NULL,
-    `creation_time`     TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     CONSTRAINT `mock_ibfk_1` FOREIGN KEY (`service_id`) REFERENCES `service` (`id`) ON DELETE CASCADE,
     CONSTRAINT `mock_ibfk_2` FOREIGN KEY (`request_model_id`) REFERENCES `model` (`id`),

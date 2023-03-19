@@ -18,7 +18,7 @@ case class RestMockerService(restMockerManager: RestMockerManager) extends RestM
 
   override def createModel(request: CreateModel.Request): IO[Status, CreateModel.Response] = {
     restMockerManager
-      .createModel(request.servicePath, convertCreateModelRequest(request))
+      .upsertModel(request.servicePath, convertCreateModelRequest(request))
       .mapError(_.status)
       .map(_ => CreateModel.Response())
   }
@@ -158,6 +158,41 @@ case class RestMockerService(restMockerManager: RestMockerManager) extends RestM
       .deleteAllMockStaticResponses(request.servicePath, request.mockId)
       .mapError(_.status)
       .map(_ => DeleteAllMockStaticResponses.Response())
+  }
+
+  override def updateService(request: UpdateService.Request): IO[Status, UpdateService.Response] = {
+    restMockerManager
+      .updateService(request.servicePath, convertUpdateServiceRequest(request))
+      .mapError(_.status)
+      .map(_ => UpdateService.Response())
+  }
+
+  override def updateModel(request: UpdateModel.Request): IO[Status, UpdateModel.Response] = {
+    restMockerManager
+      .upsertModel(request.servicePath, convertUpdateModelRequest(request))
+      .mapError(_.status)
+      .map(_ => UpdateModel.Response())
+  }
+
+  override def updateMock(request: UpdateMock.Request): IO[Status, UpdateMock.Response] = {
+    restMockerManager
+      .updateMock(request.servicePath, request.mockId, convertUpdateMockRequest(request))
+      .mapError(_.status)
+      .map(_ => UpdateMock.Response())
+  }
+
+  override def updateMockStaticResponse(
+      request: UpdateMockStaticResponse.Request
+  ): IO[Status, UpdateMockStaticResponse.Response] = {
+    restMockerManager
+      .updateMockStaticResponse(
+        request.servicePath,
+        request.mockId,
+        request.responseId,
+        convertUpdateMockResponseRequest(request)
+      )
+      .mapError(_.status)
+      .map(_ => UpdateMockStaticResponse.Response())
   }
 }
 

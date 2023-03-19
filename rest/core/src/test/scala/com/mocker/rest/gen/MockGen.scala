@@ -28,7 +28,6 @@ trait MockGen extends BasicGenerators {
       requestHeaders = Seq.empty,
       responseHeaders = Seq.empty,
       queryParams = Seq.empty,
-      pathParams = Seq.empty,
-      creationTime = Timestamp.valueOf(dateTimeFormatter.format(Instant.now()))
+      pathParams = Seq.empty
     )
 }

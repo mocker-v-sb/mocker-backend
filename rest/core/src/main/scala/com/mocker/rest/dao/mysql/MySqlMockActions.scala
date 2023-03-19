@@ -63,7 +63,6 @@ object MySqlMockActions {
     def responseHeaders: Rep[Seq[String]] = column("response_headers")
     def queryParams: Rep[Seq[String]] = column("query_params")
     def pathParams: Rep[Seq[String]] = column("path_params")
-    def creationTime: Rep[Timestamp] = column("creation_time", O.SqlType("TIMESTAMP"))
 
     override def * : ProvenShape[Mock] =
       (
@@ -78,8 +77,7 @@ object MySqlMockActions {
         requestHeaders,
         responseHeaders,
         queryParams,
-        pathParams,
-        creationTime
+        pathParams
       ) <> ((Mock.apply _).tupled, Mock.unapply)
   }
 }

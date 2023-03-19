@@ -15,23 +15,27 @@ service RestMocker {
   rpc getService(GetService.Request) returns (GetService.Response);
   rpc getAllServices(GetAllServices.Request) returns (GetAllServices.Response);
   rpc searchServices(SearchServices.Request) returns (SearchServices.Response);
+  rpc updateService(UpdateService.Request) returns (UpdateService.Response);
   rpc deleteService(DeleteService.Request) returns (DeleteService.Response);
 
   rpc createModel(CreateModel.Request) returns (CreateModel.Response);
   rpc getModel(GetModel.Request) returns (GetModel.Response);
   rpc getAllServiceModels(GetAllServiceModels.Request) returns (GetAllServiceModels.Response);
+  rpc updateModel(UpdateModel.Request) returns (UpdateModel.Response);
   rpc deleteModel(DeleteModel.Request) returns (DeleteModel.Response);
   rpc deleteAllModels(DeleteAllModels.Request) returns (DeleteAllModels.Response);
 
   rpc createMock(CreateMock.Request) returns (CreateMock.Response);
   rpc getMock(GetMock.Request) returns (GetMock.Response);
   rpc getAllServiceMocks(GetAllServiceMocks.Request) returns (GetAllServiceMocks.Response);
+  rpc updateMock(UpdateMock.Request) returns (UpdateMock.Response);
   rpc deleteMock(DeleteMock.Request) returns (DeleteMock.Response);
   rpc deleteAllMocks(DeleteAllMocks.Request) returns (DeleteAllMocks.Response);
 
   rpc createMockStaticResponse(CreateMockStaticResponse.Request) returns (CreateMockStaticResponse.Response);
   rpc getMockStaticResponse(GetMockStaticResponse.Request) returns (GetMockStaticResponse.Response);
   rpc getAllMockStaticResponses(GetAllMockStaticResponses.Request) returns (GetAllMockStaticResponses.Response);
+  rpc updateMockStaticResponse(UpdateMockStaticResponse.Request) returns (UpdateMockStaticResponse.Response);
   rpc deleteMockStaticResponse(DeleteMockStaticResponse.Request) returns (DeleteMockStaticResponse.Response);
   rpc deleteAllMockStatisResponses(DeleteAllMockStaticResponses.Request) returns (DeleteAllMockStaticResponses.Response);
 }
@@ -86,6 +90,20 @@ message SearchServices {
   }
 }
 
+message UpdateService {
+
+  message Request {
+    string servicePath = 1;
+    string name = 2;
+    string path = 3;
+    google.protobuf.StringValue url = 4;
+    google.protobuf.StringValue description = 5;
+    google.protobuf.Timestamp expiration_time = 6;
+  }
+
+  message Response {}
+}
+
 message DeleteService {
 
   message Request {
@@ -130,6 +148,19 @@ message GetAllServiceModels {
   message Response {
     repeated ModelSnippet models = 1;
   }
+}
+
+message UpdateModel {
+
+  message Request {
+    string servicePath = 1;
+    int64 modelId = 2;
+    string name = 3;
+    google.protobuf.StringValue description = 4;
+    string schema = 5;
+  }
+
+  message Response {}
 }
 
 message DeleteModel {
@@ -204,6 +235,21 @@ message GetAllServiceMocks {
   }
 }
 
+message UpdateMock {
+
+  message Request {
+    string servicePath = 1;
+    int64 mockId = 2;
+    string name = 3;
+    google.protobuf.StringValue description = 4;
+    Method method = 5;
+    google.protobuf.Int64Value request_model_id = 6;
+    google.protobuf.Int64Value response_model_id = 7;
+  }
+
+  message Response {}
+}
+
 message DeleteMock {
 
   message Request {
@@ -271,6 +317,24 @@ message GetAllMockStaticResponses {
   message Response {
     repeated MockResponseSnippet mock_responses = 1;
   }
+}
+
+message UpdateMockStaticResponse {
+
+  message Request {
+    string servicePath = 1;
+    int64 mockId = 2;
+    int64 responseId = 3;
+    string name = 4;
+    int32 status_code = 5;
+    repeated KVPair request_headers = 6;
+    repeated KVPair response_headers = 7;
+    repeated KVPair query_params = 8;
+    repeated KVPair path_params = 9;
+    string response_content = 10;
+  }
+
+  message Response {}
 }
 
 message DeleteMockStaticResponse {
