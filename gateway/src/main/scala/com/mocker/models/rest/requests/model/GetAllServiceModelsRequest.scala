@@ -1,4 +1,4 @@
-package com.mocker.models.rest.requests
+package com.mocker.models.rest.requests.model
 
 import com.mocker.rest.rest_service.GetAllServiceModels.{Request => ProtoGetAllServiceModelsRequest}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}

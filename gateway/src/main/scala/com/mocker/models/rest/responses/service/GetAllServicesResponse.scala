@@ -1,7 +1,7 @@
-package com.mocker.models.rest.responses
+package com.mocker.models.rest.responses.service
 
-import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}
 import com.mocker.rest.rest_service.GetAllServices.{Response => ProtoGetAllServicesResponse}
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}
 
 case class GetAllServicesResponse(services: Seq[ServiceSnippet])
 

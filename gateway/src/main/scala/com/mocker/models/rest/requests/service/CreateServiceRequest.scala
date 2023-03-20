@@ -1,4 +1,4 @@
-package com.mocker.models.rest.requests
+package com.mocker.models.rest.requests.service
 
 import com.google.protobuf.timestamp.{Timestamp => GoogleTimestamp}
 import com.google.protobuf.util.Timestamps

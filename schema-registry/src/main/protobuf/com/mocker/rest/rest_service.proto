@@ -251,7 +251,7 @@ message GetAllServiceMocks {
   }
 
   message Response {
-    repeated MockSnippet models = 1;
+    repeated MockSnippet mocks = 1;
   }
 }
 
