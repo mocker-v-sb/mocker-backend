@@ -1,6 +1,13 @@
 package com.mocker.clients
 
-import com.mocker.models.rest.requests.mock.{CreateMockRequest, DeleteAllServiceMocksRequest, DeleteMockRequest, GetAllServiceMocksRequest, GetMockRequest, UpdateMockRequest}
+import com.mocker.models.rest.requests.mock.{
+  CreateMockRequest,
+  DeleteAllServiceMocksRequest,
+  DeleteMockRequest,
+  GetAllServiceMocksRequest,
+  GetMockRequest,
+  UpdateMockRequest
+}
 import com.mocker.models.rest.requests.model._
 import com.mocker.models.rest.requests.service._
 import com.mocker.rest.rest_service
