@@ -1,8 +1,11 @@
 package com.mocker.clients
 
-import com.mocker.models.rest.requests._
-import com.mocker.rest.rest_service._
+import com.mocker.models.rest.requests.mock.{CreateMockRequest, DeleteAllServiceMocksRequest, DeleteMockRequest, GetAllServiceMocksRequest, GetMockRequest, UpdateMockRequest}
+import com.mocker.models.rest.requests.model._
+import com.mocker.models.rest.requests.service._
+import com.mocker.rest.rest_service
 import com.mocker.rest.rest_service.ZioRestService.RestMockerClient
+import com.mocker.rest.rest_service._
 import io.grpc.Status
 import zio.ZIO
 
@@ -56,6 +59,30 @@ object RestMockerClientService {
 
   def deleteServiceModels(request: DeleteAllServiceModelsRequest): Response[DeleteAllModels.Response] = {
     RestMockerClient.deleteAllModels(request.toMessage)
+  }
+
+  def createMock(request: CreateMockRequest): Response[CreateMock.Response] = {
+    RestMockerClient.createMock(request.toMessage)
+  }
+
+  def getMock(request: GetMockRequest): Response[GetMock.Response] = {
+    RestMockerClient.getMock(request.toMessage)
+  }
+
+  def getAllServiceMocks(request: GetAllServiceMocksRequest): Response[GetAllServiceMocks.Response] = {
+    RestMockerClient.getAllServiceMocks(request.toMessage)
+  }
+
+  def updateMock(request: UpdateMockRequest): Response[UpdateMock.Response] = {
+    RestMockerClient.updateMock(request.toMessage)
+  }
+
+  def deleteMock(request: DeleteMockRequest): Response[DeleteMock.Response] = {
+    RestMockerClient.deleteMock(request.toMessage)
+  }
+
+  def deleteServiceMocks(request: DeleteAllServiceMocksRequest): Response[DeleteAllMocks.Response] = {
+    RestMockerClient.deleteAllMocks(request.toMessage)
   }
 
 }

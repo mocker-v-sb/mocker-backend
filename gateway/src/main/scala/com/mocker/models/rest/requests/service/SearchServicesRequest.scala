@@ -1,4 +1,4 @@
-package com.mocker.models.rest.requests
+package com.mocker.models.rest.requests.service
 
 import com.mocker.rest.rest_service.SearchServices.{Request => ProtoSearchServicesRequest}
 

@@ -2,8 +2,8 @@ package com.mocker.gateway.routes.rest
 
 import com.mocker.clients.RestMockerClientService
 import com.mocker.gateway.routes.utils.Response._
-import com.mocker.models.rest.requests._
-import com.mocker.models.rest.responses._
+import com.mocker.models.rest.requests.model._
+import com.mocker.models.rest.responses.model._
 import com.mocker.rest.rest_service.ZioRestService.RestMockerClient
 import io.grpc.{Status => GrpcStatus}
 import zhttp.http.Method.{DELETE, GET, POST, PUT}

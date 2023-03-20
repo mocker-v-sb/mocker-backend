@@ -1,4 +1,4 @@
-package com.mocker.models.rest.responses
+package com.mocker.models.rest.responses.model
 
 import com.mocker.rest.model.{ModelSnippet => ProtoModelSnippet}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}

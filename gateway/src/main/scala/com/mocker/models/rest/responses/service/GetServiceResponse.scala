@@ -1,4 +1,4 @@
-package com.mocker.models.rest.responses
+package com.mocker.models.rest.responses.service
 
 import com.mocker.rest.rest_service.GetService.{Response => ProtoGetServiceResponse}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}
