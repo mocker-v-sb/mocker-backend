@@ -1,8 +1,21 @@
 package com.mocker.gateway.routes
 
 import com.mocker.clients.MqMockerClientService
-import com.mocker.models.mq.requests.{CreateTopicRequest, DeleteTopicRequest, GetMessagesRequest, GetTopicsRequest, SendMessageRequest}
-import com.mocker.models.mq.responses.{CreateTopicResponse => ScalaCreateTopicResponse, DeleteTopicResponse => ScalaDeleteTopicResponse, GetMessagesResponse => ScalaGetMessagesResponse, GetTopicResponse => ScalaGetTopicResponse, GetTopicsResponse => ScalaGetTopicsResponse, SendMessageResponse => ScalaSendMessagesResponse}
+import com.mocker.models.mq.requests.{
+  CreateTopicRequest,
+  DeleteTopicRequest,
+  GetMessagesRequest,
+  GetTopicsRequest,
+  SendMessageRequest
+}
+import com.mocker.models.mq.responses.{
+  CreateTopicResponse => ScalaCreateTopicResponse,
+  DeleteTopicResponse => ScalaDeleteTopicResponse,
+  GetMessagesResponse => ScalaGetMessagesResponse,
+  GetTopicResponse => ScalaGetTopicResponse,
+  GetTopicsResponse => ScalaGetTopicsResponse,
+  SendMessageResponse => ScalaSendMessagesResponse
+}
 import com.mocker.mq.mq_service.GetTopicsResponse
 import com.mocker.mq.mq_service.ZioMqService.MqMockerClient
 import io.grpc.{Status => GrpcStatus}
@@ -85,7 +98,7 @@ object MockMqHandler {
           case Right(pResp) =>
             val _pResp = searchInput match {
               case Some(si) => GetTopicsResponse(queues = pResp.queues.filter(q => q.topicName.contains(si)))
-              case None => pResp
+              case None     => pResp
             }
             ScalaGetTopicsResponse.fromMessage(_pResp) match {
               case Right(resp) =>
