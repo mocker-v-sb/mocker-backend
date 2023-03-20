@@ -2,7 +2,7 @@ package com.mocker.gateway
 
 import com.mocker.common.utils.{Environment, ServerAddress}
 import com.mocker.gateway.routes._
-import com.mocker.gateway.routes.rest.MockRestApiServiceHandler
+import com.mocker.gateway.routes.rest.{MockRestApiModelHandler, MockRestApiServiceHandler}
 import com.mocker.mq.mq_service.ZioMqService.MqMockerClient
 import com.mocker.mq.mq_service.ZioMqService.MqMockerClient.Service
 import com.mocker.rest.rest_service.ZioRestService.RestMockerClient
@@ -43,7 +43,7 @@ object Main extends ZIOAppDefault {
     )
 
   val routes: Http[MqMockerClient.Service with RestMockerClient.Service, Throwable, Request, Response] =
-    MockMqHandler.routes ++ MockRestApiServiceHandler.routes
+    MockMqHandler.routes ++ MockRestApiServiceHandler.routes ++ MockRestApiModelHandler.routes
 
   val program: ZIO[Any, Throwable, ExitCode] = for {
     _ <- Console.printLine(s"Starting server on $serverAddress")
