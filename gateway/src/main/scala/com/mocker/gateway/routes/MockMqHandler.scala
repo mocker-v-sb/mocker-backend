@@ -1,20 +1,9 @@
 package com.mocker.gateway.routes
 
 import com.mocker.clients.MqMockerClientService
-import com.mocker.models.mq.requests.{
-  CreateTopicRequest,
-  DeleteTopicRequest,
-  GetMessagesRequest,
-  GetTopicsRequest,
-  SendMessageRequest
-}
-import com.mocker.models.mq.responses.{
-  CreateTopicResponse => ScalaCreateTopicResponse,
-  DeleteTopicResponse => ScalaDeleteTopicResponse,
-  GetMessagesResponse => ScalaGetMessagesResponse,
-  GetTopicsResponse => ScalaGetTopicsResponse,
-  SendMessageResponse => ScalaSendMessagesResponse
-}
+import com.mocker.models.mq.requests.{CreateTopicRequest, DeleteTopicRequest, GetMessagesRequest, GetTopicsRequest, SendMessageRequest}
+import com.mocker.models.mq.responses.{CreateTopicResponse => ScalaCreateTopicResponse, DeleteTopicResponse => ScalaDeleteTopicResponse, GetMessagesResponse => ScalaGetMessagesResponse, GetTopicResponse => ScalaGetTopicResponse, GetTopicsResponse => ScalaGetTopicsResponse, SendMessageResponse => ScalaSendMessagesResponse}
+import com.mocker.mq.mq_service.GetTopicsResponse
 import com.mocker.mq.mq_service.ZioMqService.MqMockerClient
 import io.grpc.{Status => GrpcStatus}
 import zhttp.http.Method.{DELETE, GET, POST}
@@ -88,12 +77,17 @@ object MockMqHandler {
 
     case req @ GET -> !! / "mq" / "topics" =>
       val brokerType = req.url.queryParams.get("brokerType").flatMap(_.headOption)
+      val searchInput = req.url.queryParams.get("search").flatMap(_.headOption)
       for {
         request <- ZIO.succeed(GetTopicsRequest(brokerType.getOrElse("ANY")))
         protoResponse <- MqMockerClientService.getTopics(request).either
         response <- protoResponse match {
           case Right(pResp) =>
-            ScalaGetTopicsResponse.fromMessage(pResp) match {
+            val _pResp = searchInput match {
+              case Some(si) => GetTopicsResponse(queues = pResp.queues.filter(q => q.topicName.contains(si)))
+              case None => pResp
+            }
+            ScalaGetTopicsResponse.fromMessage(_pResp) match {
               case Right(resp) =>
                 ZIO.succeed {
                   Response
@@ -122,5 +116,11 @@ object MockMqHandler {
           }
         } yield response
       }
+
+    case req @ GET -> !! / "mq" / "topic" =>
+      val brokerType = req.url.queryParams.get("brokerType").flatMap(_.headOption)
+      val topicName = req.url.queryParams.get("topicName").flatMap(_.headOption)
+      if (brokerType.isEmpty || topicName.isEmpty) ZIO.succeed(Response.status(HttpStatus.BadRequest))
+      else ZIO.succeed(Response.json(ScalaGetTopicResponse.fromMessage().copy(topicName = topicName.get).toJson))
   }
 }
