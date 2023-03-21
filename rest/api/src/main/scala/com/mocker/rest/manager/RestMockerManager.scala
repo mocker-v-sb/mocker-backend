@@ -213,9 +213,14 @@ case class RestMockerManager(
     } yield ()
   }
 
-  def createMockResponse(mockId: Long, mockResponse: MockResponse): IO[RestMockerException, Unit] = {
+  def createMockResponse(
+      servicePath: String,
+      mockId: Long,
+      mockResponse: MockResponse
+  ): IO[RestMockerException, Unit] = {
     for {
-      mock <- checkMockExists(mockId)
+      service <- getService(servicePath)
+      mock <- checkMockExists(service, mockId)
       _ <- if (isMockResponseValid(mock, mockResponse))
         mockResponseActions.upsert(mockResponse).asZIO(dbLayer).run
       else
@@ -256,15 +261,17 @@ case class RestMockerManager(
 
   def deleteMockStaticResponse(servicePath: String, mockId: Long, responseId: Long): IO[RestMockerException, Unit] = {
     for {
-      _ <- getService(servicePath)
-      _ <- mockResponseActions.delete(mockId, responseId).asZIO(dbLayer).run
+      service <- getService(servicePath)
+      mock <- checkMockExists(service, mockId)
+      _ <- mockResponseActions.delete(mock.id, responseId).asZIO(dbLayer).run
     } yield ()
   }
 
   def deleteAllMockStaticResponses(servicePath: String, mockId: Long): IO[RestMockerException, Unit] = {
     for {
-      _ <- getService(servicePath)
-      _ <- mockResponseActions.deleteAll(mockId).asZIO(dbLayer).run
+      service <- getService(servicePath)
+      mock <- checkMockExists(service, mockId)
+      _ <- mockResponseActions.deleteAll(mock.id).asZIO(dbLayer).run
     } yield ()
   }
 

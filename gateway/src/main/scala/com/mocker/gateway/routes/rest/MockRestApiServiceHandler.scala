@@ -49,10 +49,12 @@ object MockRestApiServiceHandler {
       } yield response
     case req @ GET -> !! / "rest" / "services" =>
       val search = req.url.queryParams.get("search").flatMap(_.headOption)
-      search match {
-        case Some(query) => searchServices(query)
-        case None        => getAllServices
-      }
+      for {
+        result <- search match {
+          case Some(query) => searchServices(query)
+          case None        => getAllServices
+        }
+      } yield result
   }
 
   private def getAllServices = {
