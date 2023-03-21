@@ -89,7 +89,7 @@ case class DefaultMqManager(kafkaController: KafkaController) extends MqManager 
               ZIO
                 .attempt {
                   val props: Properties = new Properties()
-                  props.put("bootstrap.servers", "localhost:29092")
+                  props.put("bootstrap.servers", s"${kafkaController.address}")
                   props.put("group.id", "kafka-mocker")
                   props.put("enable.auto.commit", "true")
                   props.put("auto.commit.interval.ms", "1000")
