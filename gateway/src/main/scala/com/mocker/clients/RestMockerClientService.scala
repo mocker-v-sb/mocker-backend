@@ -8,6 +8,14 @@ import com.mocker.models.rest.requests.mock.{
   GetMockRequest,
   UpdateMockRequest
 }
+import com.mocker.models.rest.requests.mock_response.{
+  CreateMockStaticResponseRequest,
+  DeleteAllMockStaticResponsesRequest,
+  DeleteMockStaticResponseRequest,
+  GetAllMockStaticResponsesRequest,
+  GetMockStaticResponseRequest,
+  UpdateMockStaticResponseRequest
+}
 import com.mocker.models.rest.requests.model._
 import com.mocker.models.rest.requests.service._
 import com.mocker.rest.rest_service
@@ -90,6 +98,40 @@ object RestMockerClientService {
 
   def deleteServiceMocks(request: DeleteAllServiceMocksRequest): Response[DeleteAllMocks.Response] = {
     RestMockerClient.deleteAllMocks(request.toMessage)
+  }
+
+  def createMockStaticResponse(
+      request: CreateMockStaticResponseRequest
+  ): Response[CreateMockStaticResponse.Response] = {
+    RestMockerClient.createMockStaticResponse(request.toMessage)
+  }
+
+  def getMockStaticResponse(request: GetMockStaticResponseRequest): Response[GetMockStaticResponse.Response] = {
+    RestMockerClient.getMockStaticResponse(request.toMessage)
+  }
+
+  def getAllMockStaticResponses(
+      request: GetAllMockStaticResponsesRequest
+  ): Response[GetAllMockStaticResponses.Response] = {
+    RestMockerClient.getAllMockStaticResponses(request.toMessage)
+  }
+
+  def updateMockStaticResponse(
+      request: UpdateMockStaticResponseRequest
+  ): Response[UpdateMockStaticResponse.Response] = {
+    RestMockerClient.updateMockStaticResponse(request.toMessage)
+  }
+
+  def deleteMockStaticResponse(
+      request: DeleteMockStaticResponseRequest
+  ): Response[DeleteMockStaticResponse.Response] = {
+    RestMockerClient.deleteMockStaticResponse(request.toMessage)
+  }
+
+  def deleteAllMockStaticResponses(
+      request: DeleteAllMockStaticResponsesRequest
+  ): Response[DeleteAllMockStaticResponses.Response] = {
+    RestMockerClient.deleteAllMockStatisResponses(request.toMessage)
   }
 
 }

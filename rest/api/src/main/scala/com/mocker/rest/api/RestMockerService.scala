@@ -6,12 +6,13 @@ import com.mocker.rest.manager.RestMockerManager
 import com.mocker.rest.rest_service.ZioRestService.RestMocker
 import com.mocker.rest.rest_service._
 import io.grpc.Status
-import zio.{IO, URLayer, ZIO, ZLayer}
+import zio.{Console, IO, URLayer, ZIO, ZLayer}
 
 case class RestMockerService(restMockerManager: RestMockerManager) extends RestMocker {
   override def createService(request: CreateService.Request): IO[Status, CreateService.Response] = {
     restMockerManager
       .createService(convertCreateServiceRequest(request))
+      .tapError(err => Console.printError(err.message).ignoreLogged)
       .mapError(_.status)
       .map(_ => CreateService.Response())
   }
@@ -19,6 +20,7 @@ case class RestMockerService(restMockerManager: RestMockerManager) extends RestM
   override def createModel(request: CreateModel.Request): IO[Status, CreateModel.Response] = {
     restMockerManager
       .upsertModel(request.servicePath, convertCreateModelRequest(request))
+      .tapError(err => Console.printError(err.message).ignoreLogged)
       .mapError(_.status)
       .map(_ => CreateModel.Response())
   }
@@ -26,6 +28,7 @@ case class RestMockerService(restMockerManager: RestMockerManager) extends RestM
   override def createMock(request: CreateMock.Request): IO[Status, CreateMock.Response] = {
     restMockerManager
       .createMock(request.servicePath, convertCreateMockRequest(request))
+      .tapError(err => Console.printError(err.message).ignoreLogged)
       .mapError(_.status)
       .map(_ => CreateMock.Response())
   }
@@ -34,7 +37,8 @@ case class RestMockerService(restMockerManager: RestMockerManager) extends RestM
       request: CreateMockStaticResponse.Request
   ): IO[Status, CreateMockStaticResponse.Response] = {
     restMockerManager
-      .createMockResponse(request.mockId, convertCreateMockResponseRequest(request))
+      .createMockResponse(request.servicePath, request.mockId, convertCreateMockResponseRequest(request))
+      .tapError(err => Console.printError(err.message).ignoreLogged)
       .mapError(_.status)
       .map(_ => CreateMockStaticResponse.Response())
   }
@@ -42,12 +46,14 @@ case class RestMockerService(restMockerManager: RestMockerManager) extends RestM
   override def getService(request: GetService.Request): IO[Status, GetService.Response] = {
     restMockerManager
       .getService(request.path)
+      .tapError(err => Console.printError(err.message).ignoreLogged)
       .mapError(_.status)
       .map(toGetServiceResponse)
   }
 
   override def getAllServices(request: GetAllServices.Request): IO[Status, GetAllServices.Response] = {
     restMockerManager.getServicesWithStats
+      .tapError(err => Console.printError(err.message).ignoreLogged)
       .mapError(_.status)
       .map(toGetAllServicesResponse)
   }
@@ -55,6 +61,7 @@ case class RestMockerService(restMockerManager: RestMockerManager) extends RestM
   override def searchServices(request: SearchServices.Request): IO[Status, SearchServices.Response] = {
     restMockerManager
       .searchServices(request.query)
+      .tapError(err => Console.printError(err.message).ignoreLogged)
       .mapError(_.status)
       .map(toSearchServicesResponse)
   }
@@ -62,6 +69,7 @@ case class RestMockerService(restMockerManager: RestMockerManager) extends RestM
   override def getModel(request: GetModel.Request): IO[Status, GetModel.Response] = {
     restMockerManager
       .getModel(request.servicePath, request.modelId)
+      .tapError(err => Console.printError(err.message).ignoreLogged)
       .mapError(_.status)
       .map(toGetModelResponse)
   }
@@ -71,6 +79,7 @@ case class RestMockerService(restMockerManager: RestMockerManager) extends RestM
   ): IO[Status, GetAllServiceModels.Response] = {
     restMockerManager
       .getAllServiceModels(request.servicePath)
+      .tapError(err => Console.printError(err.message).ignoreLogged)
       .mapError(_.status)
       .map(toGetAllServiceModelsResponse)
   }
@@ -78,6 +87,7 @@ case class RestMockerService(restMockerManager: RestMockerManager) extends RestM
   override def getMock(request: GetMock.Request): IO[Status, GetMock.Response] = {
     restMockerManager
       .getMock(request.servicePath, request.mockId)
+      .tapError(err => Console.printError(err.message).ignoreLogged)
       .mapError(_.status)
       .map(toGetMockResponse)
   }
@@ -85,6 +95,7 @@ case class RestMockerService(restMockerManager: RestMockerManager) extends RestM
   override def getAllServiceMocks(request: GetAllServiceMocks.Request): IO[Status, GetAllServiceMocks.Response] = {
     restMockerManager
       .getAllServiceMocks(request.servicePath)
+      .tapError(err => Console.printError(err.message).ignoreLogged)
       .mapError(_.status)
       .map(toGetAllServiceMocksResponse)
   }
@@ -94,6 +105,7 @@ case class RestMockerService(restMockerManager: RestMockerManager) extends RestM
   ): IO[Status, GetMockStaticResponse.Response] = {
     restMockerManager
       .getMockResponse(request.servicePath, request.mockId, request.responseId)
+      .tapError(err => Console.printError(err.message).ignoreLogged)
       .mapError(_.status)
       .map(toGetMockStaticResponse)
   }
@@ -103,6 +115,7 @@ case class RestMockerService(restMockerManager: RestMockerManager) extends RestM
   ): IO[Status, GetAllMockStaticResponses.Response] = {
     restMockerManager
       .getAllMockResponses(request.servicePath, request.mockId)
+      .tapError(err => Console.printError(err.message).ignoreLogged)
       .mapError(_.status)
       .map { case (mock, responses) => toGetAllMockStaticResponses(mock, responses) }
   }
@@ -110,6 +123,7 @@ case class RestMockerService(restMockerManager: RestMockerManager) extends RestM
   override def deleteService(request: DeleteService.Request): IO[Status, DeleteService.Response] = {
     restMockerManager
       .deleteService(request.servicePath)
+      .tapError(err => Console.printError(err.message).ignoreLogged)
       .mapError(_.status)
       .map(_ => DeleteService.Response())
   }
@@ -117,6 +131,7 @@ case class RestMockerService(restMockerManager: RestMockerManager) extends RestM
   override def deleteModel(request: DeleteModel.Request): IO[Status, DeleteModel.Response] = {
     restMockerManager
       .deleteModel(request.servicePath, request.modelId)
+      .tapError(err => Console.printError(err.message).ignoreLogged)
       .mapError(_.status)
       .map(_ => DeleteModel.Response())
   }
@@ -124,6 +139,7 @@ case class RestMockerService(restMockerManager: RestMockerManager) extends RestM
   override def deleteMock(request: DeleteMock.Request): IO[Status, DeleteMock.Response] = {
     restMockerManager
       .deleteMock(request.servicePath, request.mockId)
+      .tapError(err => Console.printError(err.message).ignoreLogged)
       .mapError(_.status)
       .map(_ => DeleteMock.Response())
   }
@@ -133,6 +149,7 @@ case class RestMockerService(restMockerManager: RestMockerManager) extends RestM
   ): IO[Status, DeleteMockStaticResponse.Response] = {
     restMockerManager
       .deleteMockStaticResponse(request.servicePath, request.mockId, request.responseId)
+      .tapError(err => Console.printError(err.message).ignoreLogged)
       .mapError(_.status)
       .map(_ => DeleteMockStaticResponse.Response())
   }
@@ -140,6 +157,7 @@ case class RestMockerService(restMockerManager: RestMockerManager) extends RestM
   override def deleteAllModels(request: DeleteAllModels.Request): IO[Status, DeleteAllModels.Response] = {
     restMockerManager
       .deleteAllModels(request.servicePath)
+      .tapError(err => Console.printError(err.message).ignoreLogged)
       .mapError(_.status)
       .map(_ => DeleteAllModels.Response())
   }
@@ -147,6 +165,7 @@ case class RestMockerService(restMockerManager: RestMockerManager) extends RestM
   override def deleteAllMocks(request: DeleteAllMocks.Request): IO[Status, DeleteAllMocks.Response] = {
     restMockerManager
       .deleteAllMocks(request.servicePath)
+      .tapError(err => Console.printError(err.message).ignoreLogged)
       .mapError(_.status)
       .map(_ => DeleteAllMocks.Response())
   }
@@ -156,6 +175,7 @@ case class RestMockerService(restMockerManager: RestMockerManager) extends RestM
   ): IO[Status, DeleteAllMockStaticResponses.Response] = {
     restMockerManager
       .deleteAllMockStaticResponses(request.servicePath, request.mockId)
+      .tapError(err => Console.printError(err.message).ignoreLogged)
       .mapError(_.status)
       .map(_ => DeleteAllMockStaticResponses.Response())
   }
@@ -163,6 +183,7 @@ case class RestMockerService(restMockerManager: RestMockerManager) extends RestM
   override def updateService(request: UpdateService.Request): IO[Status, UpdateService.Response] = {
     restMockerManager
       .updateService(request.servicePath, convertUpdateServiceRequest(request))
+      .tapError(err => Console.printError(err.message).ignoreLogged)
       .mapError(_.status)
       .map(_ => UpdateService.Response())
   }
@@ -170,6 +191,7 @@ case class RestMockerService(restMockerManager: RestMockerManager) extends RestM
   override def updateModel(request: UpdateModel.Request): IO[Status, UpdateModel.Response] = {
     restMockerManager
       .upsertModel(request.servicePath, convertUpdateModelRequest(request))
+      .tapError(err => Console.printError(err.message).ignoreLogged)
       .mapError(_.status)
       .map(_ => UpdateModel.Response())
   }
@@ -177,6 +199,7 @@ case class RestMockerService(restMockerManager: RestMockerManager) extends RestM
   override def updateMock(request: UpdateMock.Request): IO[Status, UpdateMock.Response] = {
     restMockerManager
       .updateMock(request.servicePath, request.mockId, convertUpdateMockRequest(request))
+      .tapError(err => Console.printError(err.message).ignoreLogged)
       .mapError(_.status)
       .map(_ => UpdateMock.Response())
   }
@@ -191,6 +214,7 @@ case class RestMockerService(restMockerManager: RestMockerManager) extends RestM
         request.responseId,
         convertUpdateMockResponseRequest(request)
       )
+      .tapError(err => Console.printError(err.message).ignoreLogged)
       .mapError(_.status)
       .map(_ => UpdateMockStaticResponse.Response())
   }
@@ -198,6 +222,7 @@ case class RestMockerService(restMockerManager: RestMockerManager) extends RestM
   override def getResponse(request: GetResponse.Request): IO[Status, GetResponse.Response] = {
     restMockerManager
       .getMockResponse(convertGetResponseRequest(request))
+      .tapError(err => Console.printError(err.message).ignoreLogged)
       .mapError(_.status)
       .map(toGetResponse)
   }

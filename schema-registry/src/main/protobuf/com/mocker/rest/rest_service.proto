@@ -294,14 +294,15 @@ message DeleteAllMocks {
 message CreateMockStaticResponse {
 
   message Request {
-    int64 mock_id = 1;
-    string name = 2;
-    int32 status_code = 3;
-    repeated KVPair request_headers = 4;
-    repeated KVPair response_headers = 5;
-    repeated KVPair query_params = 6;
-    repeated KVPair path_params = 7;
-    string response_content = 8;
+    string service_path = 1;
+    int64 mock_id = 2;
+    string name = 3;
+    int32 status_code = 4;
+    repeated KVPair request_headers = 5;
+    repeated KVPair response_headers = 6;
+    repeated KVPair query_params = 7;
+    repeated KVPair path_params = 8;
+    string response_content = 9;
   }
 
   message Response {}
