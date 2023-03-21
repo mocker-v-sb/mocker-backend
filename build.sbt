@@ -65,8 +65,18 @@ lazy val restApi = (project in file("rest/api"))
     ScoverageKeys.coverageEnabled.in(Test, test) := true,
     ScoverageKeys.coverageEnabled in (Compile, compile) := false,
     ScoverageKeys.coverageMinimumStmtTotal := 0,
-    ScoverageKeys.coverageFailOnMinimum := true
+    ScoverageKeys.coverageFailOnMinimum := true,
+    dockerExposedPorts += 8889,
+    dockerBaseImage := "amazoncorretto:17-alpine-jdk",
+    packageName := "rest-mocker-server",
+    dockerCommands := dockerCommands.value.flatMap {
+      case cmd@Cmd("FROM", _) => List(cmd, Cmd("RUN", "apk update && apk add bash"))
+      case other => List(other)
+    }
   )
+  .enablePlugins(DockerPlugin)
+  .enablePlugins(JavaServerAppPackaging)
+  .enablePlugins(AshScriptPlugin)
 
 lazy val restCore = (project in file("rest/core"))
   .dependsOn(common)
