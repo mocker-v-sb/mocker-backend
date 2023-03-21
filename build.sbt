@@ -70,8 +70,8 @@ lazy val restApi = (project in file("rest/api"))
     dockerBaseImage := "amazoncorretto:17-alpine-jdk",
     packageName := "rest-mocker-server",
     dockerCommands := dockerCommands.value.flatMap {
-      case cmd@Cmd("FROM", _) => List(cmd, Cmd("RUN", "apk update && apk add bash"))
-      case other => List(other)
+      case cmd @ Cmd("FROM", _) => List(cmd, Cmd("RUN", "apk update && apk add bash"))
+      case other                => List(other)
     }
   )
   .enablePlugins(DockerPlugin)
