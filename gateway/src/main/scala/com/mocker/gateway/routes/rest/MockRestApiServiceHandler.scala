@@ -12,10 +12,9 @@ import zio.json.{DecoderOps, EncoderOps}
 import zio.{Console, ZIO}
 
 object MockRestApiServiceHandler {
-  val prefix: Path = !! / "rest" / "service"
 
   lazy val routes: Http[RestMockerClient.Service, Throwable, Request, Response] = Http.collectZIO[Request] {
-    case req @ POST -> prefix =>
+    case req @ POST -> !! / "rest" / "service" =>
       for {
         request <- req.bodyAsString
           .map(_.fromJson[CreateServiceRequest])
@@ -26,7 +25,7 @@ object MockRestApiServiceHandler {
         }).either
         response <- protoResponse.toHttp
       } yield response
-    case req @ PUT -> prefix / servicePath =>
+    case req @ PUT -> !! / "rest" / "service" / servicePath =>
       for {
         request <- req.bodyAsString
           .map(_.fromJson[UpdateServiceRequest].map(_.copy(servicePath = servicePath)))
@@ -37,15 +36,10 @@ object MockRestApiServiceHandler {
         }).either
         response <- protoResponse.toHttp
       } yield response
-    case req @ DELETE -> prefix / servicePath =>
+    case req @ DELETE -> !! / "rest" / "service" / servicePath =>
       for {
         protoResponse <- RestMockerClientService.deleteService(DeleteServiceRequest(servicePath)).either
         response <- protoResponse.toHttp
-      } yield response
-    case req @ GET -> prefix / servicePath =>
-      for {
-        protoResponse <- RestMockerClientService.getService(GetServiceRequest(servicePath)).either
-        response <- protoResponse.withJson(GetServiceResponse.fromMessage(_).toJson)
       } yield response
     case req @ GET -> !! / "rest" / "services" =>
       val search = req.url.queryParams.get("search").flatMap(_.headOption)
@@ -55,6 +49,11 @@ object MockRestApiServiceHandler {
           case None        => getAllServices
         }
       } yield result
+    case req @ GET -> !! / "rest" / "service" / servicePath =>
+      for {
+        protoResponse <- RestMockerClientService.getService(GetServiceRequest(servicePath)).either
+        response <- protoResponse.withJson(GetServiceResponse.fromMessage(_).toJson)
+      } yield response
   }
 
   private def getAllServices = {

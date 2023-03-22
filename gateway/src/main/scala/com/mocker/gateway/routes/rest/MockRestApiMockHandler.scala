@@ -19,10 +19,9 @@ import zio.json.{DecoderOps, EncoderOps}
 import zio.{Console, ZIO}
 
 object MockRestApiMockHandler {
-  val prefix: Path = !! / "rest" / "service"
 
   lazy val routes: Http[RestMockerClient.Service, Throwable, Request, Response] = Http.collectZIO[Request] {
-    case req @ POST -> prefix / servicePath / "mock" =>
+    case req @ POST -> !! / "rest" / "service" / servicePath / "mock" =>
       for {
         request <- req.bodyAsString
           .map(_.fromJson[CreateMockRequest].map(_.copy(servicePath = servicePath)))
@@ -33,7 +32,7 @@ object MockRestApiMockHandler {
         }).either
         response <- protoResponse.toHttp
       } yield response
-    case req @ PUT -> prefix / servicePath / "mock" / mockId =>
+    case req @ PUT -> !! / "rest" / "service" / servicePath / "mock" / mockId =>
       mockId.toLongOption match {
         case Some(mockId) =>
           for {
@@ -48,7 +47,7 @@ object MockRestApiMockHandler {
           } yield response
         case None => ZIO.succeed(Response.status(HttpStatus.BadRequest))
       }
-    case req @ DELETE -> prefix / servicePath / "mock" / mockId =>
+    case req @ DELETE -> !! / "rest" / "service" / servicePath / "mock" / mockId =>
       mockId.toLongOption match {
         case Some(mockId) =>
           for {
@@ -57,12 +56,17 @@ object MockRestApiMockHandler {
           } yield response
         case None => ZIO.succeed(Response.status(HttpStatus.BadRequest))
       }
-    case req @ DELETE -> prefix / servicePath / "mocks" =>
+    case req @ DELETE -> !! / "rest" / "service" / servicePath / "mocks" =>
       for {
         protoResponse <- RestMockerClientService.deleteServiceMocks(DeleteAllServiceMocksRequest(servicePath)).either
         response <- protoResponse.toHttp
       } yield response
-    case req @ GET -> prefix / servicePath / "mock" / mockId =>
+    case req @ GET -> !! / "rest" / "service" / servicePath / "mocks" =>
+      for {
+        protoResponse <- RestMockerClientService.getAllServiceMocks(GetAllServiceMocksRequest(servicePath)).either
+        response <- protoResponse.withJson(GetAllServiceMocksResponse.fromMessage(_).toJson)
+      } yield response
+    case req @ GET -> !! / "rest" / "service" / servicePath / "mock" / mockId =>
       mockId.toLongOption match {
         case Some(mockId) =>
           for {
@@ -71,10 +75,5 @@ object MockRestApiMockHandler {
           } yield response
         case None => ZIO.succeed(Response.status(HttpStatus.BadRequest))
       }
-    case req @ GET -> prefix / servicePath / "mocks" =>
-      for {
-        protoResponse <- RestMockerClientService.getAllServiceMocks(GetAllServiceMocksRequest(servicePath)).either
-        response <- protoResponse.withJson(GetAllServiceMocksResponse.fromMessage(_).toJson)
-      } yield response
   }
 }
