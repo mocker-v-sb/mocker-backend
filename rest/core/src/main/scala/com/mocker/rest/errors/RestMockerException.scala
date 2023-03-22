@@ -31,6 +31,9 @@ object RestMockerException {
   def mockNotExists(servicePath: String, mockId: Long): RestMockerException =
     RestMockerException(s"Mock with id $mockId does not exists for service $servicePath", Status.NOT_FOUND)
 
+  def wrongSample(sample: String): RestMockerException =
+    RestMockerException(s"""Sample "$sample" has invalid format""", Status.INVALID_ARGUMENT)
+
   def responseNotExists(mockId: Long, responseId: Long): RestMockerException =
     RestMockerException(s"Response with id $responseId does not exists for mock $mockId", Status.NOT_FOUND)
 

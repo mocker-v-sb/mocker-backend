@@ -1,7 +1,5 @@
 package com.mocker.rest.model
 
-import java.sql.Timestamp
-
 case class Model(
     id: Long = 0,
     serviceId: Long = 0,

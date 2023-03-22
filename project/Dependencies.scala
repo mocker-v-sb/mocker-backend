@@ -49,4 +49,5 @@ object Dependencies {
 
   lazy val apacheAvro = "org.apache.avro" % "avro" % "1.11.0"
 
+  lazy val sAvro = "ca.dataedu" %% "savro" % "0.9.1"
 }

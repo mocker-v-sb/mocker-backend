@@ -8,7 +8,7 @@ case class UpdateModelRequest(
     modelId: Long = 0,
     name: String,
     description: Option[String],
-    schema: String
+    sample: String
 ) {
 
   def toMessage: ProtoUpdateModelRequest = {
@@ -17,7 +17,7 @@ case class UpdateModelRequest(
       modelId = modelId,
       name = name,
       description = description,
-      schema = schema
+      sample = sample
     )
   }
 }

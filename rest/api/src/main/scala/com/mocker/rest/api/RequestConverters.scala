@@ -2,6 +2,7 @@ package com.mocker.rest.api
 
 import com.mocker.rest.model.{Mock, MockPatch, MockQuery, MockResponse, Model, Service}
 import com.mocker.rest.rest_service._
+import com.mocker.rest.utils.AvroSchemaUtils
 
 import java.sql.Timestamp
 import java.time.Instant
@@ -36,7 +37,7 @@ object RequestConverters {
     Model(
       name = request.name,
       description = request.description,
-      schema = request.schema
+      schema = AvroSchemaUtils.fromSample(request.sample)
     )
   }
 
@@ -44,7 +45,7 @@ object RequestConverters {
     Model(
       name = request.name,
       description = request.description,
-      schema = request.schema
+      schema = AvroSchemaUtils.fromSample(request.sample)
     )
   }
 

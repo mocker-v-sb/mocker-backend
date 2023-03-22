@@ -37,7 +37,7 @@ object ResponseConverters {
     GetModel.Response(
       name = model.name,
       description = model.description,
-      schema = model.schema.toString
+      sample = model.schema
     )
   }
 
@@ -73,7 +73,7 @@ object ResponseConverters {
       responseHeaders = mockResponse.responseHeaders,
       queryParams = mockResponse.queryParams,
       pathParams = mockResponse.pathParams,
-      responseContent = mockResponse.response.toString
+      responseContent = mockResponse.response
     )
   }
 
