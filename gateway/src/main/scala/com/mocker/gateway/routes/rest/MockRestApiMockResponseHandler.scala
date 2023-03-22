@@ -19,10 +19,9 @@ import zio.json.{DecoderOps, EncoderOps}
 import zio.{Console, ZIO}
 
 object MockRestApiMockResponseHandler {
-  val prefix: Path = !! / "rest" / "service"
 
   lazy val routes: Http[RestMockerClient.Service, Throwable, Request, Response] = Http.collectZIO[Request] {
-    case req @ POST -> prefix / servicePath / "mock" / mockId / "response" =>
+    case req @ POST -> !! / "rest" / "service" / servicePath / "mock" / mockId / "response" =>
       mockId.toLongOption match {
         case Some(mockId) =>
           for {
@@ -37,7 +36,7 @@ object MockRestApiMockResponseHandler {
           } yield response
         case None => ZIO.succeed(Response.status(HttpStatus.BadRequest))
       }
-    case req @ PUT -> prefix / servicePath / "mock" / mockId / "response" / responseId =>
+    case req @ PUT -> !! / "rest" / "service" / servicePath / "mock" / mockId / "response" / responseId =>
       (mockId.toLongOption, responseId.toLongOption) match {
         case (Some(mockId), Some(responseId)) =>
           for {
@@ -55,7 +54,7 @@ object MockRestApiMockResponseHandler {
           } yield response
         case _ => ZIO.succeed(Response.status(HttpStatus.BadRequest))
       }
-    case req @ DELETE -> prefix / servicePath / "mock" / mockId / "response" / responseId =>
+    case req @ DELETE -> !! / "rest" / "service" / servicePath / "mock" / mockId / "response" / responseId =>
       (mockId.toLongOption, responseId.toLongOption) match {
         case (Some(mockId), Some(responseId)) =>
           for {
@@ -66,7 +65,7 @@ object MockRestApiMockResponseHandler {
           } yield response
         case _ => ZIO.succeed(Response.status(HttpStatus.BadRequest))
       }
-    case req @ DELETE -> prefix / servicePath / "mock" / mockId / "responses" =>
+    case req @ DELETE -> !! / "rest" / "service" / servicePath / "mock" / mockId / "responses" =>
       mockId.toLongOption match {
         case Some(mockId) =>
           for {
@@ -77,18 +76,7 @@ object MockRestApiMockResponseHandler {
           } yield response
         case None => ZIO.succeed(Response.status(HttpStatus.BadRequest))
       }
-    case req @ GET -> prefix / servicePath / "mock" / mockId / "response" / responseId =>
-      (mockId.toLongOption, responseId.toLongOption) match {
-        case (Some(mockId), Some(responseId)) =>
-          for {
-            protoResponse <- RestMockerClientService
-              .getMockStaticResponse(GetMockStaticResponseRequest(servicePath, mockId, responseId))
-              .either
-            response <- protoResponse.withJson(GetMockStaticResponseResponse.fromMessage(_).toJson)
-          } yield response
-        case _ => ZIO.succeed(Response.status(HttpStatus.BadRequest))
-      }
-    case req @ GET -> prefix / servicePath / "mock" / mockId / "responses" =>
+    case req @ GET -> !! / "rest" / "service" / servicePath / "mock" / mockId / "responses" =>
       mockId.toLongOption match {
         case Some(mockId) =>
           for {
@@ -96,6 +84,17 @@ object MockRestApiMockResponseHandler {
               .getAllMockStaticResponses(GetAllMockStaticResponsesRequest(servicePath, mockId))
               .either
             response <- protoResponse.withJson(GetAllMockStaticResponsesResponse.fromMessage(_).toJson)
+          } yield response
+        case _ => ZIO.succeed(Response.status(HttpStatus.BadRequest))
+      }
+    case req @ GET -> !! / "rest" / "service" / servicePath / "mock" / mockId / "response" / responseId =>
+      (mockId.toLongOption, responseId.toLongOption) match {
+        case (Some(mockId), Some(responseId)) =>
+          for {
+            protoResponse <- RestMockerClientService
+              .getMockStaticResponse(GetMockStaticResponseRequest(servicePath, mockId, responseId))
+              .either
+            response <- protoResponse.withJson(GetMockStaticResponseResponse.fromMessage(_).toJson)
           } yield response
         case _ => ZIO.succeed(Response.status(HttpStatus.BadRequest))
       }
