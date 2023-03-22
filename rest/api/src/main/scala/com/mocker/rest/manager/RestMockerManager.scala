@@ -95,7 +95,10 @@ case class RestMockerManager(
 
   def updateService(servicePath: String, service: Service): IO[RestMockerException, Unit] = {
     for {
-      _ <- checkServiceNotExists(service)
+      _ <- if (servicePath != service.path)
+        checkServiceNotExists(service)
+      else
+        ZIO.succeed()
       currentService <- getService(servicePath)
       _ <- serviceActions
         .upsert(service.copy(id = currentService.id, creationTime = currentService.creationTime))
@@ -139,7 +142,7 @@ case class RestMockerManager(
       _ <- if (existingMocks.nonEmpty)
         ZIO.fail(RestMockerException.modelInUse(servicePath, existingMocks))
       else
-        ZIO.succeed(modelActions.delete(service.id, modelId).asZIO(dbLayer).run)
+        modelActions.delete(service.id, modelId).asZIO(dbLayer).run
     } yield ()
   }
 

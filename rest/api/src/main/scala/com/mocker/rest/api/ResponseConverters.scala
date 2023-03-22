@@ -36,6 +36,7 @@ object ResponseConverters {
 
   def toGetModelResponse(model: Model): GetModel.Response = {
     GetModel.Response(
+      id = model.id,
       name = model.name,
       description = model.description,
       sample = AvroSchemaUtils.generateSample(model.schema)
@@ -48,6 +49,7 @@ object ResponseConverters {
 
   def toGetMockResponse(mock: Mock): GetMock.Response = {
     GetMock.Response(
+      id = mock.id,
       name = mock.name,
       description = mock.description,
       path = mock.path,
@@ -67,6 +69,7 @@ object ResponseConverters {
 
   def toGetMockStaticResponse(mockResponse: MockResponse): GetMockStaticResponse.Response = {
     GetMockStaticResponse.Response(
+      id = mockResponse.id,
       mockId = mockResponse.mockId,
       name = mockResponse.name,
       statusCode = mockResponse.statusCode,

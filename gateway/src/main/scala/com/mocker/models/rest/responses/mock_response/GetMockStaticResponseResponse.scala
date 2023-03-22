@@ -5,6 +5,7 @@ import com.mocker.rest.rest_service.GetMockStaticResponse.{Response => ProtoGetM
 import zio.json.DeriveJsonEncoder
 
 case class GetMockStaticResponseResponse(
+    responseId: Long,
     name: String,
     statusCode: Int,
     requestHeaders: Set[KVPair],
@@ -19,6 +20,7 @@ object GetMockStaticResponseResponse {
 
   def fromMessage(message: ProtoGetMockStaticResponseResponse): GetMockStaticResponseResponse = {
     GetMockStaticResponseResponse(
+      responseId = message.id,
       name = message.name,
       statusCode = message.statusCode,
       requestHeaders = message.requestHeaders.map(v => KVPair.fromProto(v)).toSet,
