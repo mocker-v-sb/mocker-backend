@@ -153,9 +153,10 @@ message GetModel {
   }
 
   message Response {
-    string name = 1;
-    google.protobuf.StringValue description = 2;
-    string sample = 3;
+    int64 id = 1;
+    string name = 2;
+    google.protobuf.StringValue description = 3;
+    string sample = 4;
   }
 }
 
@@ -231,16 +232,17 @@ message GetMock {
   }
 
   message Response {
-    string name = 1;
-    google.protobuf.StringValue description = 2;
-    string path = 3;
-    Method method = 4;
-    google.protobuf.Int64Value request_model_id = 5;
-    google.protobuf.Int64Value response_model_id = 6;
-    repeated string request_headers = 7;
-    repeated string response_headers = 8;
-    repeated string query_params = 9;
-    repeated string path_params = 10;
+    int64 id = 1;
+    string name = 2;
+    google.protobuf.StringValue description = 3;
+    string path = 4;
+    Method method = 5;
+    google.protobuf.Int64Value request_model_id = 6;
+    google.protobuf.Int64Value response_model_id = 7;
+    repeated string request_headers = 8;
+    repeated string response_headers = 9;
+    repeated string query_params = 10;
+    repeated string path_params = 11;
   }
 }
 
@@ -317,14 +319,15 @@ message GetMockStaticResponse {
   }
 
   message Response {
-    int64 mock_id = 1;
-    string name = 2;
-    int32 status_code = 3;
-    repeated KVPair request_headers = 4;
-    repeated KVPair response_headers = 5;
-    repeated KVPair query_params = 6;
-    repeated KVPair path_params = 7;
-    string response_content = 8;
+    int64 id = 1;
+    int64 mock_id = 2;
+    string name = 3;
+    int32 status_code = 4;
+    repeated KVPair request_headers = 5;
+    repeated KVPair response_headers = 6;
+    repeated KVPair query_params = 7;
+    repeated KVPair path_params = 8;
+    string response_content = 9;
   }
 }
 

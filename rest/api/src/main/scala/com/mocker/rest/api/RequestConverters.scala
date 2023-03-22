@@ -43,6 +43,7 @@ object RequestConverters {
 
   def convertUpdateModelRequest(request: UpdateModel.Request): Model = {
     Model(
+      id = request.modelId,
       name = request.name,
       description = request.description,
       schema = AvroSchemaUtils.fromSample(request.sample)
