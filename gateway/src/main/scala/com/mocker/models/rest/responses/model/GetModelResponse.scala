@@ -6,7 +6,7 @@ import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}
 case class GetModelResponse(
     name: String,
     description: Option[String],
-    schema: String
+    sample: String
 )
 
 object GetModelResponse {
@@ -17,7 +17,7 @@ object GetModelResponse {
     GetModelResponse(
       name = message.name,
       description = message.description,
-      schema = message.schema
+      sample = message.sample
     )
   }
 }

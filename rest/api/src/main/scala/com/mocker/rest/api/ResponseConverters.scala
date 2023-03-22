@@ -7,6 +7,7 @@ import com.mocker.rest.mock_response.MockResponseSnippet
 import com.mocker.rest.model.{Mock, MockQueryResponse, MockResponse, Model, ModelSnippet, Service, ServiceStats}
 import com.mocker.rest.rest_service._
 import com.mocker.rest.service.ServiceSnippet
+import com.mocker.rest.utils.AvroSchemaUtils
 import com.mocker.rest.utils.PathUtils.buildFullPath
 
 import java.sql.Timestamp
@@ -37,7 +38,7 @@ object ResponseConverters {
     GetModel.Response(
       name = model.name,
       description = model.description,
-      schema = model.schema.toString
+      sample = AvroSchemaUtils.generateSample(model.schema)
     )
   }
 
@@ -73,7 +74,7 @@ object ResponseConverters {
       responseHeaders = mockResponse.responseHeaders,
       queryParams = mockResponse.queryParams,
       pathParams = mockResponse.pathParams,
-      responseContent = mockResponse.response.toString
+      responseContent = mockResponse.response
     )
   }
 

@@ -1,6 +1,7 @@
 package com.mocker.rest.model
 
 import com.mocker.rest.request.KVPair
+import com.mocker.rest.utils.AvroSchemaUtils
 import org.apache.avro.Schema
 import org.apache.avro.util.RandomData
 
@@ -17,12 +18,10 @@ object MockQueryResponse {
   }
 
   def fromModel(model: Model): MockQueryResponse = {
-    val schema = new Schema.Parser().parse(model.schema)
-    val data = new RandomData(schema, 1).iterator.next()
     MockQueryResponse(
       statusCode = 200,
       headers = Seq.empty,
-      content = String.valueOf(data)
+      content = AvroSchemaUtils.generateSample(model.schema)
     )
   }
 
