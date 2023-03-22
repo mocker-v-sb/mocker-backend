@@ -1,7 +1,7 @@
 package com.mocker.rest.utils
 
+import com.mocker.rest.avro.AvroSchema
 import io.circe.parser._
-import ca.dataedu.savro.AvroSchema
 import com.mocker.rest.errors.RestMockerException
 import org.apache.avro.Schema
 import org.apache.avro.util.RandomData

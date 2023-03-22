@@ -48,6 +48,4 @@ object Dependencies {
   lazy val scalaMock = "org.scalamock" %% "scalamock" % "5.1.0"
 
   lazy val apacheAvro = "org.apache.avro" % "avro" % "1.11.0"
-
-  lazy val sAvro = "ca.dataedu" %% "savro" % "0.9.1"
 }
