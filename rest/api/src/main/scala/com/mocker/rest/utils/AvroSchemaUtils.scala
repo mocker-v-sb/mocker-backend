@@ -21,5 +21,4 @@ object AvroSchemaUtils {
     String.valueOf(data)
   }
 
-
 }
