@@ -3,8 +3,8 @@ package com.mocker.rest.avro
 final case class SanitizedFieldName(validFieldName: String, explanation: Option[String])
 
 /**
- * Credits to https://github.com/irajhedayati/savro
- */
+  * Credits to https://github.com/irajhedayati/savro
+  */
 object SanitizedFieldName {
 
   def apply(fieldName: String): SanitizedFieldName = {
@@ -18,7 +18,7 @@ object SanitizedFieldName {
         sanitizedFieldName,
         Option(
           s"The original field name was '$fieldName' but some characters is not accepted in " +
-          "the field name of Avro record"
+            "the field name of Avro record"
         )
       )
   }

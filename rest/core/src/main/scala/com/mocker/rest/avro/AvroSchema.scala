@@ -9,8 +9,8 @@ import scala.jdk.CollectionConverters._
 import scala.util.matching.Regex
 
 /**
- * Credits to https://github.com/irajhedayati/savro
- */
+  * Credits to https://github.com/irajhedayati/savro
+  */
 object AvroSchema {
 
   import AvroImplicits._

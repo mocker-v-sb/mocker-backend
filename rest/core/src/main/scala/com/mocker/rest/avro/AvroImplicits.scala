@@ -9,8 +9,8 @@ import scala.annotation.tailrec
 import scala.jdk.CollectionConverters._
 
 /**
- * Credits to https://github.com/irajhedayati/savro
- */
+  * Credits to https://github.com/irajhedayati/savro
+  */
 object AvroImplicits {
 
   implicit class SchemaFieldOps(field: Field) {
