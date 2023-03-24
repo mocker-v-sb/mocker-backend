@@ -1,7 +1,6 @@
 package com.mocker.gateway.routes
 
 import com.mocker.clients.MqMockerClientService
-import com.mocker.gateway.routes.middleware.Middleware
 import com.mocker.gateway.routes.utils.StatusMapper
 import com.mocker.models.mq.requests.{CreateTopicRequest, DeleteTopicRequest, GetMessagesRequest, GetTopicsRequest, SendMessageRequest}
 import com.mocker.models.mq.responses.{CreateTopicResponse => ScalaCreateTopicResponse, DeleteTopicResponse => ScalaDeleteTopicResponse, GetMessagesResponse => ScalaGetMessagesResponse, GetTopicResponse => ScalaGetTopicResponse, GetTopicsResponse => ScalaGetTopicsResponse, SendMessageResponse => ScalaSendMessagesResponse}
