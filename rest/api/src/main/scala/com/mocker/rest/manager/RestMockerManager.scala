@@ -26,6 +26,7 @@ case class RestMockerManager(
 
   def getMockResponse(query: MockQuery): IO[RestMockerException, MockQueryResponse] = {
     for {
+      _ <- zio.Console.printLine(query).mapError(e => RestMockerException.internal(e))
       service <- getService(query.servicePath)
       allMocks <- mockActions.getAll(service.id).asZIO(dbLayer).run
       suitableMocks = allMocks.filter(_.matches(query))
@@ -33,18 +34,22 @@ case class RestMockerManager(
         .sequence(suitableMocks.map(mock => mockResponseActions.getAll(mock.id)))
         .asZIO(dbLayer)
         .run
-        .map(_.flatten)
       suitableResponses = suitableMocks
         .zip(responses)
         .map {
           case (mock, response) => (extractPathParams(query.requestPath, mock), response)
         }
-        .filter {
-          case (pathParams, response) => pathParams.sorted == response.pathParams.sorted && response.matches(query)
-        }
         .map {
+          case (pathParams, response) =>
+            (
+              pathParams,
+              response.filter(response => pathParams.sorted == response.pathParams.sorted && response.matches(query))
+            )
+        }
+        .flatMap {
           case (_, response) => response
         }
+      _ <- zio.Console.printLine(suitableResponses).mapError(e => RestMockerException.internal(e))
       result <- chooseMockResponse(suitableMocks, suitableResponses)
     } yield result
   }

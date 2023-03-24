@@ -81,11 +81,11 @@ object MockRestHandler {
       headers = headers.toList.map { case (name, value)       => KVPair(name, value) }.toSet,
       queryParams = queryParams.flatMap { case (name, values) => values.map(value => KVPair(name, value)) }.toSet
     )
-    path.segments.toList match {
+    path.encode.split("/").filter(_.nonEmpty).toList match {
       case Nil                => ZIO.fail(new IllegalArgumentException("Path can't be root"))
-      case servicePath :: Nil => ZIO.succeed(request.copy(servicePath = servicePath.toString))
+      case servicePath :: Nil => ZIO.succeed(request.copy(servicePath = servicePath))
       case servicePath :: requestPath =>
-        ZIO.succeed(request.copy(servicePath = servicePath.toString, requestPath = requestPath.toString()))
+        ZIO.succeed(request.copy(servicePath = servicePath, requestPath = "/" + requestPath.mkString("/")))
     }
   }
 
