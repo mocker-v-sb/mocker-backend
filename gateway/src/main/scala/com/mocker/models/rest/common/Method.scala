@@ -12,6 +12,8 @@ sealed trait Method {
 
 object Method {
 
+  def default: Method = GET
+
   def all: Seq[Method] = Seq(GET, POST, PUT, DELETE, PATCH)
 
   implicit val encoder: JsonEncoder[Method] = JsonEncoder[String].contramap(_.name)

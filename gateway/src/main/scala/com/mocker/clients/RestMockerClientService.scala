@@ -1,24 +1,10 @@
 package com.mocker.clients
 
-import com.mocker.models.rest.requests.mock.{
-  CreateMockRequest,
-  DeleteAllServiceMocksRequest,
-  DeleteMockRequest,
-  GetAllServiceMocksRequest,
-  GetMockRequest,
-  UpdateMockRequest
-}
-import com.mocker.models.rest.requests.mock_response.{
-  CreateMockStaticResponseRequest,
-  DeleteAllMockStaticResponsesRequest,
-  DeleteMockStaticResponseRequest,
-  GetAllMockStaticResponsesRequest,
-  GetMockStaticResponseRequest,
-  UpdateMockStaticResponseRequest
-}
+import com.mocker.models.rest.requests.GetResponseRequest
+import com.mocker.models.rest.requests.mock._
+import com.mocker.models.rest.requests.mock_response._
 import com.mocker.models.rest.requests.model._
 import com.mocker.models.rest.requests.service._
-import com.mocker.rest.rest_service
 import com.mocker.rest.rest_service.ZioRestService.RestMockerClient
 import com.mocker.rest.rest_service._
 import io.grpc.Status
@@ -132,6 +118,10 @@ object RestMockerClientService {
       request: DeleteAllMockStaticResponsesRequest
   ): Response[DeleteAllMockStaticResponses.Response] = {
     RestMockerClient.deleteAllMockStatisResponses(request.toMessage)
+  }
+
+  def getResponse(request: GetResponseRequest): Response[GetResponse.Response] = {
+    RestMockerClient.getResponse(request.toMessage)
   }
 
 }
