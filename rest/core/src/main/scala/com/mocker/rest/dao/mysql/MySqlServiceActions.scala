@@ -24,8 +24,7 @@ case class MySqlServiceActions()(implicit ec: ExecutionContext) extends ServiceA
     sql"""SELECT service.*,
            (SELECT COUNT(*) FROM mock where service.id = mock.service_id)   AS mock_count,
            (SELECT COUNT(*) FROM model where service.id = model.service_id) AS model_count
-    FROM service
-    GROUP BY service.id;""".as[ServiceStats]
+    FROM service;""".as[ServiceStats]
   }
 
   override def search(query: String): DBIO[Seq[ServiceStats]] = {
@@ -33,8 +32,7 @@ case class MySqlServiceActions()(implicit ec: ExecutionContext) extends ServiceA
            (SELECT COUNT(*) FROM mock where service.id = mock.service_id)   AS mock_count,
            (SELECT COUNT(*) FROM model where service.id = model.service_id) AS model_count
     FROM service
-        WHERE service.path LIKE '%#$query%' OR service.name LIKE '%#$query%'
-    GROUP BY service.id;""".as[ServiceStats]
+        WHERE service.path LIKE '%#$query%' OR service.name LIKE '%#$query%';""".as[ServiceStats]
   }
 
   override def get(serviceId: Long): DBIO[Option[Service]] =
