@@ -1,7 +1,7 @@
 package com.mocker.gateway.routes.rest
 
 import com.mocker.clients.RestMockerClientService
-import com.mocker.gateway.routes.StatusMapper
+import com.mocker.gateway.routes.utils.StatusMapper
 import com.mocker.models.rest.common
 import com.mocker.models.rest.common.KVPair
 import com.mocker.models.rest.requests.GetResponseRequest
