@@ -49,7 +49,7 @@ object MockRestApiModelHandler {
           } yield response
         case None => ZIO.succeed(Response.status(HttpStatus.BadRequest))
       }
-    case req @ DELETE -> !! / "rest" / "service" / servicePath / "model" =>
+    case req @ DELETE -> !! / "rest" / "service" / servicePath / "models" =>
       for {
         protoResponse <- RestMockerClientService.deleteServiceModels(DeleteAllServiceModelsRequest(servicePath)).either
         response <- protoResponse.toHttp
