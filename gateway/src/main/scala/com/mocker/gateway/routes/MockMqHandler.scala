@@ -1,6 +1,7 @@
 package com.mocker.gateway.routes
 
 import com.mocker.clients.MqMockerClientService
+import com.mocker.gateway.routes.utils.StatusMapper
 import com.mocker.models.mq.requests.{
   CreateTopicRequest,
   DeleteTopicRequest,

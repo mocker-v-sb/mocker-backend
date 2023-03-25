@@ -1,4 +1,4 @@
-package com.mocker.gateway.routes
+package com.mocker.gateway.routes.utils
 
 import io.grpc.{Status => GrpcStatus}
 import zhttp.http.{Status => HttpStatus}
