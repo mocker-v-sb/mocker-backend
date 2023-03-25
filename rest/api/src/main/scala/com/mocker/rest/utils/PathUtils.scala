@@ -43,8 +43,8 @@ object PathUtils {
   implicit class PathMatcher(private val path: Path) extends AnyVal {
 
     def matchesPattern(pattern: String): Boolean = {
-      val pathSegments = path.split("/").toList
-      val patternSegments = pattern.split("/").toList
+      val pathSegments = path.split("/").toList.filter(_.nonEmpty)
+      val patternSegments = pattern.split("/").toList.filter(_.nonEmpty)
 
       pathSegments.size == patternSegments.size && pathSegments.zip(patternSegments).forall {
         case (pathChunk, patternChunk) =>
