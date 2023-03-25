@@ -49,6 +49,9 @@ case class MySqlServiceActions()(implicit ec: ExecutionContext) extends ServiceA
 
   override def delete(serviceId: Long): DBIO[Unit] =
     table.filter(_.id === serviceId).delete.map(_ => ())
+
+  override def deleteExpired(): DBIO[Unit] =
+    sqlu"""DELETE FROM service WHERE expiration_time <= NOW();""".map(_ => ())
 }
 
 object MySqlServiceActions {

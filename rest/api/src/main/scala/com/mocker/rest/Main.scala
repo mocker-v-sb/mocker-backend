@@ -4,10 +4,11 @@ import com.mocker.common.utils.{Environment, ServerAddress}
 import com.mocker.rest.api.RestMockerService
 import com.mocker.rest.manager.RestMockerManager
 import com.mocker.rest.rest_service.ZioRestService.ZRestMocker
+import com.mocker.rest.scheduler.RestExpiredServiceCleanerTask
 import io.grpc.protobuf.services.ProtoReflectionService
 import scalapb.zio_grpc.{RequestContext, Server, ServerLayer, ServiceList}
 import slick.interop.zio.DatabaseProvider
-import zio.{Scope, ZIO, ZIOAppArgs, ZLayer}
+import zio.{Schedule, Scope, ZIO, ZIOAppArgs, ZLayer}
 
 import scala.concurrent.ExecutionContext
 
@@ -34,14 +35,27 @@ object Main extends zio.ZIOAppDefault {
     serviceList
   )
 
-  private val service = ZLayer.make[Server](
+  private val dbProviderLayer = ZLayer.make[DatabaseProvider](
     dbConfig,
     dbBackendLayer,
-    DatabaseProvider.fromConfig(),
+    DatabaseProvider.fromConfig()
+  )
+
+  private val service = ZLayer.make[Server](
+    dbProviderLayer,
     RestMockerManager.layer,
     RestMockerService.layer,
     serverLayer
   )
 
-  override def run: ZIO[Any with ZIOAppArgs with Scope, Any, Any] = service.launch
+  private val restService =
+    for {
+      _ <- service.launch.forkDaemon
+      _ <- RestExpiredServiceCleanerTask
+        .dropExpiredServices()
+        .provide(dbProviderLayer)
+        .schedule(Schedule.secondOfMinute(0))
+    } yield ()
+
+  override def run: ZIO[Any with ZIOAppArgs with Scope, Any, Any] = restService.exitCode
 }
