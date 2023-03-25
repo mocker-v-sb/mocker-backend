@@ -22,24 +22,16 @@ case class MySqlServiceActions()(implicit ec: ExecutionContext) extends ServiceA
 
   override def getWithStats: DBIO[Seq[ServiceStats]] = {
     sql"""SELECT service.*,
-           (SELECT COUNT(mock.id)
-            FROM service
-                     LEFT JOIN mock ON service.id = mock.service_id)   AS mock_count,
-           (SELECT COUNT(model.id)
-            FROM service
-                     LEFT JOIN model ON service.id = model.service_id) AS model_count
+           (SELECT COUNT(*) FROM mock where service.id = mock.service_id)   AS mock_count,
+           (SELECT COUNT(*) FROM model where service.id = model.service_id) AS model_count
     FROM service
     GROUP BY service.id;""".as[ServiceStats]
   }
 
   override def search(query: String): DBIO[Seq[ServiceStats]] = {
     sql"""SELECT service.*,
-           (SELECT COUNT(mock.id)
-            FROM service
-                     LEFT JOIN mock ON service.id = mock.service_id)   AS mock_count,
-           (SELECT COUNT(model.id)
-            FROM service
-                     LEFT JOIN model ON service.id = model.service_id) AS model_count
+           (SELECT COUNT(*) FROM mock where service.id = mock.service_id)   AS mock_count,
+           (SELECT COUNT(*) FROM model where service.id = model.service_id) AS model_count
     FROM service
         WHERE service.path LIKE '%#$query%' OR service.name LIKE '%#$query%'
     GROUP BY service.id;""".as[ServiceStats]
