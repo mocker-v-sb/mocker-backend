@@ -2,13 +2,10 @@ package com.mocker.gateway
 
 import com.mocker.common.utils.{Environment, ServerAddress}
 import com.mocker.gateway.routes._
-import com.mocker.gateway.routes.rest.{MockRestApiMockHandler, MockRestApiMockResponseHandler, MockRestApiModelHandler, MockRestApiServiceHandler, MockRestHandler}
+import com.mocker.gateway.routes.rest._
 import com.mocker.mq.mq_service.ZioMqService.MqMockerClient
-import com.mocker.mq.mq_service.ZioMqService.MqMockerClient.Service
 import com.mocker.rest.rest_service.ZioRestService.RestMockerClient
-import com.mocker.rest.rest_service.ZioRestService.RestMockerClient.Service
 import io.grpc.ManagedChannelBuilder
-import scalapb.zio_grpc.ZManagedChannel
 import zhttp.http._
 import zhttp.service.Server
 import zio._
