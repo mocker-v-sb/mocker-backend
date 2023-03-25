@@ -10,7 +10,7 @@ object MockMatchers {
 
     def matches(query: MockQuery): Boolean = {
       mock.method == query.method &&
-      mock.requestHeaders.sorted == query.headers.map(_.name).sorted &&
+      mock.requestHeaders.forall(n => query.headers.map(_.name).contains(n)) && // query can contain extra headers
       mock.queryParams.sorted == query.queryParams.map(_.name).sorted &&
       query.requestPath.matchesPattern(mock.path)
     }
@@ -20,7 +20,7 @@ object MockMatchers {
 
     def matches(query: MockQuery): Boolean = {
       mockResponse.queryParams.sorted == query.queryParams.sorted &&
-      mockResponse.requestHeaders == query.headers.sorted
+      mockResponse.requestHeaders.forall(n => query.headers.contains(n)) // query can contain extra headers
     }
   }
 

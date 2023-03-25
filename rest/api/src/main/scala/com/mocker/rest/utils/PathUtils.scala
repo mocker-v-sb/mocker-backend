@@ -25,8 +25,8 @@ object PathUtils {
   }
 
   def extractPathParams(path: Path, mock: Mock): Seq[KVPair] = {
-    val mockPathSegments = mock.path.split("/").toList
-    val pathSegments = path.split("/").toList
+    val mockPathSegments = mock.path.split("/").toList.filter(_.nonEmpty)
+    val pathSegments = path.split("/").toList.filter(_.nonEmpty)
 
     val pairs: mutable.Buffer[KVPair] = mutable.Buffer.empty
     mockPathSegments.zip(pathSegments).foreach {
