@@ -2,18 +2,11 @@ package com.mocker.gateway.routes.rest
 
 import com.mocker.clients.RestMockerClientService
 import com.mocker.gateway.routes.utils.Response._
-import com.mocker.models.rest.requests.mock.{
-  CreateMockRequest,
-  DeleteAllServiceMocksRequest,
-  DeleteMockRequest,
-  GetAllServiceMocksRequest,
-  GetMockRequest,
-  UpdateMockRequest
-}
+import com.mocker.models.rest.requests.mock._
 import com.mocker.models.rest.responses.mock.{GetAllServiceMocksResponse, GetMockResponse}
 import com.mocker.rest.rest_service.ZioRestService.RestMockerClient
 import io.grpc.{Status => GrpcStatus}
-import zhttp.http.Method.{DELETE, GET, POST, PUT}
+import zhttp.http.Method.{DELETE, GET, PATCH, POST}
 import zhttp.http.{Status => HttpStatus, _}
 import zio.json.{DecoderOps, EncoderOps}
 import zio.{Console, ZIO}
@@ -32,7 +25,7 @@ object MockRestApiMockHandler {
         }).either
         response <- protoResponse.toHttp
       } yield response
-    case req @ PUT -> !! / "rest" / "service" / servicePath / "mock" / mockId =>
+    case req @ PATCH -> !! / "rest" / "service" / servicePath / "mock" / mockId =>
       mockId.toLongOption match {
         case Some(mockId) =>
           for {
