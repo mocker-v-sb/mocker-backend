@@ -1,20 +1,32 @@
 package com.mocker.gateway.routes
 
-import com.mocker.clients.GraphQlMockerClient
-import zhttp.http.Method.{DELETE, GET, PATCH, POST, PUT}
-import zhttp.http.{->, Http, Path, Request, Response}
+import com.mocker.common.utils.{Environment, ServerAddress}
+import zhttp.http.{/:, ->, Http, HttpData, Request, Response}
+import zhttp.service.{ChannelFactory, Client, EventLoopGroup}
 import zio.ZIO
 
-case class GraphQlMockerHandler(client: GraphQlMockerClient) {
+object GraphQlMockerHandler {
 
-  lazy val routes: Http[Nothing, Throwable, Request, Response] = Http.collectZIO[Request] {
+  private val serverAddress = ServerAddress(
+    Environment.conf.getString("mq-mocker-server.address"),
+    Environment.conf.getInt("mq-mocker-server.port")
+  )
+
+  lazy val routes: Http[EventLoopGroup with ChannelFactory, Throwable, Request, Response] = Http.collectZIO[Request] {
     case req @ _ -> "" /: "graphql" /: path => inner(req)
-    case req @ _ -> "" /: "user" /: path => inner(req)
+    case req @ _ -> "" /: "user" /: path    => inner(req)
   }
 
-  private def inner(request: Request) = for {
-    response <- client.proxyRequest(request)
-    responseBody <- response.bodyAsString
-    responseStatus <- ZIO.succeed(response.status)
-  } yield Response.text(responseBody).setStatus(responseStatus)
+  private def inner(request: Request) =
+    for {
+      content <- request.bodyAsString.map(b => HttpData.fromString(b))
+      response <- Client.request(
+        url = s"${serverAddress.toString}/${request.path}",
+        method = request.method,
+        content = content,
+        headers = request.headers
+      )
+      responseBody <- response.bodyAsString
+      responseStatus <- ZIO.succeed(response.status)
+    } yield Response.text(responseBody).setStatus(responseStatus)
 }
