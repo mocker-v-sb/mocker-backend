@@ -50,11 +50,12 @@ object Main extends zio.ZIOAppDefault {
 
   private val restService =
     for {
-      _ <- service.launch.forkDaemon
       _ <- RestExpiredServiceCleanerTask
         .dropExpiredServices()
         .provide(dbProviderLayer)
         .schedule(Schedule.secondOfMinute(0))
+        .forkDaemon
+      _ <- service.launch
     } yield ()
 
   override def run: ZIO[Any with ZIOAppArgs with Scope, Any, Any] = restService.exitCode
