@@ -17,6 +17,7 @@ import scalapb.zio_grpc.ZManagedChannel
 import zhttp.http._
 import zhttp.service.Server
 import zio._
+import zhttp.service.{ChannelFactory, Client, EventLoopGroup}
 
 object Main extends ZIOAppDefault {
 
@@ -35,6 +36,8 @@ object Main extends ZIOAppDefault {
       )
     )
 
+  val graphQlMockerClient = ???
+
   val restMockerClient: Layer[Throwable, RestMockerClient.Service] =
     RestMockerClient.live(
       ZManagedChannel(
@@ -48,9 +51,9 @@ object Main extends ZIOAppDefault {
     )
 
   val routes: Http[MqMockerClient.Service with RestMockerClient.Service, Throwable, Request, Response] =
-    MockMqHandler.routes ++ MockRestApiServiceHandler.routes ++
+    (MockMqHandler.routes ++ MockRestApiServiceHandler.routes ++
       MockRestApiModelHandler.routes ++ MockRestApiMockHandler.routes ++
-      MockRestApiMockResponseHandler.routes ++ MockRestHandler.routes @@ Middleware.cors(corsConfig)
+      MockRestApiMockResponseHandler.routes ++ MockRestHandler.routes) @@ Middleware.cors(corsConfig)
 
   val program: ZIO[Any, Throwable, ExitCode] = for {
     _ <- Console.printLine(s"Starting server on $serverAddress")
