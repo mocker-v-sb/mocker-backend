@@ -11,4 +11,6 @@ trait ServiceActions {
   def search(query: String): DBIO[Seq[ServiceStats]]
   def upsert(service: Service): DBIO[Unit]
   def delete(serviceId: Long): DBIO[Unit]
+
+  def deleteExpired(): DBIO[Unit]
 }
