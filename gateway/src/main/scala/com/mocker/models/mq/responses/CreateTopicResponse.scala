@@ -11,8 +11,8 @@ object CreateTopicResponse {
 
   def fromMessage(message: ProtoCreateTopicResponse): CreateTopicResponse = {
     CreateTopicResponse(
-      brokerType = message.brokerType.toString(),
-      host = message.host,
+      brokerType = "KAFKA",
+      host = "158.160.57.255",
       port = message.port,
       topicName = message.topicName
     )
