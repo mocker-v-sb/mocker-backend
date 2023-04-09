@@ -30,9 +30,8 @@ final class AuthRepositoryImpl(
 
   override def insertUser(user: User): IO[AppError.RepositoryError, Int] = {
     val _id = UUID.randomUUID()
-    val query = (insertInto(users)
-      (id, username, password))
-    .values(_id, user.username, user.password)
+    val query = (insertInto(users)(id, username, password))
+      .values(_id, user.username, user.password)
 
     ZIO.logInfo(s"Query to insert user is ${renderInsert(query)}") *>
       execute(query).provideAndLog(driverLayer)

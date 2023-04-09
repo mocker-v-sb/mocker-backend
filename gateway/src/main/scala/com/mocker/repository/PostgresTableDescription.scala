@@ -13,7 +13,6 @@ trait PostgresTableDescription extends PostgresJdbcModule {
 
   implicit val userSchema = DeriveSchema.gen[User]
 
-
   val users = defineTableSmart[User]
 
   val (id, username, password) = users.columns

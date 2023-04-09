@@ -4,7 +4,7 @@ object Dependencies {
 
   lazy val coreZio = Seq(
     "dev.zio" %% "zio" % "2.0.10",
-    "dev.zio" %% "zio-json" % "0.4.2",
+    "dev.zio" %% "zio-json" % "0.4.2"
   )
 
   lazy val zioHttp = Seq(
