@@ -3,19 +3,22 @@ import sbt._
 object Dependencies {
 
   lazy val coreZio = Seq(
-    "dev.zio" %% "zio" % "2.0.8",
+    "dev.zio" %% "zio" % "2.0.10",
     "dev.zio" %% "zio-json" % "0.4.2",
-    "io.d11" %% "zhttp" % "2.0.0-RC10"
+  )
+  lazy val zioHttp = Seq(
+    "dev.zio" %% "zio-http" % "0.0.5",
+    "com.github.jwt-scala" %% "jwt-core" % "9.2.0"
   )
 
   lazy val logging = Seq(
     "org.slf4j" % "slf4j-api" % "2.0.5",
-    "ch.qos.logback" % "logback-classic" % "1.4.5"
+    "ch.qos.logback" % "logback-classic" % "1.4.6"
   )
 
   lazy val kafka = Seq(
-    "dev.zio" %% "zio-streams" % "2.0.8",
-    "dev.zio" %% "zio-kafka" % "2.0.7"
+    "dev.zio" %% "zio-streams" % "2.0.10",
+    "dev.zio" %% "zio-kafka" % "2.1.3"
   )
 
   lazy val typesafeConfig = "com.typesafe" % "config" % "1.4.2"
@@ -45,7 +48,7 @@ object Dependencies {
 
   lazy val mySqlConnector = "mysql" % "mysql-connector-java" % "8.0.32"
 
-  lazy val scalaMock = "org.scalamock" %% "scalamock" % "5.1.0"
+  lazy val scalaMock = "org.scalamock" %% "scalamock" % "5.2.0"
 
   lazy val apacheAvro = "org.apache.avro" % "avro" % "1.11.0"
 }

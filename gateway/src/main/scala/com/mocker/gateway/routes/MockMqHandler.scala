@@ -2,34 +2,23 @@ package com.mocker.gateway.routes
 
 import com.mocker.clients.MqMockerClientService
 import com.mocker.gateway.routes.utils.StatusMapper
-import com.mocker.models.mq.requests.{
-  CreateTopicRequest,
-  DeleteTopicRequest,
-  GetMessagesRequest,
-  GetTopicsRequest,
-  SendMessageRequest
-}
-import com.mocker.models.mq.responses.{
-  CreateTopicResponse => ScalaCreateTopicResponse,
-  DeleteTopicResponse => ScalaDeleteTopicResponse,
-  GetMessagesResponse => ScalaGetMessagesResponse,
-  GetTopicResponse => ScalaGetTopicResponse,
-  GetTopicsResponse => ScalaGetTopicsResponse,
-  SendMessageResponse => ScalaSendMessagesResponse
-}
+import com.mocker.models.mq.requests.{CreateTopicRequest, DeleteTopicRequest, GetMessagesRequest, GetTopicsRequest, SendMessageRequest}
+import com.mocker.models.mq.responses.{CreateTopicResponse => ScalaCreateTopicResponse, DeleteTopicResponse => ScalaDeleteTopicResponse, GetMessagesResponse => ScalaGetMessagesResponse, GetTopicResponse => ScalaGetTopicResponse, GetTopicsResponse => ScalaGetTopicsResponse, SendMessageResponse => ScalaSendMessagesResponse}
 import com.mocker.mq.mq_service.GetTopicsResponse
 import com.mocker.mq.mq_service.ZioMqService.MqMockerClient
 import io.grpc.{Status => GrpcStatus}
-import zhttp.http.Method.{DELETE, GET, POST}
-import zhttp.http.{!!, ->, /, Http, Request, Response, Status => HttpStatus}
+import zio.http.model.Method.{DELETE, GET, POST}
+import zio.http._
+import zio.http.model.{Status => HttpStatus}
+import zio.http.{Http, Request, Response}
 import zio.json.{DecoderOps, EncoderOps}
 import zio.{Console, ZIO}
 
 object MockMqHandler {
-  lazy val routes: Http[MqMockerClient.Service, Throwable, Request, Response] = Http.collectZIO[Request] {
+  lazy val routes: Http[MqMockerClient.Service, Response, Request, Response] = Http.collectZIO[Request] {
     case req @ POST -> !! / "mq" / "topic" =>
       for {
-        request <- req.bodyAsString
+        request <- req.body.asString
           .map(_.fromJson[CreateTopicRequest])
           .tapError(err => Console.printError(err).ignoreLogged)
         protoResponse <- (request match {
@@ -71,7 +60,7 @@ object MockMqHandler {
 
     case req @ POST -> !! / "mq" / "messages" =>
       for {
-        request <- req.bodyAsString
+        request <- req.body.asString
           .map(_.fromJson[SendMessageRequest])
           .tapError(err => Console.printError(err).ignoreLogged)
         protoResponse <- (request match {
@@ -137,4 +126,6 @@ object MockMqHandler {
       if (brokerType.isEmpty || topicName.isEmpty) ZIO.succeed(Response.status(HttpStatus.BadRequest))
       else ZIO.succeed(Response.json(ScalaGetTopicResponse.fromMessage().copy(topicName = topicName.get).toJson))
   }
+  .tapErrorZIO(err => Console.printError(err).ignoreLogged)
+  .mapError(_ => Response.status(HttpStatus.InternalServerError))
 }

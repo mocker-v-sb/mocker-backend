@@ -6,17 +6,18 @@ import com.mocker.models.rest.requests.service._
 import com.mocker.models.rest.responses.service._
 import com.mocker.rest.rest_service.ZioRestService.RestMockerClient
 import io.grpc.{Status => GrpcStatus}
-import zhttp.http.Method.{DELETE, GET, POST, PUT}
-import zhttp.http._
+import zio.http.model.Method.{DELETE, GET, POST, PUT}
+import zio.http.model.{Status => HttpStatus}
+import zio.http._
 import zio.json.{DecoderOps, EncoderOps}
 import zio.{Console, ZIO}
 
 object MockRestApiServiceHandler {
 
-  lazy val routes: Http[RestMockerClient.Service, Throwable, Request, Response] = Http.collectZIO[Request] {
+  lazy val routes: Http[RestMockerClient.Service, Response, Request, Response] = Http.collectZIO[Request] {
     case req @ POST -> !! / "rest" / "service" =>
       for {
-        request <- req.bodyAsString
+        request <- req.body.asString
           .map(_.fromJson[CreateServiceRequest])
           .tapError(err => Console.printError(err).ignoreLogged)
         protoResponse <- (request match {
@@ -27,7 +28,7 @@ object MockRestApiServiceHandler {
       } yield response
     case req @ PUT -> !! / "rest" / "service" / servicePath =>
       for {
-        request <- req.bodyAsString
+        request <- req.body.asString
           .map(_.fromJson[UpdateServiceRequest].map(_.copy(servicePath = servicePath)))
           .tapError(err => Console.printError(err).ignoreLogged)
         protoResponse <- (request match {
@@ -55,6 +56,8 @@ object MockRestApiServiceHandler {
         response <- protoResponse.withJson(GetServiceResponse.fromMessage(_).toJson)
       } yield response
   }
+  .tapErrorZIO(err => Console.printError(err).ignoreLogged)
+  .mapError(_ => Response.status(HttpStatus.InternalServerError))
 
   private def getAllServices = {
     for {

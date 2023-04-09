@@ -2,4 +2,4 @@ import Dependencies._
 
 name := "gateway"
 
-libraryDependencies ++= coreZio ++ grpc
+libraryDependencies ++= coreZio ++ zioHttp ++ grpc

@@ -1,7 +1,7 @@
 package com.mocker.gateway.routes.utils
 
 import io.grpc.{Status => GrpcStatus}
-import zhttp.http.{Status => HttpStatus}
+import zio.http.model.{Status => HttpStatus}
 
 object StatusMapper {
 
