@@ -17,53 +17,54 @@ import zio.Console
 
 object MockRestHandler {
 
-  lazy val routes: Http[RestMockerClient.Service, Response, Request, Response] = Http.collectZIO[Request] {
-    case req @ GET -> "" /: "rest" /: path =>
-      for {
-        request <- buildRequest(path, req.headers, req.url.queryParams).either
-        response <- request match {
-          case Left(_)        => ZIO.succeed(Response.status(HttpStatus.BadRequest))
-          case Right(request) => buildHttpResponse(request.copy(method = common.GET))
-        }
-      } yield response
-    case req @ DELETE -> "" /: "rest" /: path =>
-      for {
-        request <- buildRequest(path, req.headers, req.url.queryParams).either
-        response <- request match {
-          case Left(_)        => ZIO.succeed(Response.status(HttpStatus.BadRequest))
-          case Right(request) => buildHttpResponse(request.copy(method = common.DELETE))
-        }
-      } yield response
-    case req @ POST -> "" /: "rest" /: path =>
-      for {
-        body <- req.body.asString
-        request <- buildRequest(path, req.headers, req.url.queryParams, Some(body)).either
-        response <- request match {
-          case Left(_)        => ZIO.succeed(Response.status(HttpStatus.BadRequest))
-          case Right(request) => buildHttpResponse(request.copy(method = common.POST))
-        }
-      } yield response
-    case req @ PUT -> "" /: "rest" /: path =>
-      for {
-        body <- req.body.asString
-        request <- buildRequest(path, req.headers, req.url.queryParams, Some(body)).either
-        response <- request match {
-          case Left(_)        => ZIO.succeed(Response.status(HttpStatus.BadRequest))
-          case Right(request) => buildHttpResponse(request.copy(method = common.PUT))
-        }
-      } yield response
-    case req @ PATCH -> "" /: "rest" /: path =>
-      for {
-        body <- req.body.asString
-        request <- buildRequest(path, req.headers, req.url.queryParams, Some(body)).either
-        response <- request match {
-          case Left(_)        => ZIO.succeed(Response.status(HttpStatus.BadRequest))
-          case Right(request) => buildHttpResponse(request.copy(method = common.PATCH))
-        }
-      } yield response
-  }
-  .tapErrorZIO(err => Console.printError(err).ignoreLogged)
-  .mapError(_ => Response.status(HttpStatus.InternalServerError))
+  lazy val routes: Http[RestMockerClient.Service, Response, Request, Response] = Http
+    .collectZIO[Request] {
+      case req @ GET -> "" /: "rest" /: path =>
+        for {
+          request <- buildRequest(path, req.headers, req.url.queryParams).either
+          response <- request match {
+            case Left(_)        => ZIO.succeed(Response.status(HttpStatus.BadRequest))
+            case Right(request) => buildHttpResponse(request.copy(method = common.GET))
+          }
+        } yield response
+      case req @ DELETE -> "" /: "rest" /: path =>
+        for {
+          request <- buildRequest(path, req.headers, req.url.queryParams).either
+          response <- request match {
+            case Left(_)        => ZIO.succeed(Response.status(HttpStatus.BadRequest))
+            case Right(request) => buildHttpResponse(request.copy(method = common.DELETE))
+          }
+        } yield response
+      case req @ POST -> "" /: "rest" /: path =>
+        for {
+          body <- req.body.asString
+          request <- buildRequest(path, req.headers, req.url.queryParams, Some(body)).either
+          response <- request match {
+            case Left(_)        => ZIO.succeed(Response.status(HttpStatus.BadRequest))
+            case Right(request) => buildHttpResponse(request.copy(method = common.POST))
+          }
+        } yield response
+      case req @ PUT -> "" /: "rest" /: path =>
+        for {
+          body <- req.body.asString
+          request <- buildRequest(path, req.headers, req.url.queryParams, Some(body)).either
+          response <- request match {
+            case Left(_)        => ZIO.succeed(Response.status(HttpStatus.BadRequest))
+            case Right(request) => buildHttpResponse(request.copy(method = common.PUT))
+          }
+        } yield response
+      case req @ PATCH -> "" /: "rest" /: path =>
+        for {
+          body <- req.body.asString
+          request <- buildRequest(path, req.headers, req.url.queryParams, Some(body)).either
+          response <- request match {
+            case Left(_)        => ZIO.succeed(Response.status(HttpStatus.BadRequest))
+            case Right(request) => buildHttpResponse(request.copy(method = common.PATCH))
+          }
+        } yield response
+    }
+    .tapErrorZIO(err => Console.printError(err).ignoreLogged)
+    .mapError(_ => Response.status(HttpStatus.InternalServerError))
 
   private def buildRequest(
       path: Path,

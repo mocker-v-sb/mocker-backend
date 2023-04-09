@@ -6,9 +6,14 @@ object Dependencies {
     "dev.zio" %% "zio" % "2.0.10",
     "dev.zio" %% "zio-json" % "0.4.2",
   )
+
   lazy val zioHttp = Seq(
     "dev.zio" %% "zio-http" % "0.0.5",
     "com.github.jwt-scala" %% "jwt-core" % "9.2.0"
+  )
+
+  lazy val zioPostgres = Seq(
+    "dev.zio" %% "zio-sql-postgres" % "0.1.2"
   )
 
   lazy val logging = Seq(
@@ -51,4 +56,10 @@ object Dependencies {
   lazy val scalaMock = "org.scalamock" %% "scalamock" % "5.2.0"
 
   lazy val apacheAvro = "org.apache.avro" % "avro" % "1.11.0"
+
+  lazy val zioConfig = Seq(
+    "dev.zio" %% "zio-config" % "3.0.7",
+    "dev.zio" %% "zio-config-typesafe" % "3.0.7",
+    "dev.zio" %% "zio-config-magnolia" % "3.0.7"
+  )
 }

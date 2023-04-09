@@ -1,6 +1,7 @@
 package com.mocker.gateway
 
 import com.mocker.common.utils.{Environment, ServerAddress}
+import com.mocker.gateway.routes.AuthenticationHandler.jwtDecode
 import com.mocker.gateway.routes._
 import com.mocker.gateway.routes.rest._
 import com.mocker.mq.mq_service.ZioMqService.MqMockerClient
@@ -8,7 +9,7 @@ import com.mocker.rest.rest_service.ZioRestService.RestMockerClient
 import io.grpc.ManagedChannelBuilder
 import scalapb.zio_grpc.ZManagedChannel
 import zio._
-import zio.http.HttpAppMiddleware.cors
+import zio.http.HttpAppMiddleware.{bearerAuth, cors}
 import zio.http._
 import zio.http.middleware.Cors.CorsConfig
 import zio.http.model.Method
@@ -50,10 +51,10 @@ object Main extends ZIOAppDefault {
     )
 
   val routes =
-    (MockMqHandler.routes ++ MockRestApiServiceHandler.routes ++
+    (AuthenticationHandler.routes ++ (MockMqHandler.routes ++ MockRestApiServiceHandler.routes ++
       MockRestApiModelHandler.routes ++ MockRestApiMockHandler.routes ++
       MockRestApiMockResponseHandler.routes ++ MockRestHandler.routes ++
-      GraphQlMockerHandler.routes) @@ cors(corsConfig)
+      GraphQlMockerHandler.routes) @@ bearerAuth(jwtDecode(_).isDefined)) @@ cors(corsConfig)
 
   val program: ZIO[Any, Throwable, ExitCode] = for {
     _ <- Console.printLine(s"Starting server on $serverAddress")
