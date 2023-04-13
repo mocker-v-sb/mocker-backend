@@ -54,11 +54,15 @@ object Main extends ZIOAppDefault {
     (AuthenticationHandler.routes ++ (MockMqHandler.routes ++ MockRestApiServiceHandler.routes ++
       MockRestApiModelHandler.routes ++ MockRestApiMockHandler.routes ++
       MockRestApiMockResponseHandler.routes ++ MockRestHandler.routes ++
-      GraphQlMockerHandler.routes) @@ bearerAuth(jwtDecode(_).isDefined)) @@ cors(corsConfig)
+      GraphQlMockerHandler.routes)) @@ cors(corsConfig)
+//      GraphQlMockerHandler.routes) @@ bearerAuth(jwtDecode(_).isDefined)) @@ cors(corsConfig)
+
+  val serverConfig: ServerConfig => ServerConfig = _.port(9000)
 
   val program: ZIO[Any, Throwable, ExitCode] = for {
-    _ <- Console.printLine(s"Starting server on $serverAddress")
-    _ <- Server.serve(routes).provideLayer(mqMockerClient ++ restMockerClient ++ Server.default ++ Client.default)
+    _ <- Server
+      .serve(routes)
+      .provideLayer(Server.defaultWith(serverConfig) ++ mqMockerClient ++ restMockerClient ++ Client.default)
   } yield ExitCode.success
 
   override def run: ZIO[Any with ZIOAppArgs with Scope, Any, Any] = program
