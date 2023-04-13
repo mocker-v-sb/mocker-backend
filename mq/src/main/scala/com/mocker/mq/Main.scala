@@ -22,6 +22,11 @@ object Main extends zio.ZIOAppDefault {
     Environment.conf.getInt("kafka.port")
   )
 
+  val publicKafkaAddress = ServerAddress(
+    Environment.conf.getString("public-kafka.kafka.address"),
+    Environment.conf.getInt("kafka.port")
+  )
+
   val serviceList = ServiceList.addFromEnvironment[ZMqMocker[RequestContext]]
 
   val serverLayer = ServerLayer.fromServiceList(

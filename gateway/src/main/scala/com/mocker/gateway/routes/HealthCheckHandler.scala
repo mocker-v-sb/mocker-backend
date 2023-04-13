@@ -1,14 +1,13 @@
 package com.mocker.gateway.routes
 
-import zhttp.http.Method.GET
-import zhttp.http._
 import zio.ZIO
+import zio.http.model.Method.GET
+import zio.http._
 
 object HealthCheckHandler {
-  val prefix: Path = !! / "ping"
 
   def routes: Http[Any, Nothing, Request, Response] = Http.collectZIO[Request] {
-    case req @ GET -> prefix =>
+    case req @ GET -> !! / "ping" =>
       for {
         _ <- ZIO.unit
       } yield Response.text("pong")
