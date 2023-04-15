@@ -23,7 +23,7 @@ object Main extends zio.ZIOAppDefault {
   )
 
   val publicKafkaAddress = ServerAddress(
-    Environment.conf.getString("public-kafka.kafka.address"),
+    Environment.conf.getString("public-kafka.address"),
     Environment.conf.getInt("kafka.port")
   )
 

@@ -177,8 +177,8 @@ case class DefaultMqManager(kafkaController: KafkaController) extends MqManager 
     for {
       _ <- request.brokerType match {
         case ProtoBrokerType.BROKER_TYPE_KAFKA =>
-          ZIO
-            .attempt(kafkaController.adminClient.deleteTopic(request.topicName))
+          kafkaController.adminClient
+            .deleteTopic(request.topicName)
             .orElseFail(
               BrokerManagerException.couldNotDeleteTopic(
                 request.topicName,

@@ -3,7 +3,7 @@ import sbt._
 object Dependencies {
 
   lazy val coreZio = Seq(
-    "dev.zio" %% "zio" % "2.0.10",
+    "dev.zio" %% "zio" % "2.0.12",
     "dev.zio" %% "zio-json" % "0.4.2"
   )
 
@@ -17,13 +17,13 @@ object Dependencies {
   )
 
   lazy val logging = Seq(
-    "org.slf4j" % "slf4j-api" % "2.0.5",
+    "dev.zio" %% "zio-logging-slf4j" % "2.1.12",
     "ch.qos.logback" % "logback-classic" % "1.4.6"
   )
 
   lazy val kafka = Seq(
     "dev.zio" %% "zio-streams" % "2.0.10",
-    "dev.zio" %% "zio-kafka" % "2.1.3"
+    "dev.zio" %% "zio-kafka" % "2.2"
   )
 
   lazy val typesafeConfig = "com.typesafe" % "config" % "1.4.2"
