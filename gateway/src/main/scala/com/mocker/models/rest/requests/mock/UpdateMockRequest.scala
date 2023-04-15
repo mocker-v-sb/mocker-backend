@@ -20,7 +20,7 @@ case class UpdateMockRequest(
       mockId = mockId,
       name = name,
       description = description,
-      method = method.toProto,
+      method = method.proto,
       requestModelId = requestModelId,
       responseModelId = responseModelId
     )

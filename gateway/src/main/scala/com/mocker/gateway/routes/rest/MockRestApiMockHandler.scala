@@ -59,14 +59,14 @@ object MockRestApiMockHandler {
       case req @ GET -> !! / "rest" / "service" / servicePath / "mocks" =>
         for {
           protoResponse <- RestMockerClientService.getAllServiceMocks(GetAllServiceMocksRequest(servicePath)).either
-          response <- protoResponse.withJson(GetAllServiceMocksResponse.fromMessage(_).toJson)
+          response <- protoResponse.withBody(GetAllServiceMocksResponse.fromMessage(_).toJson)
         } yield response
       case req @ GET -> !! / "rest" / "service" / servicePath / "mock" / mockId =>
         mockId.toLongOption match {
           case Some(mockId) =>
             for {
               protoResponse <- RestMockerClientService.getMock(GetMockRequest(servicePath, mockId)).either
-              response <- protoResponse.withJson(GetMockResponse.fromMessage(_).toJson)
+              response <- protoResponse.withBody(GetMockResponse.fromMessage(_).toJson)
             } yield response
           case None => ZIO.succeed(Response.status(HttpStatus.BadRequest))
         }

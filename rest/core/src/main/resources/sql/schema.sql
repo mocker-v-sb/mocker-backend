@@ -17,7 +17,8 @@ CREATE TABLE `model`
     `service_id`    BIGINT(16)   NOT NULL,
     `name`          VARCHAR(128) NOT NULL,
     `description`   VARCHAR(128) NULL,
-    `schema`        JSON         NOT NULL,
+    `response_type` INT(8)       NOT NULL,
+    `response`      MEDIUMTEXT   NOT NULL,
     PRIMARY KEY (`id`),
     CONSTRAINT `model_ibfk_1` FOREIGN KEY (`service_id`) REFERENCES `service` (`id`) ON DELETE CASCADE
 );

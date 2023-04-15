@@ -5,9 +5,9 @@ import zio.json.{JsonDecoder, JsonEncoder}
 
 sealed trait Method {
 
-  def name: String
+  val proto: ProtoMethod
 
-  def toProto: ProtoMethod
+  def name: String = proto.name
 }
 
 object Method {
@@ -25,31 +25,21 @@ object Method {
 }
 
 case object GET extends Method {
-  override def name: String = "GET"
-
-  override def toProto: ProtoMethod = ProtoMethod.GET
+  override val proto: ProtoMethod = ProtoMethod.GET
 }
 
 case object POST extends Method {
-  override def name: String = "POST"
-
-  override def toProto: ProtoMethod = ProtoMethod.POST
+  override val proto: ProtoMethod = ProtoMethod.POST
 }
 
 case object PUT extends Method {
-  override def name: String = "PUT"
-
-  override def toProto: ProtoMethod = ProtoMethod.PUT
+  override val proto: ProtoMethod = ProtoMethod.PUT
 }
 
 case object DELETE extends Method {
-  override def name: String = "DELETE"
-
-  override def toProto: ProtoMethod = ProtoMethod.DELETE
+  override val proto: ProtoMethod = ProtoMethod.DELETE
 }
 
 case object PATCH extends Method {
-  override def name: String = "PATCH"
-
-  override def toProto: ProtoMethod = ProtoMethod.PATCH
+  override val proto: ProtoMethod = ProtoMethod.PATCH
 }

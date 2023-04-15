@@ -2,8 +2,10 @@ package com.mocker.rest.api
 
 import com.google.protobuf.util.Timestamps
 import com.google.protobuf.timestamp.{Timestamp => GoogleTimestamp}
+import com.mocker.rest.api.CommonConverters.convertModelResponse
 import com.mocker.rest.mock.MockSnippet
 import com.mocker.rest.mock_response.MockResponseSnippet
+import com.mocker.rest.model.ResponseTypeNamespace.ResponseType
 import com.mocker.rest.model.{Mock, MockQueryResponse, MockResponse, Model, ModelSnippet, Service, ServiceStats}
 import com.mocker.rest.rest_service._
 import com.mocker.rest.service.ServiceSnippet
@@ -39,7 +41,8 @@ object ResponseConverters {
       id = model.id,
       name = model.name,
       description = model.description,
-      sample = AvroSchemaUtils.generateSample(model.schema)
+      responseType = model.responseType,
+      response = convertModelResponse(model.responseType, model.response)
     )
   }
 

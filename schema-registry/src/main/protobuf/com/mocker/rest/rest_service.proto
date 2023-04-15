@@ -139,7 +139,8 @@ message CreateModel{
     string service_path = 1;
     string name = 2;
     google.protobuf.StringValue description = 3;
-    string sample = 4;
+    ResponseTypeNamespace.ResponseType response_type = 4;
+    string response = 5;
   }
 
   message Response {}
@@ -156,7 +157,8 @@ message GetModel {
     int64 id = 1;
     string name = 2;
     google.protobuf.StringValue description = 3;
-    string sample = 4;
+    ResponseTypeNamespace.ResponseType response_type = 4;
+    string response = 5;
   }
 }
 
@@ -178,7 +180,8 @@ message UpdateModel {
     int64 modelId = 2;
     string name = 3;
     google.protobuf.StringValue description = 4;
-    string sample = 5;
+    ResponseTypeNamespace.ResponseType response_type = 5;
+    string response = 6;
   }
 
   message Response {}

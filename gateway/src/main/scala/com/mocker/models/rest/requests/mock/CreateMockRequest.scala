@@ -24,7 +24,7 @@ case class CreateMockRequest(
       name = name,
       description = description,
       path = path,
-      method = method.toProto,
+      method = method.proto,
       requestModelId = requestModelId,
       responseModelId = responseModelId,
       requestHeaders = requestHeaders.toSeq,

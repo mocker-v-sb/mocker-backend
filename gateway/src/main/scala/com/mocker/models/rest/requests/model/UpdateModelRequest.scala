@@ -1,5 +1,6 @@
 package com.mocker.models.rest.requests.model
 
+import com.mocker.models.rest.common.ModelResponseType
 import com.mocker.rest.rest_service.UpdateModel.{Request => ProtoUpdateModelRequest}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}
 
@@ -8,7 +9,8 @@ case class UpdateModelRequest(
     modelId: Long = 0,
     name: String,
     description: Option[String],
-    sample: String
+    responseType: ModelResponseType,
+    response: String
 ) {
 
   def toMessage: ProtoUpdateModelRequest = {
@@ -17,7 +19,8 @@ case class UpdateModelRequest(
       modelId = modelId,
       name = name,
       description = description,
-      sample = sample
+      responseType = responseType.proto,
+      response = response
     )
   }
 }

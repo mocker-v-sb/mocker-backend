@@ -1,5 +1,6 @@
 package com.mocker.rest.model
 
+import com.mocker.rest.api.CommonConverters.convertModelResponse
 import com.mocker.rest.request.KVPair
 import com.mocker.rest.utils.AvroSchemaUtils
 import org.apache.avro.Schema
@@ -21,7 +22,7 @@ object MockQueryResponse {
     MockQueryResponse(
       statusCode = 200,
       headers = Seq.empty,
-      content = AvroSchemaUtils.generateSample(model.schema)
+      content = convertModelResponse(model.responseType, model.response)
     )
   }
 

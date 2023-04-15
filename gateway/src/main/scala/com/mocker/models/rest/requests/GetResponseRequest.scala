@@ -17,7 +17,7 @@ case class GetResponseRequest(
     ProtoGetResponseRequest(
       servicePath = servicePath,
       requestPath = requestPath,
-      method = method.toProto,
+      method = method.proto,
       body = body,
       headers = headers.map(_.toProto).toSeq,
       queryParams = queryParams.map(_.toProto).toSeq
