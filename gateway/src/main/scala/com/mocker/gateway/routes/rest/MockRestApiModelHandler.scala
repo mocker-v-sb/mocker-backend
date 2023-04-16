@@ -61,14 +61,14 @@ object MockRestApiModelHandler {
       case req @ GET -> !! / "rest" / "service" / servicePath / "models" =>
         for {
           protoResponse <- RestMockerClientService.getAllServiceModels(GetAllServiceModelsRequest(servicePath)).either
-          response <- protoResponse.withJson(GetAllServiceModelsResponse.fromMessage(_).toJson)
+          response <- protoResponse.withBody(GetAllServiceModelsResponse.fromMessage(_).toJson)
         } yield response
       case req @ GET -> !! / "rest" / "service" / servicePath / "model" / modelId =>
         modelId.toLongOption match {
           case Some(modelId) =>
             for {
               protoResponse <- RestMockerClientService.getModel(GetModelRequest(servicePath, modelId)).either
-              response <- protoResponse.withJson(GetModelResponse.fromMessage(_).toJson)
+              response <- protoResponse.withBody(GetModelResponse.fromMessage(_).toJson)
             } yield response
           case None => ZIO.succeed(Response.status(HttpStatus.BadRequest))
         }

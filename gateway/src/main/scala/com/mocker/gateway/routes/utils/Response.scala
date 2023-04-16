@@ -2,7 +2,7 @@ package com.mocker.gateway.routes.utils
 
 import io.grpc.{Status => GrpcStatus}
 import zio.http.model.{Status => HttpStatus}
-import zio.http.{Response => ZIOResponse}
+import zio.http.{Body, Response => ZIOResponse}
 import zio.{UIO, ZIO}
 
 object Response {
@@ -16,9 +16,9 @@ object Response {
       }
     }
 
-    def withJson(json: A => String): UIO[ZIOResponse] = {
+    def withBody(data: A => String): UIO[ZIOResponse] = {
       response match {
-        case Right(value)            => ZIO.succeed(ZIOResponse.json(json(value)).setStatus(HttpStatus.Ok))
+        case Right(value)            => ZIO.succeed(ZIOResponse(body = Body.fromString(data(value))).setStatus(HttpStatus.Ok))
         case Left(errSt: GrpcStatus) => ZIO.succeed(ZIOResponse.status(StatusMapper.grpc2Http(errSt)))
       }
     }

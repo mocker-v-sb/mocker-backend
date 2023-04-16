@@ -14,3 +14,12 @@ message ModelSnippet {
   string name = 2;
   google.protobuf.StringValue description = 3;
 }
+
+message ResponseTypeNamespace {
+  enum ResponseType {
+    PLAINTEXT = 0;
+    JSON = 1;
+    XML = 2;
+    JSON_TEMPLATE = 3;
+  }
+}

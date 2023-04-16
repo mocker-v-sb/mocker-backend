@@ -54,7 +54,7 @@ object MockRestApiServiceHandler {
       case req @ GET -> !! / "rest" / "service" / servicePath =>
         for {
           protoResponse <- RestMockerClientService.getService(GetServiceRequest(servicePath)).either
-          response <- protoResponse.withJson(GetServiceResponse.fromMessage(_).toJson)
+          response <- protoResponse.withBody(GetServiceResponse.fromMessage(_).toJson)
         } yield response
     }
     .tapErrorZIO(err => Console.printError(err).ignoreLogged)
@@ -63,14 +63,14 @@ object MockRestApiServiceHandler {
   private def getAllServices = {
     for {
       protoResponse <- RestMockerClientService.getAllServices.either
-      response <- protoResponse.withJson(GetAllServicesResponse.fromMessage(_).toJson)
+      response <- protoResponse.withBody(GetAllServicesResponse.fromMessage(_).toJson)
     } yield response
   }
 
   private def searchServices(query: String) = {
     for {
       protoResponse <- RestMockerClientService.searchServices(SearchServicesRequest(query)).either
-      response <- protoResponse.withJson(SearchServicesResponse.fromMessage(_).toJson)
+      response <- protoResponse.withBody(SearchServicesResponse.fromMessage(_).toJson)
     } yield response
   }
 }

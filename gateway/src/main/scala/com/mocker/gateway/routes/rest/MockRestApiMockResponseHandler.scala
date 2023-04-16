@@ -80,7 +80,7 @@ object MockRestApiMockResponseHandler {
               protoResponse <- RestMockerClientService
                 .getAllMockStaticResponses(GetAllMockStaticResponsesRequest(servicePath, mockId))
                 .either
-              response <- protoResponse.withJson(GetAllMockStaticResponsesResponse.fromMessage(_).toJson)
+              response <- protoResponse.withBody(GetAllMockStaticResponsesResponse.fromMessage(_).toJson)
             } yield response
           case _ => ZIO.succeed(Response.status(HttpStatus.BadRequest))
         }
@@ -91,7 +91,7 @@ object MockRestApiMockResponseHandler {
               protoResponse <- RestMockerClientService
                 .getMockStaticResponse(GetMockStaticResponseRequest(servicePath, mockId, responseId))
                 .either
-              response <- protoResponse.withJson(GetMockStaticResponseResponse.fromMessage(_).toJson)
+              response <- protoResponse.withBody(GetMockStaticResponseResponse.fromMessage(_).toJson)
             } yield response
           case _ => ZIO.succeed(Response.status(HttpStatus.BadRequest))
         }

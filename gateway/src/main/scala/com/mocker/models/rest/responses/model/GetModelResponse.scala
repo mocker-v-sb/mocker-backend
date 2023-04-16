@@ -1,5 +1,6 @@
 package com.mocker.models.rest.responses.model
 
+import com.mocker.models.rest.common.ModelResponseType
 import com.mocker.rest.rest_service.GetModel.{Response => ProtoGetModelResponse}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}
 
@@ -7,7 +8,8 @@ case class GetModelResponse(
     modelId: Long,
     name: String,
     description: Option[String],
-    sample: String
+    responseType: ModelResponseType,
+    responseContent: String
 )
 
 object GetModelResponse {
@@ -19,7 +21,8 @@ object GetModelResponse {
       modelId = message.id,
       name = message.name,
       description = message.description,
-      sample = message.sample
+      responseType = ModelResponseType.forName(message.responseType.name),
+      responseContent = message.response
     )
   }
 }

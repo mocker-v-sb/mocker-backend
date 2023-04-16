@@ -101,8 +101,7 @@ object MockRestHandler {
       protoResponse <- RestMockerClientService.getResponse(request).either
       response <- protoResponse match {
         case Right(mockResponse) =>
-          val response = Response
-            .json(mockResponse.content)
+          val response = Response(body = Body.fromString(mockResponse.content))
             .setStatus(HttpStatus.Custom(mockResponse.statusCode))
             .setHeaders {
               Headers(mockResponse.headers.map(header => Header(header.name, header.value)))
