@@ -9,7 +9,7 @@ case class GetModelResponse(
     name: String,
     description: Option[String],
     responseType: ModelResponseType,
-    response: String
+    responseContent: String
 )
 
 object GetModelResponse {
@@ -22,7 +22,7 @@ object GetModelResponse {
       name = message.name,
       description = message.description,
       responseType = ModelResponseType.forName(message.responseType.name),
-      response = message.response
+      responseContent = message.response
     )
   }
 }

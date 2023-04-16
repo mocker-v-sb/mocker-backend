@@ -10,7 +10,7 @@ case class UpdateModelRequest(
     name: String,
     description: Option[String],
     responseType: ModelResponseType,
-    response: String
+    responseContent: String
 ) {
 
   def toMessage: ProtoUpdateModelRequest = {
@@ -20,7 +20,7 @@ case class UpdateModelRequest(
       name = name,
       description = description,
       responseType = responseType.proto,
-      response = response
+      response = responseContent
     )
   }
 }
