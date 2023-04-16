@@ -17,7 +17,7 @@ object Dependencies {
   )
 
   lazy val logging = Seq(
-    "dev.zio" %% "zio-logging-slf4j" % "2.1.12",
+    "dev.zio" %% "zio-logging" % "2.1.12",
     "ch.qos.logback" % "logback-classic" % "1.4.6"
   )
 

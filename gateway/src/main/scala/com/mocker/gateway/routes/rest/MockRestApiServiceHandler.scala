@@ -20,10 +20,10 @@ object MockRestApiServiceHandler {
         for {
           request <- req.body.asString
             .map(_.fromJson[CreateServiceRequest])
-            .tapError(err => Console.printError(err).ignoreLogged)
+            .tapError(err => ZIO.logErrorCause(Cause.fail(err)))
           protoResponse <- (request match {
             case Right(request) => RestMockerClientService.createService(request)
-            case Left(error)    => Console.printError(error).ignoreLogged *> ZIO.fail(GrpcStatus.INVALID_ARGUMENT)
+            case Left(error)    => ZIO.logErrorCause(Cause.fail(error)) *> ZIO.fail(GrpcStatus.INVALID_ARGUMENT)
           }).either
           response <- protoResponse.toHttp
         } yield response
@@ -31,10 +31,10 @@ object MockRestApiServiceHandler {
         for {
           request <- req.body.asString
             .map(_.fromJson[UpdateServiceRequest].map(_.copy(servicePath = servicePath)))
-            .tapError(err => Console.printError(err).ignoreLogged)
+            .tapError(err => ZIO.logErrorCause(Cause.fail(err)))
           protoResponse <- (request match {
             case Right(request) => RestMockerClientService.updateService(request)
-            case Left(error)    => Console.printError(error).ignoreLogged *> ZIO.fail(GrpcStatus.INVALID_ARGUMENT)
+            case Left(error)    => ZIO.logErrorCause(Cause.fail(error)) *> ZIO.fail(GrpcStatus.INVALID_ARGUMENT)
           }).either
           response <- protoResponse.toHttp
         } yield response
@@ -57,7 +57,7 @@ object MockRestApiServiceHandler {
           response <- protoResponse.withBody(GetServiceResponse.fromMessage(_).toJson)
         } yield response
     }
-    .tapErrorZIO(err => Console.printError(err).ignoreLogged)
+    .tapErrorZIO(err => ZIO.logErrorCause(Cause.fail(err)))
     .mapError(_ => Response.status(HttpStatus.InternalServerError))
 
   private def getAllServices = {

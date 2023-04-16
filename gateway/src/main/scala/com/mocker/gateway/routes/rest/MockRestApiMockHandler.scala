@@ -10,7 +10,7 @@ import zio.http.model.Method.{DELETE, GET, PATCH, POST}
 import zio.http.model.{Status => HttpStatus}
 import zio.http._
 import zio.json.{DecoderOps, EncoderOps}
-import zio.{Console, ZIO}
+import zio.{Cause, Console, ZIO}
 
 object MockRestApiMockHandler {
 
@@ -20,10 +20,10 @@ object MockRestApiMockHandler {
         for {
           request <- req.body.asString
             .map(_.fromJson[CreateMockRequest].map(_.copy(servicePath = servicePath)))
-            .tapError(err => Console.printError(err).ignoreLogged)
+            .tapError(err => ZIO.logErrorCause(Cause.fail(err)))
           protoResponse <- (request match {
             case Right(request) => RestMockerClientService.createMock(request)
-            case Left(error)    => Console.printError(error).ignoreLogged *> ZIO.fail(GrpcStatus.INVALID_ARGUMENT)
+            case Left(error)    => ZIO.logErrorCause(Cause.fail(error)) *> ZIO.fail(GrpcStatus.INVALID_ARGUMENT)
           }).either
           response <- protoResponse.toHttp
         } yield response
@@ -33,10 +33,10 @@ object MockRestApiMockHandler {
             for {
               request <- req.body.asString
                 .map(_.fromJson[UpdateMockRequest].map(_.copy(servicePath = servicePath, mockId = mockId)))
-                .tapError(err => Console.printError(err).ignoreLogged)
+                .tapError(err => ZIO.logErrorCause(Cause.fail(err)))
               protoResponse <- (request match {
                 case Right(request) => RestMockerClientService.updateMock(request)
-                case Left(error)    => Console.printError(error).ignoreLogged *> ZIO.fail(GrpcStatus.INVALID_ARGUMENT)
+                case Left(error)    => ZIO.logErrorCause(Cause.fail(error)) *> ZIO.fail(GrpcStatus.INVALID_ARGUMENT)
               }).either
               response <- protoResponse.toHttp
             } yield response
@@ -71,6 +71,6 @@ object MockRestApiMockHandler {
           case None => ZIO.succeed(Response.status(HttpStatus.BadRequest))
         }
     }
-    .tapErrorZIO(err => Console.printError(err).ignoreLogged)
+    .tapErrorZIO(err => ZIO.logErrorCause(Cause.fail(err)))
     .mapError(_ => Response.status(HttpStatus.InternalServerError))
 }

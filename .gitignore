@@ -2,8 +2,11 @@ op/
 .dotty-ide*
 .idea/
 .metals/
-*.worksheet.sc
 metals.sbt
 target/
 .bsp/
 .DS_Store
+/.vscode/
+.bloop/
+project/.bloop/
+project/project/

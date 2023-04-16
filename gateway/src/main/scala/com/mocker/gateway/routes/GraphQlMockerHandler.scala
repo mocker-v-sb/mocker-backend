@@ -1,12 +1,12 @@
 package com.mocker.gateway.routes
 
 import com.mocker.common.utils.{Environment, ServerAddress}
-import zio.ZIO
+import zio.{Cause, Console, ZIO}
 import zio.http._
 import zio.http.URL.Location
 import zio.http.model.Scheme
 import zio.http.model.{Status => HttpStatus}
-import zio.Console
+import com.mocker.utils.LogAspect._
 
 object GraphQlMockerHandler {
 
@@ -20,7 +20,7 @@ object GraphQlMockerHandler {
       case req @ _ -> "" /: "graphql" /: path => inner(req)
       case req @ _ -> "" /: "mocker" /: path  => inner(req)
     }
-    .tapErrorZIO(err => Console.printError(err).ignoreLogged)
+    .tapErrorZIO(err => ZIO.logErrorCause(Cause.fail(err)))
     .mapError(_ => Response.status(HttpStatus.InternalServerError))
 
   private def inner(request: Request) =

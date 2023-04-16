@@ -24,10 +24,10 @@ object MockRestApiMockResponseHandler {
                 .map(
                   _.fromJson[CreateMockStaticResponseRequest].map(_.copy(servicePath = servicePath, mockId = mockId))
                 )
-                .tapError(err => Console.printError(err).ignoreLogged)
+                .tapError(err => ZIO.logErrorCause(Cause.fail(err)))
               protoResponse <- (request match {
                 case Right(request) => RestMockerClientService.createMockStaticResponse(request)
-                case Left(error)    => Console.printError(error).ignoreLogged *> ZIO.fail(GrpcStatus.INVALID_ARGUMENT)
+                case Left(error)    => ZIO.logErrorCause(Cause.fail(error)) *> ZIO.fail(GrpcStatus.INVALID_ARGUMENT)
               }).either
               response <- protoResponse.toHttp
             } yield response
@@ -42,10 +42,10 @@ object MockRestApiMockResponseHandler {
                   _.fromJson[UpdateMockStaticResponseRequest]
                     .map(_.copy(servicePath = servicePath, mockId = mockId, responseId = responseId))
                 )
-                .tapError(err => Console.printError(err).ignoreLogged)
+                .tapError(err => ZIO.logErrorCause(Cause.fail(err)))
               protoResponse <- (request match {
                 case Right(request) => RestMockerClientService.updateMockStaticResponse(request)
-                case Left(error)    => Console.printError(error).ignoreLogged *> ZIO.fail(GrpcStatus.INVALID_ARGUMENT)
+                case Left(error)    => ZIO.logErrorCause(Cause.fail(error)) *> ZIO.fail(GrpcStatus.INVALID_ARGUMENT)
               }).either
               response <- protoResponse.toHttp
             } yield response
@@ -96,6 +96,6 @@ object MockRestApiMockResponseHandler {
           case _ => ZIO.succeed(Response.status(HttpStatus.BadRequest))
         }
     }
-    .tapErrorZIO(err => Console.printError(err).ignoreLogged)
+    .tapErrorZIO(err => ZIO.logErrorCause(Cause.fail(err)))
     .mapError(_ => Response.status(HttpStatus.InternalServerError))
 }

@@ -63,7 +63,7 @@ object MockRestHandler {
           }
         } yield response
     }
-    .tapErrorZIO(err => Console.printError(err).ignoreLogged)
+    .tapErrorZIO(err => ZIO.logErrorCause(Cause.fail(err)))
     .mapError(_ => Response.status(HttpStatus.InternalServerError))
 
   private def buildRequest(
