@@ -4,6 +4,7 @@ import zio.http.URL
 import zio.http.model.Scheme
 
 object UrlBuilder {
+
   def asString(url: URL): String = {
     val scheme = url.scheme.getOrElse(Scheme.HTTP).encode
     val hostWithPort = url.hostWithOptionalPort.getOrElse("1.1.1.1:1")

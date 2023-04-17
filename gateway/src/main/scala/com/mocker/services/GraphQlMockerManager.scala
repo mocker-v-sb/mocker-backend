@@ -21,7 +21,7 @@ case class GraphQlMockerManager(tracing: Tracing) {
   lazy val routes: Http[Client, Response, Request, Response] = Http
     .collectZIO[Request] {
       case req @ _ -> "" /: "graphql" /: _ => proxy(req)
-      case req @ _ -> "" /: "mocker" /: _ => proxy(req)
+      case req @ _ -> "" /: "mocker" /: _  => proxy(req)
     }
     .tapErrorZIO(err => ZIO.logErrorCause(Cause.fail(err)))
     .mapError(_ => Response.status(HttpStatus.InternalServerError))
@@ -49,11 +49,13 @@ case class GraphQlMockerManager(tracing: Tracing) {
       )
       _ <- tracing.setAttribute("url", UrlBuilder.asString(url))
       proxiedRequest <- ZIO.succeed(
-        Request.default(
-          body = request.body,
-          url = url,
-          method = request.method
-        ).updateHeaders(_ ++ Header("x-request-id", spanId))
+        Request
+          .default(
+            body = request.body,
+            url = url,
+            method = request.method
+          )
+          .updateHeaders(_ ++ Header("x-request-id", spanId))
       )
       _ <- ZIO.foreach(proxiedRequest.headersAsList) { h =>
         tracing.setAttribute(h._1.toString, h._2.toString)

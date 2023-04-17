@@ -5,7 +5,13 @@ import com.mocker.common.utils.{Environment, ServerAddress}
 import com.mocker.mq.mq_service.ZioMqService.MqMockerClient
 import com.mocker.rest.rest_service.ZioRestService.RestMockerClient
 import com.mocker.services.{AuthenticationService, GraphQlMockerManager, MqMockerManager}
-import com.mocker.services.rest.{MockRestApiMockHandler, MockRestApiMockResponseHandler, MockRestApiModelHandler, MockRestApiServiceHandler, MockRestHandler}
+import com.mocker.services.rest.{
+  MockRestApiMockHandler,
+  MockRestApiMockResponseHandler,
+  MockRestApiModelHandler,
+  MockRestApiServiceHandler,
+  MockRestHandler
+}
 import io.grpc.ManagedChannelBuilder
 import io.opentelemetry.api.trace.Tracer
 import scalapb.zio_grpc.ZManagedChannel

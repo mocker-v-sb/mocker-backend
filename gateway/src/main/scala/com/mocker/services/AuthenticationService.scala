@@ -31,21 +31,24 @@ case class AuthenticationService() {
     Jwt.decode(token, SECRET_KEY, Seq(JwtAlgorithm.HS512)).toOption
   }
 
-  def routes = Http.collectZIO[Request] {
-    case Method.GET -> !! / "dummy-login" / username / password =>
-      if (password.reverse.hashCode == username.hashCode)
-        ZIO.succeed(Response.text(jwtEncode(username)))
-      else
-        ZIO.succeed(Response.text("Invalid username or password.").setStatus(Status.Unauthorized))
+  def routes =
+    Http
+      .collectZIO[Request] {
+        case Method.GET -> !! / "dummy-login" / username / password =>
+          if (password.reverse.hashCode == username.hashCode)
+            ZIO.succeed(Response.text(jwtEncode(username)))
+          else
+            ZIO.succeed(Response.text("Invalid username or password.").setStatus(Status.Unauthorized))
 
-    case req @ Method.POST -> !! / "auth" / "signup" => for {
-      request <- req.body.asString
-        .map(_.fromJson[AuthenticationRequest])
-        .tapError(err => ZIO.logErrorCause(Cause.fail(err)))
-    } yield Response.status(HttpStatus.Created)
-  }
-  .tapErrorZIO(err => ZIO.logErrorCause(Cause.fail(err)))
-  .mapError(_ => Response.status(HttpStatus.InternalServerError))
+        case req @ Method.POST -> !! / "auth" / "signup" =>
+          for {
+            request <- req.body.asString
+              .map(_.fromJson[AuthenticationRequest])
+              .tapError(err => ZIO.logErrorCause(Cause.fail(err)))
+          } yield Response.status(HttpStatus.Created)
+      }
+      .tapErrorZIO(err => ZIO.logErrorCause(Cause.fail(err)))
+      .mapError(_ => Response.status(HttpStatus.InternalServerError))
 }
 
 object AuthenticationService {

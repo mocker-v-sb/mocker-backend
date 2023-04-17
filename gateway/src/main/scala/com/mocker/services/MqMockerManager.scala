@@ -1,8 +1,21 @@
 package com.mocker.services
 
 import com.mocker.clients.MqMockerClientService
-import com.mocker.models.mq.requests.{CreateTopicRequest, DeleteTopicRequest, GetMessagesRequest, GetTopicsRequest, SendMessageRequest}
-import com.mocker.models.mq.responses.{CreateTopicResponse => ScalaCreateTopicResponse, DeleteTopicResponse => ScalaDeleteTopicResponse, GetMessagesResponse => ScalaGetMessagesResponse, GetTopicResponse => ScalaGetTopicResponse, GetTopicsResponse => ScalaGetTopicsResponse, SendMessageResponse => ScalaSendMessagesResponse}
+import com.mocker.models.mq.requests.{
+  CreateTopicRequest,
+  DeleteTopicRequest,
+  GetMessagesRequest,
+  GetTopicsRequest,
+  SendMessageRequest
+}
+import com.mocker.models.mq.responses.{
+  CreateTopicResponse => ScalaCreateTopicResponse,
+  DeleteTopicResponse => ScalaDeleteTopicResponse,
+  GetMessagesResponse => ScalaGetMessagesResponse,
+  GetTopicResponse => ScalaGetTopicResponse,
+  GetTopicsResponse => ScalaGetTopicsResponse,
+  SendMessageResponse => ScalaSendMessagesResponse
+}
 import com.mocker.mq.mq_service.GetTopicsResponse
 import com.mocker.mq.mq_service.ZioMqService.MqMockerClient
 import com.mocker.services.utils.StatusMapper
@@ -18,14 +31,14 @@ import zio.{Cause, Console, ZIO, ZLayer}
 case class MqMockerManager(tracing: Tracing) {
   lazy val routes: Http[MqMockerClient.Service, Response, Request, Response] = Http
     .collectZIO[Request] {
-      case req@POST -> !! / "mq" / "topic" =>
+      case req @ POST -> !! / "mq" / "topic" =>
         for {
           request <- req.body.asString
             .map(_.fromJson[CreateTopicRequest])
             .tapError(err => ZIO.logErrorCause(Cause.fail(err)))
           protoResponse <- (request match {
             case Right(request) => MqMockerClientService.createTopic(request)
-            case Left(error) => ZIO.logErrorCause(Cause.fail(error)) *> ZIO.fail(GrpcStatus.INVALID_ARGUMENT)
+            case Left(error)    => ZIO.logErrorCause(Cause.fail(error)) *> ZIO.fail(GrpcStatus.INVALID_ARGUMENT)
           }).either
           response <- protoResponse match {
             case Right(pResp) =>
@@ -38,7 +51,7 @@ case class MqMockerManager(tracing: Tracing) {
           }
         } yield response
 
-      case req@GET -> !! / "mq" / "messages" =>
+      case req @ GET -> !! / "mq" / "messages" =>
         val brokerType = req.url.queryParams.get("brokerType").flatMap(_.headOption)
         val topicName = req.url.queryParams.get("topicName").flatMap(_.headOption)
         val repeat = req.url.queryParams.getOrElse("repeat", Seq("1")).head.toInt
@@ -60,14 +73,14 @@ case class MqMockerManager(tracing: Tracing) {
           } yield response
         }
 
-      case req@POST -> !! / "mq" / "messages" =>
+      case req @ POST -> !! / "mq" / "messages" =>
         for {
           request <- req.body.asString
             .map(_.fromJson[SendMessageRequest])
             .tapError(err => ZIO.logErrorCause(Cause.fail(err)))
           protoResponse <- (request match {
             case Right(request) => MqMockerClientService.sendMessage(request)
-            case Left(error) => ZIO.logErrorCause(Cause.fail(error)) *> ZIO.fail(GrpcStatus.INVALID_ARGUMENT)
+            case Left(error)    => ZIO.logErrorCause(Cause.fail(error)) *> ZIO.fail(GrpcStatus.INVALID_ARGUMENT)
           }).either
           response <- protoResponse match {
             case Right(pResp) =>
@@ -80,7 +93,7 @@ case class MqMockerManager(tracing: Tracing) {
           }
         } yield response
 
-      case req@GET -> !! / "mq" / "topics" =>
+      case req @ GET -> !! / "mq" / "topics" =>
         val brokerType = req.url.queryParams.get("brokerType").flatMap(_.headOption)
         val searchInput = req.url.queryParams.get("search").flatMap(_.headOption)
         for {
@@ -90,7 +103,7 @@ case class MqMockerManager(tracing: Tracing) {
             case Right(pResp) =>
               val _pResp = searchInput match {
                 case Some(si) => GetTopicsResponse(queues = pResp.queues.filter(q => q.topicName.contains(si)))
-                case None => pResp
+                case None     => pResp
               }
               ScalaGetTopicsResponse.fromMessage(_pResp) match {
                 case Right(resp) =>
@@ -107,7 +120,7 @@ case class MqMockerManager(tracing: Tracing) {
           }
         } yield response
 
-      case req@DELETE -> !! / "mq" / "topic" =>
+      case req @ DELETE -> !! / "mq" / "topic" =>
         val brokerType = req.url.queryParams.get("brokerType").flatMap(_.headOption)
         val topicName = req.url.queryParams.get("topicName").flatMap(_.headOption)
         if (brokerType.isEmpty || topicName.isEmpty) ZIO.succeed(Response.status(HttpStatus.BadRequest))
@@ -117,12 +130,12 @@ case class MqMockerManager(tracing: Tracing) {
             protoResponse <- MqMockerClientService.deleteTopic(request).either
             response <- protoResponse match {
               case Right(pResp) => ZIO.succeed(Response.json(ScalaDeleteTopicResponse.fromMessage(pResp).toJson))
-              case Left(errSt) => ZIO.succeed(Response.status(StatusMapper.grpc2Http(errSt)))
+              case Left(errSt)  => ZIO.succeed(Response.status(StatusMapper.grpc2Http(errSt)))
             }
           } yield response
         }
 
-      case req@GET -> !! / "mq" / "topic" =>
+      case req @ GET -> !! / "mq" / "topic" =>
         val brokerType = req.url.queryParams.get("brokerType").flatMap(_.headOption)
         val topicName = req.url.queryParams.get("topicName").flatMap(_.headOption)
         if (brokerType.isEmpty || topicName.isEmpty) ZIO.succeed(Response.status(HttpStatus.BadRequest))
