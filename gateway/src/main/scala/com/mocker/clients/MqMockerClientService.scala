@@ -1,8 +1,20 @@
 package com.mocker.clients
 
-import com.mocker.models.mq.requests.{CreateTopicRequest => ScalaCreateTopicRequest, DeleteTopicRequest => ScalaDeleteTopicRequest, GetMessagesRequest => ScalaGetMessagesRequest, GetTopicsRequest => ScalaGetTopicsRequest, SendMessageRequest => ScalaSendMessageRequest}
+import com.mocker.models.mq.requests.{
+  CreateTopicRequest => ScalaCreateTopicRequest,
+  DeleteTopicRequest => ScalaDeleteTopicRequest,
+  GetMessagesRequest => ScalaGetMessagesRequest,
+  GetTopicsRequest => ScalaGetTopicsRequest,
+  SendMessageRequest => ScalaSendMessageRequest
+}
 import com.mocker.mq.mq_service.ZioMqService.MqMockerClient
-import com.mocker.mq.mq_service.{CreateTopicResponse, DeleteTopicResponse, GetMessagesResponse, GetTopicsResponse, SendMessageResponse}
+import com.mocker.mq.mq_service.{
+  CreateTopicResponse,
+  DeleteTopicResponse,
+  GetMessagesResponse,
+  GetTopicsResponse,
+  SendMessageResponse
+}
 import io.grpc.Status
 import zio.{Cause, Console, ZIO}
 

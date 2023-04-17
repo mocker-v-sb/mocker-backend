@@ -62,4 +62,10 @@ object Dependencies {
     "dev.zio" %% "zio-config-typesafe" % "3.0.7",
     "dev.zio" %% "zio-config-magnolia" % "3.0.7"
   )
+
+  lazy val otel = Seq(
+    "dev.zio" %% "zio-opentelemetry" % "3.0.0-RC7",
+    "io.opentelemetry" % "opentelemetry-exporter-jaeger" % "1.24.0",
+    "io.opentelemetry" % "opentelemetry-sdk" % "1.24.0"
+  )
 }

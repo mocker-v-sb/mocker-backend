@@ -1,4 +1,4 @@
-package com.mocker.gateway.routes
+package com.mocker.services
 
 import zio.ZIO
 import zio.http.model.Method.GET

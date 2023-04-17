@@ -1,7 +1,7 @@
-package com.mocker.gateway.routes.rest
+package com.mocker.services.rest
 
 import com.mocker.clients.RestMockerClientService
-import com.mocker.gateway.routes.utils.Response._
+import com.mocker.services.utils.Response._
 import com.mocker.models.rest.requests.model._
 import com.mocker.models.rest.responses.model._
 import com.mocker.rest.rest_service.ZioRestService.RestMockerClient
@@ -10,7 +10,7 @@ import zio.http.model.Method.{DELETE, GET, POST, PUT}
 import zio.http.model.{Status => HttpStatus}
 import zio.http._
 import zio.json.{DecoderOps, EncoderOps}
-import zio.{Console, ZIO}
+import zio.{Cause, Console, ZIO}
 
 object MockRestApiModelHandler {
 

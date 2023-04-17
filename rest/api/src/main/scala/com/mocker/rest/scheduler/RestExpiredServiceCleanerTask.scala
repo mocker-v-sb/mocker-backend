@@ -1,6 +1,6 @@
 package com.mocker.rest.scheduler
 
-import com.mocker.common.utils.ZIOSlick._
+import com.mocker.rest.utils.ZIOSlick._
 import com.mocker.rest.dao.mysql.MySqlServiceActions
 import com.mocker.rest.errors.RestMockerException
 import com.mocker.rest.utils.RestMockerUtils._

@@ -1,7 +1,7 @@
-package com.mocker.gateway.routes.rest
+package com.mocker.services.rest
 
 import com.mocker.clients.RestMockerClientService
-import com.mocker.gateway.routes.utils.Response._
+import com.mocker.services.utils.Response._
 import com.mocker.models.rest.requests.mock._
 import com.mocker.models.rest.responses.mock.{GetAllServiceMocksResponse, GetMockResponse}
 import com.mocker.rest.rest_service.ZioRestService.RestMockerClient

@@ -234,7 +234,7 @@ case class DefaultMqManager(kafkaController: KafkaController) extends MqManager 
       response <- ZIO.ifZIO(ZIO.succeed(topics.keySet.contains(request.topicName)))(
         onTrue = ZIO.succeed(
           CreateTopicResponse(
-            host = kafkaController.address.address,
+            host = kafkaController.address.host,
             port = kafkaController.address.port,
             topicName = request.topicName
           )

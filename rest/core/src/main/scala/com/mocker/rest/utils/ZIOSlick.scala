@@ -1,4 +1,4 @@
-package com.mocker.common.utils
+package com.mocker.rest.utils
 
 import slick.dbio.DBIO
 import slick.interop.zio.DatabaseProvider

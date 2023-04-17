@@ -2,4 +2,4 @@ import Dependencies._
 
 name := "rest-api"
 
-libraryDependencies ++= coreZio ++ grpc :+ mySqlConnector
+libraryDependencies ++= coreZio ++ grpc ++ slick :+ mySqlConnector
