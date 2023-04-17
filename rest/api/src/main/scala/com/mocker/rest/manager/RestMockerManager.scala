@@ -76,6 +76,7 @@ case class RestMockerManager(
   def createService(service: Service): IO[RestMockerException, Unit] = {
     for {
       _ <- checkServiceNotExists(service)
+      _ <- validate(service)
       _ <- serviceActions.upsert(service).asZIO(dbLayer).run
     } yield ()
   }
@@ -98,6 +99,15 @@ case class RestMockerManager(
     serviceActions.search(query).asZIO(dbLayer).run
   }
 
+  def switchServiceProxy(servicePath: String, isProxyEnabled: Boolean): IO[RestMockerException, Unit] = {
+    for {
+      service <- getService(servicePath)
+      newService = service.copy(isProxyEnabled = isProxyEnabled)
+      _ <- validate(newService)
+      _ <- serviceActions.upsert(newService).asZIO(dbLayer).run
+    } yield ()
+  }
+
   def updateService(servicePath: String, service: Service): IO[RestMockerException, Unit] = {
     for {
       _ <- if (servicePath != service.path)
@@ -105,10 +115,9 @@ case class RestMockerManager(
       else
         ZIO.succeed()
       currentService <- getService(servicePath)
-      _ <- serviceActions
-        .upsert(service.copy(id = currentService.id, creationTime = currentService.creationTime))
-        .asZIO(dbLayer)
-        .run
+      newService = service.copy(id = currentService.id, creationTime = currentService.creationTime)
+      _ <- validate(newService)
+      _ <- serviceActions.upsert(newService).asZIO(dbLayer).run
     } yield ()
   }
 
@@ -294,6 +303,13 @@ case class RestMockerManager(
         case None           => ZIO.fail(RestMockerException.responseNotExists(mockId = mockId, responseId = responseId))
       }
     } yield result
+  }
+
+  private def validate(service: Service): IO[RestMockerException, Unit] = {
+    if (service.isProxyEnabled && service.url.isEmpty)
+      ZIO.fail(RestMockerException.proxyUrlMissing(service.path))
+    else
+      ZIO.succeed()
   }
 
   private def checkServiceNotExists(service: Service): IO[RestMockerException, Unit] = {

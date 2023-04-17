@@ -17,7 +17,8 @@ object RequestConverters {
       description = request.description,
       creationTime = Timestamp.from(Instant.now()),
       updateTime = Timestamp.from(Instant.now()),
-      expirationTime = request.expirationTime.map(t => Timestamp.from(t.asJavaInstant))
+      expirationTime = request.expirationTime.map(t => Timestamp.from(t.asJavaInstant)),
+      isProxyEnabled = request.isProxyEnabled
     )
   }
 
@@ -29,7 +30,8 @@ object RequestConverters {
       description = request.description,
       creationTime = Timestamp.from(Instant.now()),
       updateTime = Timestamp.from(Instant.now()),
-      expirationTime = request.expirationTime.map(t => Timestamp.from(t.asJavaInstant))
+      expirationTime = request.expirationTime.map(t => Timestamp.from(t.asJavaInstant)),
+      isProxyEnabled = request.isProxyEnabled
     )
   }
 

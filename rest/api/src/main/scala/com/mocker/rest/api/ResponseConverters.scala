@@ -24,7 +24,8 @@ object ResponseConverters {
       description = service.description,
       expirationTime = service.expirationTime.map(toProtoTimestamp),
       creationTime = Some(toProtoTimestamp(service.creationTime)),
-      updateTime = Some(toProtoTimestamp(service.updateTime))
+      updateTime = Some(toProtoTimestamp(service.updateTime)),
+      isProxyEnabled = service.isProxyEnabled
     )
   }
 

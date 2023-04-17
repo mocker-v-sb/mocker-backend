@@ -10,5 +10,6 @@ case class Service(
     description: Option[String],
     creationTime: Timestamp,
     updateTime: Timestamp,
-    expirationTime: Option[Timestamp]
+    expirationTime: Option[Timestamp],
+    isProxyEnabled: Boolean
 )
