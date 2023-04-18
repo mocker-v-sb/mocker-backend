@@ -77,12 +77,10 @@ object Main extends ZIOAppDefault {
 
   val program: ZIO[Any, Throwable, ExitCode] = for {
     routes <- routes.provide(
-      Client.default,
       AuthenticationService.live,
       GraphQlMockerManager.live,
       MqMockerManager.live,
       Tracing.propagating,
-      Baggage.live(),
       tracer,
       ContextStorage.fiberRef
     )
