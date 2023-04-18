@@ -8,6 +8,7 @@ import com.mocker.rest.scheduler.RestExpiredServiceCleanerTask
 import io.grpc.protobuf.services.ProtoReflectionService
 import scalapb.zio_grpc.{RequestContext, Server, ServerLayer, ServiceList}
 import slick.interop.zio.DatabaseProvider
+import zio.http.Client
 import zio.{Schedule, Scope, ZIO, ZIOAppArgs, ZLayer}
 
 import scala.concurrent.ExecutionContext
@@ -43,6 +44,7 @@ object Main extends zio.ZIOAppDefault {
 
   private val service = ZLayer.make[Server](
     dbProviderLayer,
+    Client.default,
     RestMockerManager.layer,
     RestMockerService.layer,
     serverLayer

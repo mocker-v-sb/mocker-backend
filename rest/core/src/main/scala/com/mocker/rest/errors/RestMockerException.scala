@@ -10,6 +10,9 @@ object RestMockerException {
   def internal(throwable: Throwable): RestMockerException =
     RestMockerException(throwable.getMessage, Status.INTERNAL)
 
+  def cantGetProxiedResponse(throwable: Throwable): RestMockerException =
+    RestMockerException(throwable.getMessage, Status.INTERNAL)
+
   def serviceAlreadyExists(path: String): RestMockerException =
     RestMockerException(s"Service with path $path already exists", Status.ALREADY_EXISTS)
 
