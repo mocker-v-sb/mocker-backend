@@ -12,7 +12,7 @@ import org.apache.kafka.clients.producer.RecordMetadata
 import zio.kafka.admin.AdminClient
 import zio.kafka.producer.Producer
 import zio.kafka.serde.Serde
-import zio.{Console, IO, UIO, ZIO, ZLayer}
+import zio.{Cause, Console, IO, UIO, ZIO, ZLayer}
 
 import java.time.Duration
 import java.util.Properties
@@ -20,6 +20,15 @@ import scala.collection.mutable
 import scala.jdk.CollectionConverters._
 
 case class DefaultMqManager(kafkaController: KafkaController) extends MqManager {
+
+  private val props: Properties = new Properties()
+  props.put("bootstrap.servers", s"${kafkaController.address}")
+  props.put("group.id", "kafka-mocker")
+  props.put("enable.auto.commit", "true")
+  props.put("auto.commit.interval.ms", "1000")
+  props.put("session.timeout.ms", "30000")
+  props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer")
+  props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer")
   override def createTopic(request: CreateTopicRequest): IO[BrokerManagerException, CreateTopicResponse] = {
     def topicCreationException(reason: String = "reason unknown", status: Status): BrokerManagerException =
       BrokerManagerException.couldNotCreateTopic(request.topicName, BrokerType.Kafka, reason, status)
@@ -88,22 +97,14 @@ case class DefaultMqManager(kafkaController: KafkaController) extends MqManager 
             case ProtoBrokerType.BROKER_TYPE_KAFKA =>
               ZIO
                 .attempt {
-                  val props: Properties = new Properties()
-                  props.put("bootstrap.servers", s"${kafkaController.address}")
-                  props.put("group.id", "kafka-mocker")
-                  props.put("enable.auto.commit", "true")
-                  props.put("auto.commit.interval.ms", "1000")
-                  props.put("session.timeout.ms", "30000")
-                  props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer")
-                  props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer")
                   val consumer: KafkaConsumer[String, String] = new KafkaConsumer(props)
                   val events = mutable.ListBuffer.empty[(String, String)]
                   consumer.subscribe(List(meta.topic).asJava)
-                  consumer.poll(Duration.ofMillis(5000)).asScala.foreach(kv => events.addOne((kv.key(), kv.value())))
+                  consumer.poll(Duration.ofMillis(1000)).asScala.foreach(kv => events.addOne((kv.key(), kv.value())))
                   consumer.unsubscribe()
                   events.toSeq
                 }
-                .tapError(err => Console.printError(err).ignore)
+                .tapError(err => ZIO.logErrorCause(Cause.fail(err)))
                 .orElseFail(
                   errorBuilder(
                     meta.topic,
@@ -173,7 +174,6 @@ case class DefaultMqManager(kafkaController: KafkaController) extends MqManager 
     } yield GetTopicsResponse(queues = topics.values.map(t => Queue(ProtoBrokerType.BROKER_TYPE_KAFKA, t.name)).toSeq)
 
   def deleteTopic(request: DeleteTopicRequest): IO[BrokerManagerException, DeleteTopicResponse] = {
-
     for {
       _ <- request.brokerType match {
         case ProtoBrokerType.BROKER_TYPE_KAFKA =>
@@ -234,7 +234,7 @@ case class DefaultMqManager(kafkaController: KafkaController) extends MqManager 
       response <- ZIO.ifZIO(ZIO.succeed(topics.keySet.contains(request.topicName)))(
         onTrue = ZIO.succeed(
           CreateTopicResponse(
-            host = kafkaController.address.address,
+            host = kafkaController.address.host,
             port = kafkaController.address.port,
             topicName = request.topicName
           )

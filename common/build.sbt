@@ -2,4 +2,4 @@ import Dependencies._
 
 name := "common"
 
-libraryDependencies ++= (logging ++ slick :+ typesafeConfig :+ scalaCheck)
+libraryDependencies ++= (logging ++ otel :+ typesafeConfig :+ scalaCheck)

@@ -1,7 +1,7 @@
-package com.mocker.gateway.routes.rest
+package com.mocker.services.rest
 
 import com.mocker.clients.RestMockerClientService
-import com.mocker.gateway.routes.utils.Response._
+import com.mocker.services.utils.Response._
 import com.mocker.models.rest.requests.model._
 import com.mocker.models.rest.responses.model._
 import com.mocker.rest.rest_service.ZioRestService.RestMockerClient
@@ -10,7 +10,7 @@ import zio.http.model.Method.{DELETE, GET, POST, PUT}
 import zio.http.model.{Status => HttpStatus}
 import zio.http._
 import zio.json.{DecoderOps, EncoderOps}
-import zio.{Console, ZIO}
+import zio.{Cause, Console, ZIO}
 
 object MockRestApiModelHandler {
 
@@ -20,10 +20,10 @@ object MockRestApiModelHandler {
         for {
           request <- req.body.asString
             .map(_.fromJson[CreateModelRequest].map(_.copy(servicePath = servicePath)))
-            .tapError(err => Console.printError(err).ignoreLogged)
+            .tapError(err => ZIO.logErrorCause(Cause.fail(err)))
           protoResponse <- (request match {
             case Right(request) => RestMockerClientService.createModel(request)
-            case Left(error)    => Console.printError(error).ignoreLogged *> ZIO.fail(GrpcStatus.INVALID_ARGUMENT)
+            case Left(error)    => ZIO.logErrorCause(Cause.fail(error)) *> ZIO.fail(GrpcStatus.INVALID_ARGUMENT)
           }).either
           response <- protoResponse.toHttp
         } yield response
@@ -33,10 +33,10 @@ object MockRestApiModelHandler {
             for {
               request <- req.body.asString
                 .map(_.fromJson[UpdateModelRequest].map(_.copy(servicePath = servicePath, modelId = modelId)))
-                .tapError(err => Console.printError(err).ignoreLogged)
+                .tapError(err => ZIO.logErrorCause(Cause.fail(err)))
               protoResponse <- (request match {
                 case Right(request) => RestMockerClientService.updateModel(request)
-                case Left(error)    => Console.printError(error).ignoreLogged *> ZIO.fail(GrpcStatus.INVALID_ARGUMENT)
+                case Left(error)    => ZIO.logErrorCause(Cause.fail(error)) *> ZIO.fail(GrpcStatus.INVALID_ARGUMENT)
               }).either
               response <- protoResponse.toHttp
             } yield response
@@ -73,7 +73,7 @@ object MockRestApiModelHandler {
           case None => ZIO.succeed(Response.status(HttpStatus.BadRequest))
         }
     }
-    .tapErrorZIO(err => Console.printError(err).ignoreLogged)
+    .tapErrorZIO(err => ZIO.logErrorCause(Cause.fail(err)))
     .mapError(_ => Response.status(HttpStatus.InternalServerError))
 
 }

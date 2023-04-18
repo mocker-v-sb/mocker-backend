@@ -12,3 +12,4 @@ libraryDependencies ++= Seq(
   "io.circe" %% "circe-generic-extras" % "0.14.3",
   "io.circe" %% "circe-parser" % "0.14.5"
 ) :+ apacheAvro
+libraryDependencies ++= slick

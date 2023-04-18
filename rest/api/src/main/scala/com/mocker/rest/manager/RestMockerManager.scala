@@ -1,6 +1,6 @@
 package com.mocker.rest.manager
 
-import com.mocker.common.utils.ZIOSlick._
+import com.mocker.rest.utils.ZIOSlick._
 import com.mocker.rest.dao.mysql.{MySqlMockActions, MySqlMockResponseActions, MySqlModelActions, MySqlServiceActions}
 import com.mocker.rest.dao.{MockActions, MockResponseActions, ModelActions, ServiceActions}
 import com.mocker.rest.errors.RestMockerException

@@ -17,7 +17,7 @@ object Dependencies {
   )
 
   lazy val logging = Seq(
-    "dev.zio" %% "zio-logging-slf4j" % "2.1.12",
+    "dev.zio" %% "zio-logging" % "2.1.12",
     "ch.qos.logback" % "logback-classic" % "1.4.6"
   )
 
@@ -61,5 +61,11 @@ object Dependencies {
     "dev.zio" %% "zio-config" % "3.0.7",
     "dev.zio" %% "zio-config-typesafe" % "3.0.7",
     "dev.zio" %% "zio-config-magnolia" % "3.0.7"
+  )
+
+  lazy val otel = Seq(
+    "dev.zio" %% "zio-opentelemetry" % "3.0.0-RC7",
+    "io.opentelemetry" % "opentelemetry-exporter-jaeger" % "1.24.0",
+    "io.opentelemetry" % "opentelemetry-sdk" % "1.24.0"
   )
 }

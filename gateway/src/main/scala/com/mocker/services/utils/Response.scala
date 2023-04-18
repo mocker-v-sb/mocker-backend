@@ -1,4 +1,4 @@
-package com.mocker.gateway.routes.utils
+package com.mocker.services.utils
 
 import io.grpc.{Status => GrpcStatus}
 import zio.http.model.{Status => HttpStatus}

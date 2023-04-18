@@ -1,19 +1,18 @@
-package com.mocker.gateway.routes.rest
+package com.mocker.services.rest
 
 import com.mocker.clients.RestMockerClientService
-import com.mocker.gateway.routes.utils.StatusMapper
 import com.mocker.models.rest.common
 import com.mocker.models.rest.common.KVPair
 import com.mocker.models.rest.requests.GetResponseRequest
 import com.mocker.rest.rest_service.ZioRestService.RestMockerClient
+import com.mocker.services.utils.StatusMapper
 import io.grpc.{Status => GrpcStatus}
-import zio.{IO, ZIO}
+import zio.{Cause, Console, IO, ZIO}
 import zio.http.model.Headers.Header
 import zio.http.model.Headers
 import zio.http.model.Method.{DELETE, GET, PATCH, POST, PUT}
 import zio.http.model.{Status => HttpStatus}
 import zio.http._
-import zio.Console
 
 object MockRestHandler {
 
@@ -63,7 +62,7 @@ object MockRestHandler {
           }
         } yield response
     }
-    .tapErrorZIO(err => Console.printError(err).ignoreLogged)
+    .tapErrorZIO(err => ZIO.logErrorCause(Cause.fail(err)))
     .mapError(_ => Response.status(HttpStatus.InternalServerError))
 
   private def buildRequest(

@@ -16,7 +16,7 @@ import com.mocker.mq.mq_service.{
   SendMessageResponse
 }
 import io.grpc.Status
-import zio.{Console, ZIO}
+import zio.{Cause, Console, ZIO}
 
 object MqMockerClientService {
 
@@ -24,7 +24,7 @@ object MqMockerClientService {
     for {
       resp <- request.toMessage match {
         case Right(message) => MqMockerClient.createTopic(message)
-        case Left(error)    => Console.printError(error).ignoreLogged *> ZIO.fail(Status.INVALID_ARGUMENT)
+        case Left(error)    => ZIO.logErrorCause(Cause.fail(error)).ignoreLogged *> ZIO.fail(Status.INVALID_ARGUMENT)
       }
     } yield resp
 
@@ -32,7 +32,7 @@ object MqMockerClientService {
     for {
       resp <- request.toMessage match {
         case Right(message) => MqMockerClient.sendMessage(message)
-        case Left(error)    => Console.printError(error).ignoreLogged *> ZIO.fail(Status.INVALID_ARGUMENT)
+        case Left(error)    => ZIO.logErrorCause(Cause.fail(error)) *> ZIO.fail(Status.INVALID_ARGUMENT)
       }
     } yield resp
 
@@ -40,7 +40,7 @@ object MqMockerClientService {
     for {
       resp <- request.toMessage match {
         case Right(message) => MqMockerClient.getMessages(message)
-        case Left(error)    => Console.printError(error).ignoreLogged *> ZIO.fail(Status.INVALID_ARGUMENT)
+        case Left(error)    => ZIO.logErrorCause(Cause.fail(error)) *> ZIO.fail(Status.INVALID_ARGUMENT)
       }
     } yield resp
 
@@ -48,7 +48,7 @@ object MqMockerClientService {
     for {
       resp <- request.toMessage match {
         case Right(message) => MqMockerClient.getTopics(message)
-        case Left(error)    => Console.printError(error).ignoreLogged *> ZIO.fail(Status.INVALID_ARGUMENT)
+        case Left(error)    => ZIO.logErrorCause(Cause.fail(error)) *> ZIO.fail(Status.INVALID_ARGUMENT)
       }
     } yield resp
 
@@ -56,7 +56,7 @@ object MqMockerClientService {
     for {
       resp <- request.toMessage match {
         case Right(message) => MqMockerClient.deleteTopic(message)
-        case Left(error)    => Console.printError(error).ignoreLogged *> ZIO.fail(Status.INVALID_ARGUMENT)
+        case Left(error)    => ZIO.logErrorCause(Cause.fail(error)) *> ZIO.fail(Status.INVALID_ARGUMENT)
       }
     } yield resp
 }

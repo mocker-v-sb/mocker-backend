@@ -68,6 +68,8 @@ services:
       - '9000'
     environment:
       - MQ_MOCKER_ADDRESS=mq-mocker
-      - REST_MOCKER_ADDRESS=rest-mocker
+      - REST_MOCKER_ADDRESS=84.201.158.52
+      - GRAPHQL_MOCKER_ADDRESS=78.24.220.57
+      - AUTH_DB_ADDRESS=auth-db
 volumes:
   my-db:
