@@ -5,8 +5,8 @@ import com.mocker.mq.mq_service.{GetTopicsResponse => ProtoGetTopicsResponse}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}
 
 case class GetTopicsResponse(queues: Seq[Queue])
-object GetTopicsResponse {
 
+object GetTopicsResponse {
 
   def fromMessage(message: ProtoGetTopicsResponse): Either[String, GetTopicsResponse] = {
     val queuesAndErrors = message.queues.map(q => Queue.fromMessage(q))

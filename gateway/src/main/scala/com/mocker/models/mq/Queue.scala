@@ -10,7 +10,7 @@ object Queue {
 
   def fromMessage(message: ProtoQueue): Either[String, Queue] = {
     ScalaBrokerType.fromMessage(message.brokerType) match {
-      case Right(sbt) => Right(Queue(brokerType = sbt, topicName = message.topicName))
+      case Right(sbt)  => Right(Queue(brokerType = sbt, topicName = message.topicName))
       case Left(error) => Left(error)
     }
   }
