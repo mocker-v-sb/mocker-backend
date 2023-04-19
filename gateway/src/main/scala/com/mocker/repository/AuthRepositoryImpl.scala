@@ -8,7 +8,7 @@ import com.mocker.models.auth.User
 
 import java.util.UUID
 
-final class AuthRepositoryImpl(
+case class AuthRepositoryImpl(
     connectionPool: ConnectionPool
 ) extends AuthRepository
     with PostgresTableDescription {
@@ -23,17 +23,20 @@ final class AuthRepositoryImpl(
       .from(users)
       .where(username === _username)
 
-    ZIO.logInfo(s"Query to execute findByUsername is ${renderRead(query)}") *>
+    ZIO.logInfo(s"Query to find user is ${renderRead(query)}") *>
       execute(query.to((User.apply _).tupled))
         .findFirst(driverLayer, _username)
   }
 
   override def insertUser(user: User): IO[AppError.RepositoryError, Int] = {
-    val _id = UUID.randomUUID()
     val query = (insertInto(users)(id, username, password))
-      .values(_id, user.username, user.password)
+      .values(user.id, user.username, user.password)
 
     ZIO.logInfo(s"Query to insert user is ${renderInsert(query)}") *>
       execute(query).provideAndLog(driverLayer)
   }
+}
+
+object AuthRepositoryImpl {
+  def live = ZLayer.fromFunction(AuthRepositoryImpl.apply _)
 }

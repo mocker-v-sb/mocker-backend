@@ -5,13 +5,7 @@ import com.mocker.common.utils.{Environment, ServerAddress}
 import com.mocker.mq.mq_service.ZioMqService.MqMockerClient
 import com.mocker.rest.rest_service.ZioRestService.RestMockerClient
 import com.mocker.services.{AuthenticationService, GraphQlMockerManager, MqMockerManager}
-import com.mocker.services.rest.{
-  MockRestApiMockHandler,
-  MockRestApiMockResponseHandler,
-  MockRestApiModelHandler,
-  MockRestApiServiceHandler,
-  MockRestHandler
-}
+import com.mocker.services.rest.{MockRestApiMockHandler, MockRestApiMockResponseHandler, MockRestApiModelHandler, MockRestApiServiceHandler, MockRestHandler}
 import io.grpc.ManagedChannelBuilder
 import io.opentelemetry.api.trace.Tracer
 import scalapb.zio_grpc.ZManagedChannel
@@ -20,9 +14,12 @@ import zio.http.HttpAppMiddleware.{bearerAuth, cors}
 import zio.http._
 import zio.http.middleware.Cors.CorsConfig
 import zio.http.model.Method
-import zio.telemetry.opentelemetry.baggage.Baggage
+import com.mocker.repository.AuthRepositoryImpl
+import zio.sql.ConnectionPool
 import zio.telemetry.opentelemetry.context.ContextStorage
 import zio.telemetry.opentelemetry.tracing.Tracing
+
+import java.util.Properties
 
 object Main extends ZIOAppDefault {
 
@@ -75,8 +72,23 @@ object Main extends ZIOAppDefault {
     mqMockerManager <- ZIO.service[MqMockerManager]
   } yield authService.routes ++ graphqlMockerManager.routes ++ mqMockerManager.routes ++ restMockerRoutes
 
+  val connectionPoolConfig = ZLayer.succeed {
+    zio.sql.ConnectionPoolConfig(
+      url = Environment.conf.getString("auth-db.url"),
+      properties = {
+        val props = new Properties
+        props.setProperty("user", Environment.conf.getString("auth-db.user"))
+        props.setProperty("password", Environment.conf.getString("auth-db.password"))
+        props
+      }
+    )
+  }
+
+  val authRepositoryLayer = connectionPoolConfig >>> ConnectionPool.live >>> AuthRepositoryImpl.live
+
   val program: ZIO[Any, Throwable, ExitCode] = for {
     routes <- routes.provide(
+      authRepositoryLayer,
       AuthenticationService.live,
       GraphQlMockerManager.live,
       MqMockerManager.live,
@@ -87,6 +99,7 @@ object Main extends ZIOAppDefault {
     _ <- Server
       .serve(routes)
       .provide(
+        authRepositoryLayer,
         Client.default,
         Server.defaultWith(serverConfig),
         mqMockerClient,
