@@ -5,7 +5,7 @@ import com.mocker.models.auth.requests.AuthenticationRequest
 import com.mocker.repository.AuthRepository
 import pdi.jwt.{Jwt, JwtAlgorithm, JwtClaim}
 import zio._
-import zio.http.model.{Method, Status, Status => HttpStatus}
+import zio.http.model.{Method, Status => HttpStatus}
 import zio.http._
 import zio.json.DecoderOps
 
@@ -39,7 +39,7 @@ case class AuthenticationService(authRepository: AuthRepository) {
           if (password.reverse.hashCode == username.hashCode)
             ZIO.succeed(Response.text(jwtEncode(username)))
           else
-            ZIO.succeed(Response.text("Invalid username or password.").setStatus(Status.Unauthorized))
+            ZIO.succeed(Response.text("Invalid username or password.").setStatus(HttpStatus.Unauthorized))
 
         case req @ Method.POST -> !! / "auth" / "signup" =>
           for {
