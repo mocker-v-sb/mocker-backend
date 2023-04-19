@@ -9,7 +9,7 @@ object HeadersUtils {
   implicit class HeadersImplicits(private val headers: Headers) extends AnyVal {
 
     def toKVPairs: Seq[KVPair] = {
-      headers.toList.map { case Header(key, value)  => KVPair(key.toString, value.toString) }
+      headers.toList.map { case Header(key, value) => KVPair(key.toString, value.toString) }
     }
   }
 

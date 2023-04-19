@@ -21,8 +21,7 @@ object KVPairUtils {
           .groupBy(_.name)
           .map {
             case (name, pairs) =>
-              val chunk = pairs.map(_.value).foldLeft(Chunk[String]()) { case (chunk, string) => chunk ++ string }
-              (name, chunk)
+              (name, Chunk.fromIterable(pairs.map(_.value)))
           }
       )
     }
