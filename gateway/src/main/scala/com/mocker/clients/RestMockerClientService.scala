@@ -34,6 +34,10 @@ object RestMockerClientService {
     RestMockerClient.updateService(request.toMessage)
   }
 
+  def switchServiceProxy(request: SwitchServiceProxyRequest): Response[SwitchServiceProxy.Response] = {
+    RestMockerClient.switchServiceProxy(request.toMessage)
+  }
+
   def deleteService(request: DeleteServiceRequest): Response[DeleteService.Response] = {
     RestMockerClient.deleteService(request.toMessage)
   }

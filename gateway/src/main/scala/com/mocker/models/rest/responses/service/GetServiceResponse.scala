@@ -10,7 +10,8 @@ case class GetServiceResponse(
     url: Option[String],
     creationTime: Option[Long],
     updateTime: Option[Long],
-    expirationTime: Option[Long]
+    expirationTime: Option[Long],
+    isProxyEnabled: Boolean
 )
 
 object GetServiceResponse {
@@ -25,7 +26,8 @@ object GetServiceResponse {
       url = message.url,
       creationTime = message.creationTime.map(_.asJavaInstant.toEpochMilli),
       updateTime = message.updateTime.map(_.asJavaInstant.toEpochMilli),
-      expirationTime = message.expirationTime.map(_.asJavaInstant.toEpochMilli)
+      expirationTime = message.expirationTime.map(_.asJavaInstant.toEpochMilli),
+      isProxyEnabled = message.isProxyEnabled
     )
   }
 }
