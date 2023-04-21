@@ -17,6 +17,7 @@ service RestMocker {
   rpc getService(GetService.Request) returns (GetService.Response);
   rpc getAllServices(GetAllServices.Request) returns (GetAllServices.Response);
   rpc searchServices(SearchServices.Request) returns (SearchServices.Response);
+  rpc switchServiceProxy(SwitchServiceProxy.Request) returns (SwitchServiceProxy.Response);
   rpc updateService(UpdateService.Request) returns (UpdateService.Response);
   rpc deleteService(DeleteService.Request) returns (DeleteService.Response);
 
@@ -68,6 +69,7 @@ message CreateService {
     google.protobuf.StringValue url = 3;
     google.protobuf.StringValue description = 4;
     google.protobuf.Timestamp expiration_time = 5;
+    bool is_proxy_enabled = 6;
   }
 
   message Response {}
@@ -87,6 +89,7 @@ message GetService {
     google.protobuf.Timestamp expiration_time = 5;
     google.protobuf.Timestamp creation_time = 6;
     google.protobuf.Timestamp update_time = 7;
+    bool is_proxy_enabled = 8;
   }
 }
 
@@ -97,6 +100,16 @@ message GetAllServices {
   message Response {
     repeated ServiceSnippet services = 1;
   }
+}
+
+message SwitchServiceProxy {
+
+  message Request {
+    string path = 1;
+    bool is_proxy_enabled = 2;
+  }
+
+  message Response {}
 }
 
 message SearchServices {
@@ -119,6 +132,7 @@ message UpdateService {
     google.protobuf.StringValue url = 4;
     google.protobuf.StringValue description = 5;
     google.protobuf.Timestamp expiration_time = 6;
+    bool is_proxy_enabled = 7;
   }
 
   message Response {}

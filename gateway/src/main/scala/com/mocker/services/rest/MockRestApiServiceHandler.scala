@@ -6,7 +6,7 @@ import com.mocker.models.rest.requests.service._
 import com.mocker.models.rest.responses.service._
 import com.mocker.rest.rest_service.ZioRestService.RestMockerClient
 import io.grpc.{Status => GrpcStatus}
-import zio.http.model.Method.{DELETE, GET, POST, PUT}
+import zio.http.model.Method.{DELETE, GET, PATCH, POST, PUT}
 import zio.http.model.{Status => HttpStatus}
 import zio.http._
 import zio.json.{DecoderOps, EncoderOps}
@@ -34,6 +34,17 @@ object MockRestApiServiceHandler {
             .tapError(err => ZIO.logErrorCause(Cause.fail(err)))
           protoResponse <- (request match {
             case Right(request) => RestMockerClientService.updateService(request)
+            case Left(error)    => ZIO.logErrorCause(Cause.fail(error)) *> ZIO.fail(GrpcStatus.INVALID_ARGUMENT)
+          }).either
+          response <- protoResponse.toHttp
+        } yield response
+      case req @ PATCH -> !! / "rest" / "service" / servicePath / "proxy" =>
+        for {
+          request <- req.body.asString
+            .map(_.fromJson[SwitchServiceProxyRequest].map(_.copy(servicePath = servicePath)))
+            .tapError(err => ZIO.logErrorCause(Cause.fail(err)))
+          protoResponse <- (request match {
+            case Right(request) => RestMockerClientService.switchServiceProxy(request)
             case Left(error)    => ZIO.logErrorCause(Cause.fail(error)) *> ZIO.fail(GrpcStatus.INVALID_ARGUMENT)
           }).either
           response <- protoResponse.toHttp

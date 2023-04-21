@@ -8,6 +8,7 @@ CREATE TABLE `service`
     `creation_time`   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `update_time`     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `expiration_time` TIMESTAMP    NULL     DEFAULT NULL,
+    `proxy_enabled`   BOOLEAN      NOT NULL DEFAULT FALSE,
     PRIMARY KEY (`id`)
 );
 

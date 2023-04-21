@@ -5,16 +5,21 @@ import com.mocker.rest.dao.mysql.{MySqlMockActions, MySqlMockResponseActions, My
 import com.mocker.rest.dao.{MockActions, MockResponseActions, ModelActions, ServiceActions}
 import com.mocker.rest.errors.RestMockerException
 import com.mocker.rest.model._
+import com.mocker.rest.utils.HeadersUtils._
+import com.mocker.rest.utils.MethodUtils._
+import com.mocker.rest.utils.KVPairUtils._
 import com.mocker.rest.utils.MockMatchers._
 import com.mocker.rest.utils.Orderings._
 import com.mocker.rest.utils.PathUtils._
 import com.mocker.rest.utils.RestMockerUtils._
 import slick.dbio.DBIO
 import slick.interop.zio.DatabaseProvider
+import zio.http.{Body, Client, Request, Response, URL}
 import zio.{IO, URLayer, ZIO, ZLayer}
 
 import scala.concurrent.ExecutionContext
 case class RestMockerManager(
+    httpClient: Client,
     restMockerDbProvider: DatabaseProvider,
     serviceActions: ServiceActions,
     modelActions: ModelActions,
@@ -50,11 +55,13 @@ case class RestMockerManager(
           case (_, response) => response
         }
       _ <- zio.Console.printLine(suitableResponses).mapError(e => RestMockerException.internal(e))
-      result <- chooseMockResponse(suitableMocks, suitableResponses)
+      result <- chooseMockResponse(service, query, suitableMocks, suitableResponses)
     } yield result
   }
 
   private def chooseMockResponse(
+      service: Service,
+      query: MockQuery,
       mocks: Seq[Mock],
       responses: Seq[MockResponse]
   ): IO[RestMockerException, MockQueryResponse] = {
@@ -69,13 +76,59 @@ case class RestMockerManager(
           response = modelOpt.map(model => MockQueryResponse.fromModel(model)).getOrElse(MockQueryResponse.default)
           result <- ZIO.succeed(response)
         } yield result
-      case (_, _) => ZIO.fail(RestMockerException.suitableMockNotFound)
+      case (_, _) => tryGetResponseFromRealService(service: Service, query: MockQuery)
     }
+  }
+
+  private def tryGetResponseFromRealService(
+      service: Service,
+      mockQuery: MockQuery
+  ): IO[RestMockerException, MockQueryResponse] = {
+    if (service.isProxyEnabled) {
+      for {
+        request <- buildHttpRequest(service, mockQuery)
+        response <- httpClient.request(request).mapError(RestMockerException.cantGetProxiedResponse)
+        mockQueryResponse <- buildMockResponse(response)
+      } yield mockQueryResponse
+    } else
+      ZIO.fail(RestMockerException.suitableMockNotFound)
+  }
+
+  private def buildHttpRequest(service: Service, mockQuery: MockQuery): IO[RestMockerException, Request] = {
+    for {
+      serviceUrl <- service.url match {
+        case Some(url) => ZIO.succeed(url)
+        case None      => ZIO.fail(RestMockerException.proxyUrlMissing(service.path))
+      }
+      url <- ZIO
+        .fromEither(URL.fromString(serviceUrl).map(_.setQueryParams(mockQuery.queryParams.toQueryParams)))
+        .mapError(RestMockerException.cantGetProxiedResponse)
+      proxiedRequest <- ZIO.succeed(
+        Request
+          .default(
+            body = mockQuery.body.map(Body.fromString(_)).getOrElse(Body.empty),
+            url = url,
+            method = mockQuery.method.toZIOMethod
+          )
+          .setHeaders(mockQuery.headers.toHttpHeaders)
+      )
+    } yield proxiedRequest
+  }
+
+  private def buildMockResponse(response: Response): IO[RestMockerException, MockQueryResponse] = {
+    for {
+      responseContent <- response.body.asString.mapError(RestMockerException.cantGetProxiedResponse)
+    } yield MockQueryResponse(
+      response.status.code,
+      response.headers.toKVPairs,
+      responseContent
+    )
   }
 
   def createService(service: Service): IO[RestMockerException, Unit] = {
     for {
       _ <- checkServiceNotExists(service)
+      _ <- validate(service)
       _ <- serviceActions.upsert(service).asZIO(dbLayer).run
     } yield ()
   }
@@ -98,6 +151,15 @@ case class RestMockerManager(
     serviceActions.search(query).asZIO(dbLayer).run
   }
 
+  def switchServiceProxy(servicePath: String, isProxyEnabled: Boolean): IO[RestMockerException, Unit] = {
+    for {
+      service <- getService(servicePath)
+      newService = service.copy(isProxyEnabled = isProxyEnabled)
+      _ <- validate(newService)
+      _ <- serviceActions.upsert(newService).asZIO(dbLayer).run
+    } yield ()
+  }
+
   def updateService(servicePath: String, service: Service): IO[RestMockerException, Unit] = {
     for {
       _ <- if (servicePath != service.path)
@@ -105,10 +167,9 @@ case class RestMockerManager(
       else
         ZIO.succeed()
       currentService <- getService(servicePath)
-      _ <- serviceActions
-        .upsert(service.copy(id = currentService.id, creationTime = currentService.creationTime))
-        .asZIO(dbLayer)
-        .run
+      newService = service.copy(id = currentService.id, creationTime = currentService.creationTime)
+      _ <- validate(newService)
+      _ <- serviceActions.upsert(newService).asZIO(dbLayer).run
     } yield ()
   }
 
@@ -296,6 +357,13 @@ case class RestMockerManager(
     } yield result
   }
 
+  private def validate(service: Service): IO[RestMockerException, Unit] = {
+    if (service.isProxyEnabled && service.url.isEmpty)
+      ZIO.fail(RestMockerException.proxyUrlMissing(service.path))
+    else
+      ZIO.succeed()
+  }
+
   private def checkServiceNotExists(service: Service): IO[RestMockerException, Unit] = {
     for {
       dbService <- serviceActions.get(service.path).asZIO(dbLayer).run
@@ -356,11 +424,13 @@ case class RestMockerManager(
 
 object RestMockerManager {
 
-  def layer(implicit ec: ExecutionContext): URLayer[DatabaseProvider, RestMockerManager] = {
+  def layer(implicit ec: ExecutionContext): URLayer[DatabaseProvider with Client, RestMockerManager] = {
     ZLayer.fromZIO {
       for {
+        httpClient <- ZIO.service[Client]
         restMockerDatabase <- ZIO.service[DatabaseProvider]
       } yield RestMockerManager(
+        httpClient,
         restMockerDatabase,
         MySqlServiceActions(),
         MySqlModelActions(),

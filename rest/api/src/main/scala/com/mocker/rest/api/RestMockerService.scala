@@ -66,6 +66,14 @@ case class RestMockerService(restMockerManager: RestMockerManager) extends RestM
       .map(toSearchServicesResponse)
   }
 
+  override def switchServiceProxy(request: SwitchServiceProxy.Request): IO[Status, SwitchServiceProxy.Response] = {
+    restMockerManager
+      .switchServiceProxy(request.path, request.isProxyEnabled)
+      .tapError(err => Console.printLineError(err.message).ignoreLogged)
+      .mapError(_.status)
+      .map(_ => SwitchServiceProxy.Response())
+  }
+
   override def getModel(request: GetModel.Request): IO[Status, GetModel.Response] = {
     restMockerManager
       .getModel(request.servicePath, request.modelId)

@@ -10,7 +10,8 @@ case class CreateServiceRequest(
     path: String,
     url: Option[String],
     description: Option[String],
-    expirationTime: Option[Long]
+    expirationTime: Option[Long],
+    isProxyEnabled: Boolean
 ) {
 
   def toMessage: ProtoCreateServiceRequest = {
@@ -19,7 +20,8 @@ case class CreateServiceRequest(
       path = path,
       url = url,
       description = description,
-      expirationTime = expirationTime.map(Timestamps.fromMillis).map(GoogleTimestamp.fromJavaProto)
+      expirationTime = expirationTime.map(Timestamps.fromMillis).map(GoogleTimestamp.fromJavaProto),
+      isProxyEnabled = isProxyEnabled
     )
   }
 }
