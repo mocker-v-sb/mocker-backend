@@ -1,6 +1,6 @@
 package com.mocker.repository
 
-import com.mocker.models.auth.User
+import com.mocker.models.auth.{RefreshToken, User}
 import com.mocker.models.error.AppError.RepositoryError
 import zio.sql.postgresql.PostgresJdbcModule
 import zio.stream._
@@ -13,9 +13,15 @@ trait PostgresTableDescription extends PostgresJdbcModule {
 
   implicit val userSchema = DeriveSchema.gen[User]
 
+  implicit val refreshTokenSchema = DeriveSchema.gen[RefreshToken]
+
   val users = defineTableSmart[User]
 
-  val (id, username, password) = users.columns
+  val refreshTokens = defineTableSmart[RefreshToken]
+
+  val (userId, email, password) = users.columns
+
+  val (tokenId, token) = refreshTokens.columns
 
   implicit class ZStreamSqlExt[T](zstream: ZStream[SqlDriver, Exception, T]) {
 
@@ -29,20 +35,11 @@ trait PostgresTableDescription extends PostgresJdbcModule {
 
     def findFirst(
         driver: ULayer[SqlDriver],
-        username: String
-    ): ZIO[Any, RepositoryError, T] =
-      zstream.runHead.some
-        .tapError {
-          case None    => ZIO.unit
-          case Some(e) => ZIO.logError(e.getMessage)
-        }
-        .mapError {
-          case None =>
-            RepositoryError(
-              new RuntimeException(s"User with username $username does not exists")
-            )
-          case Some(e) => RepositoryError(e.getCause)
-        }
+        email: String
+    ): ZIO[Any, RepositoryError, Option[T]] =
+      zstream.runHead
+        .tapError(error => ZIO.logError(s"Caught error while looking for user: $email\n${error.getMessage}"))
+        .mapError(error => RepositoryError(error.getCause))
         .provide(driver)
   }
 

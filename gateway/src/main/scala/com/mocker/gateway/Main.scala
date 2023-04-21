@@ -3,9 +3,10 @@ package com.mocker.gateway
 import com.mocker.common.monitoring.tracing.JaegerTracer
 import com.mocker.common.utils.{Environment, ServerAddress}
 import com.mocker.mq.mq_service.ZioMqService.MqMockerClient
+import com.mocker.repository.impls.{AuthRepositoryImpl, RefreshTokenRepositoryImpl}
 import com.mocker.rest.rest_service.ZioRestService.RestMockerClient
 import com.mocker.services.{AuthenticationService, GraphQlMockerManager, MqMockerManager}
-import com.mocker.services.rest.{MockRestApiMockHandler, MockRestApiMockResponseHandler, MockRestApiModelHandler, MockRestApiServiceHandler, MockRestHandler}
+import com.mocker.services.rest._
 import io.grpc.ManagedChannelBuilder
 import io.opentelemetry.api.trace.Tracer
 import scalapb.zio_grpc.ZManagedChannel
@@ -14,7 +15,6 @@ import zio.http.HttpAppMiddleware.{bearerAuth, cors}
 import zio.http._
 import zio.http.middleware.Cors.CorsConfig
 import zio.http.model.Method
-import com.mocker.repository.AuthRepositoryImpl
 import zio.sql.ConnectionPool
 import zio.telemetry.opentelemetry.context.ContextStorage
 import zio.telemetry.opentelemetry.tracing.Tracing
@@ -30,8 +30,8 @@ object Main extends ZIOAppDefault {
     allowedMethods = Some(Set(Method.GET, Method.POST, Method.PUT, Method.PATCH, Method.DELETE))
   )
 
-  val serverAddress: ServerAddress =
-    ServerAddress(Environment.conf.getString("gateway-server.address"), Environment.conf.getInt("gateway-server.port"))
+  // val serverAddress: ServerAddress =
+  //  ServerAddress(Environment.conf.getString("gateway-server.address"), Environment.conf.getInt("gateway-server.port"))
 
   val mqMockerClient: Layer[Throwable, MqMockerClient.Service] =
     MqMockerClient.live(
@@ -61,8 +61,8 @@ object Main extends ZIOAppDefault {
     JaegerTracer.live("mocker-gateway", ServerAddress("158.160.57.255", 14250))
 
   val restMockerRoutes = MockRestApiServiceHandler.routes ++ MockRestApiModelHandler.routes ++
-    MockRestApiMockHandler.routes ++ MockRestApiMockResponseHandler.routes ++ MockRestHandler.routes
-  // @@ bearerAuth(jwtDecode(_).isDefined)) @@ cors(corsConfig)
+    MockRestApiMockHandler.routes ++ MockRestApiMockResponseHandler.routes ++
+    MockRestHandler.routes
 
   val serverConfig: ServerConfig => ServerConfig = _.port(9000)
 
@@ -70,7 +70,9 @@ object Main extends ZIOAppDefault {
     authService <- ZIO.service[AuthenticationService]
     graphqlMockerManager <- ZIO.service[GraphQlMockerManager]
     mqMockerManager <- ZIO.service[MqMockerManager]
-  } yield authService.routes ++ graphqlMockerManager.routes ++ mqMockerManager.routes ++ restMockerRoutes
+  } yield (authService.routes ++
+    (graphqlMockerManager.routes ++ mqMockerManager.routes ++ restMockerRoutes) @@
+      bearerAuth(AuthenticationService.jwtDecode(_).isDefined)) @@ cors(corsConfig)
 
   val connectionPoolConfig = ZLayer.succeed {
     zio.sql.ConnectionPoolConfig(
@@ -83,12 +85,14 @@ object Main extends ZIOAppDefault {
       }
     )
   }
-
-  val authRepositoryLayer = connectionPoolConfig >>> ConnectionPool.live >>> AuthRepositoryImpl.live
+  val connectionPool = connectionPoolConfig >>> ConnectionPool.live
+  val authRepositoryLayer = connectionPool >>> AuthRepositoryImpl.live
+  val refreshTokenRepositoryLayer = connectionPool >>> RefreshTokenRepositoryImpl.live
 
   val program: ZIO[Any, Throwable, ExitCode] = for {
     routes <- routes.provide(
       authRepositoryLayer,
+      refreshTokenRepositoryLayer,
       AuthenticationService.live,
       GraphQlMockerManager.live,
       MqMockerManager.live,
@@ -100,6 +104,7 @@ object Main extends ZIOAppDefault {
       .serve(routes)
       .provide(
         authRepositoryLayer,
+        refreshTokenRepositoryLayer,
         Client.default,
         Server.defaultWith(serverConfig),
         mqMockerClient,

@@ -1,12 +1,10 @@
-package com.mocker.repository
+package com.mocker.repository.impls
 
-import com.mocker.models.error.AppError
-import zio.sql.ConnectionPool
-import zio._
-import zio.prelude.EqualOps
 import com.mocker.models.auth.User
-
-import java.util.UUID
+import com.mocker.models.error.AppError
+import com.mocker.repository.{AuthRepository, PostgresTableDescription}
+import zio._
+import zio.sql.ConnectionPool
 
 case class AuthRepositoryImpl(
     connectionPool: ConnectionPool
@@ -18,19 +16,19 @@ case class AuthRepositoryImpl(
       ZLayer.succeed(connectionPool)
     )
 
-  override def findByUsername(_username: String): IO[AppError.RepositoryError, User] = {
-    val query = select(id, username, password)
+  override def findByEmail(_email: String): IO[AppError.RepositoryError, Option[User]] = {
+    val query = select(userId, email, password)
       .from(users)
-      .where(username === _username)
+      .where(email === _email)
 
     ZIO.logInfo(s"Query to find user is ${renderRead(query)}") *>
       execute(query.to((User.apply _).tupled))
-        .findFirst(driverLayer, _username)
+        .findFirst(driverLayer, _email)
   }
 
   override def insertUser(user: User): IO[AppError.RepositoryError, Int] = {
-    val query = (insertInto(users)(id, username, password))
-      .values(user.id, user.username, user.password)
+    val query = insertInto(users)(userId, email, password)
+      .values(user.id, user.email, user.password)
 
     ZIO.logInfo(s"Query to insert user is ${renderInsert(query)}") *>
       execute(query).provideAndLog(driverLayer)
