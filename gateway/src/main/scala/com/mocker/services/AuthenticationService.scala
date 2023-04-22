@@ -45,9 +45,9 @@ case class AuthenticationService(authRepository: AuthRepository, refreshTokenRep
             requestE <- req.body.asString
               .tapError(err => ZIO.logError(err.getMessage))
               .mapBoth(
-              _ => Response.text("could not parse request1").setStatus(HttpStatus.BadRequest),
-              _.fromJson[RefreshTokenRequest]
-            )
+                _ => Response.text("could not parse request1").setStatus(HttpStatus.BadRequest),
+                _.fromJson[RefreshTokenRequest]
+              )
             request <- ZIO
               .fromEither(requestE)
               .tapError(err => ZIO.logError(err))
@@ -68,8 +68,10 @@ case class AuthenticationService(authRepository: AuthRepository, refreshTokenRep
               }
               .orElseFail(
                 Response
-                  .text(s"could not parse auth header " +
-                    s"${req.headers.get("Authorization").map(_.split(" ").mkString(", "))}")
+                  .text(
+                    s"could not parse auth header " +
+                      s"${req.headers.get("Authorization").map(_.split(" ").mkString(", "))}"
+                  )
                   .setStatus(HttpStatus.BadRequest)
               )
             response <- refreshTokenRepository
@@ -182,12 +184,14 @@ object AuthenticationService {
   }
 
   def jwtDecode(token: String, shouldIgnoreTiming: Boolean = false): Option[JwtClaim] = {
-    Jwt.decode(
-      token,
-      SECRET_KEY,
-      Seq(JwtAlgorithm.HS512),
-      if (shouldIgnoreTiming) JwtOptions(expiration = false, notBefore = false) else JwtOptions.DEFAULT
-    ).toOption
+    Jwt
+      .decode(
+        token,
+        SECRET_KEY,
+        Seq(JwtAlgorithm.HS512),
+        if (shouldIgnoreTiming) JwtOptions(expiration = false, notBefore = false) else JwtOptions.DEFAULT
+      )
+      .toOption
   }
 
   private val DefaultIterations = 10000
