@@ -21,6 +21,7 @@ object RestMockerException {
 
   def incorrectServicePath(servicePath: String): RestMockerException =
     RestMockerException(s"Path $servicePath for service is invalid", Status.INVALID_ARGUMENT)
+
   def proxyUrlMissing(servicePath: String): RestMockerException =
     RestMockerException(s"Service $servicePath has proxy enabled, but no url is defined", Status.INVALID_ARGUMENT)
 
