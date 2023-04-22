@@ -360,6 +360,8 @@ case class RestMockerManager(
   private def validate(service: Service): IO[RestMockerException, Unit] = {
     if (service.isProxyEnabled && service.url.isEmpty)
       ZIO.fail(RestMockerException.proxyUrlMissing(service.path))
+    else if (service.path == "service")
+      ZIO.fail(RestMockerException.incorrectServicePath(service.path))
     else
       ZIO.succeed()
   }

@@ -19,6 +19,8 @@ object RestMockerException {
   def serviceNotExists(path: String): RestMockerException =
     RestMockerException(s"Service with path $path does not exists", Status.NOT_FOUND)
 
+  def incorrectServicePath(servicePath: String): RestMockerException =
+    RestMockerException(s"Path $servicePath for service is invalid", Status.INVALID_ARGUMENT)
   def proxyUrlMissing(servicePath: String): RestMockerException =
     RestMockerException(s"Service $servicePath has proxy enabled, but no url is defined", Status.INVALID_ARGUMENT)
 

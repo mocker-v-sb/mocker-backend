@@ -90,6 +90,7 @@ message GetService {
     google.protobuf.Timestamp creation_time = 6;
     google.protobuf.Timestamp update_time = 7;
     bool is_proxy_enabled = 8;
+    int64 id = 9;
   }
 }
 

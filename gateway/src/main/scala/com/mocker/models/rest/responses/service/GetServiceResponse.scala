@@ -4,6 +4,7 @@ import com.mocker.rest.rest_service.GetService.{Response => ProtoGetServiceRespo
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}
 
 case class GetServiceResponse(
+    id: Long,
     name: String,
     path: String,
     description: Option[String],
@@ -20,6 +21,7 @@ object GetServiceResponse {
 
   def fromMessage(message: ProtoGetServiceResponse): GetServiceResponse = {
     GetServiceResponse(
+      id = message.id,
       name = message.name,
       path = message.path,
       description = message.description,
