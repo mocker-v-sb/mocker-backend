@@ -5,15 +5,15 @@ import com.mocker.models.error.AppError.RepositoryError
 import zio.ZIO
 
 trait AuthRepository {
-  def findByUsername(username: String): ZIO[AuthRepository, RepositoryError, User]
+  def findByEmail(email: String): ZIO[AuthRepository, RepositoryError, Option[User]]
 
   def insertUser(user: User): ZIO[AuthRepository, RepositoryError, Int]
 }
 
 object AuthRepository {
 
-  def findByUsername(username: String): ZIO[AuthRepository, RepositoryError, User] =
-    ZIO.serviceWithZIO[AuthRepository](_.findByUsername(username))
+  def findByEmail(email: String): ZIO[AuthRepository, RepositoryError, Option[User]] =
+    ZIO.serviceWithZIO[AuthRepository](_.findByEmail(email))
 
   def insertUser(user: User): ZIO[AuthRepository, RepositoryError, Int] =
     ZIO.serviceWithZIO[AuthRepository](_.insertUser(user))

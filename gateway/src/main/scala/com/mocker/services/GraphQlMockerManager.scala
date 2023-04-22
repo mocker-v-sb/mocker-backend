@@ -29,7 +29,7 @@ case class GraphQlMockerManager(tracing: Tracing) {
   private def proxy(request: Request) =
     tracing.span[Client, Throwable, Response](
       spanName = "proxy_graphql_request",
-      spanKind = SpanKind.INTERNAL
+      spanKind = SpanKind.CLIENT
     )(inner(request))
 
   private def inner(request: Request) = {
@@ -55,7 +55,7 @@ case class GraphQlMockerManager(tracing: Tracing) {
             url = url,
             method = request.method
           )
-          .updateHeaders(_ ++ Header("x-request-id", spanId))
+          .updateHeaders(_.combine(Header("x-request-id", spanId).combine(request.headers)))
       )
       _ <- ZIO.foreach(proxiedRequest.headersAsList) { h =>
         tracing.setAttribute(h._1.toString, h._2.toString)
