@@ -100,8 +100,12 @@ case class RestMockerManager(
         case Some(url) => ZIO.succeed(url)
         case None      => ZIO.fail(RestMockerException.proxyUrlMissing(service.path))
       }
+      fullPath = serviceUrl + {
+        if (serviceUrl.endsWith("/")) mockQuery.requestPath.drop(1)
+        else mockQuery.requestPath
+      }
       url <- ZIO
-        .fromEither(URL.fromString(serviceUrl).map(_.setQueryParams(mockQuery.queryParams.toQueryParams)))
+        .fromEither(URL.fromString(fullPath).map(_.setQueryParams(mockQuery.queryParams.toQueryParams)))
         .mapError(RestMockerException.cantGetProxiedResponse)
       proxiedRequest <- ZIO.succeed(
         Request
