@@ -5,3 +5,10 @@ create table if not exists users
     password varchar not null,
     UNIQUE(email)
 );
+
+create table if not exists refresh_tokens
+(
+    id uuid not null primary key,
+    token varchar not null
+);
+echo "" > $(docker inspect --format='{{.LogPath}}' <>)

@@ -50,7 +50,7 @@ case class AuthenticationService(authRepository: AuthRepository, refreshTokenRep
             )
             request <- ZIO
               .fromEither(requestE)
-              .tapError(err => ZIO.logErrorCause(Cause.fail(err)))
+              .tapError(err => ZIO.logError(err))
               .orElseFail(Response.text("could not parse request1").setStatus(HttpStatus.BadRequest))
             email <- ZIO
               .fromOption {
