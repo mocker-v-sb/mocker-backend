@@ -11,5 +11,6 @@ case class Service(
     creationTime: Timestamp,
     updateTime: Timestamp,
     expirationTime: Option[Timestamp],
-    isProxyEnabled: Boolean
+    isProxyEnabled: Boolean,
+    isHistoryEnabled: Boolean
 )

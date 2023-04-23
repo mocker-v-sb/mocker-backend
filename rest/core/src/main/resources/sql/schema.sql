@@ -9,6 +9,7 @@ CREATE TABLE `service`
     `update_time`     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `expiration_time` TIMESTAMP    NULL     DEFAULT NULL,
     `proxy_enabled`   BOOLEAN      NOT NULL DEFAULT FALSE,
+    `history_enabled` BOOLEAN      NOT NULL DEFAULT FALSE,
     PRIMARY KEY (`id`)
 );
 

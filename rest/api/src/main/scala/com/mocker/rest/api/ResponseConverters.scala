@@ -26,7 +26,8 @@ object ResponseConverters {
       creationTime = Some(toProtoTimestamp(service.creationTime)),
       updateTime = Some(toProtoTimestamp(service.updateTime)),
       isProxyEnabled = service.isProxyEnabled,
-      id = service.id
+      id = service.id,
+      isHistoryEnabled = service.isHistoryEnabled
     )
   }
 
