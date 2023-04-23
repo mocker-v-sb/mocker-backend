@@ -28,6 +28,7 @@ trait ServiceGen extends BasicGenerators {
       creationTime = Timestamp.valueOf(dateTimeFormatter.format(Instant.now())),
       updateTime = Timestamp.valueOf(dateTimeFormatter.format(Instant.now())),
       expirationTime = Some(Timestamp.valueOf(dateTimeFormatter.format(Instant.now().plusMillis(ttl.toMillis)))),
-      isProxyEnabled = false
+      isProxyEnabled = false,
+      isHistoryEnabled = false
     )
 }

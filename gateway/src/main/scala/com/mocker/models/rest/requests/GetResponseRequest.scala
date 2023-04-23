@@ -5,6 +5,7 @@ import com.mocker.rest.rest_service.GetResponse.{Request => ProtoGetResponseRequ
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}
 
 case class GetResponseRequest(
+    url: String = "",
     servicePath: String,
     requestPath: String,
     method: Method,
@@ -20,7 +21,8 @@ case class GetResponseRequest(
       method = method.proto,
       body = body,
       headers = headers.map(_.toProto).toSeq,
-      queryParams = queryParams.map(_.toProto).toSeq
+      queryParams = queryParams.map(_.toProto).toSeq,
+      rawUrl = url
     )
   }
 }

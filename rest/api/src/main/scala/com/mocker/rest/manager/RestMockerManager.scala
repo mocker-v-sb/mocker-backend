@@ -1,7 +1,13 @@
 package com.mocker.rest.manager
 
 import com.mocker.rest.utils.ZIOSlick._
-import com.mocker.rest.dao.mysql.{MySqlMockActions, MySqlMockResponseActions, MySqlModelActions, MySqlServiceActions}
+import com.mocker.rest.dao.mysql.{
+  MySqlMockActions,
+  MySqlMockHistoryActions,
+  MySqlMockResponseActions,
+  MySqlModelActions,
+  MySqlServiceActions
+}
 import com.mocker.rest.dao.{MockActions, MockResponseActions, ModelActions, ServiceActions}
 import com.mocker.rest.errors.RestMockerException
 import com.mocker.rest.model._
@@ -24,7 +30,8 @@ case class RestMockerManager(
     serviceActions: ServiceActions,
     modelActions: ModelActions,
     mockActions: MockActions,
-    mockResponseActions: MockResponseActions
+    mockResponseActions: MockResponseActions,
+    mockHistoryActions: MySqlMockHistoryActions
 ) {
 
   private val dbLayer = ZLayer.succeed(restMockerDbProvider)
@@ -66,24 +73,44 @@ case class RestMockerManager(
       responses: Seq[MockResponse]
   ): IO[RestMockerException, MockQueryResponse] = {
     (mocks.toList, responses.toList) match {
-      case (_, response :: _) => ZIO.succeed(MockQueryResponse.fromMockResponse(response))
-      case (mock :: _, _) =>
-        for {
-          modelOpt <- mock.responseModelId match {
-            case Some(id) => modelActions.get(id).asZIO(dbLayer).run
-            case None     => ZIO.succeed(None)
-          }
-          response = modelOpt.map(model => MockQueryResponse.fromModel(model)).getOrElse(MockQueryResponse.default)
-          result <- ZIO.succeed(response)
-        } yield result
-      case (_, _) => tryGetResponseFromRealService(service: Service, query: MockQuery)
+      case (_, response :: _) => processStaticResponse(service, query, response)
+      case (mock :: _, _)     => processMockTemplate(service, query, mock)
+      case (_, _)             => tryGetResponseFromRealService(service, query)
     }
+  }
+
+  private def processStaticResponse(
+      service: Service,
+      query: MockQuery,
+      response: MockResponse
+  ): IO[RestMockerException, MockQueryResponse] = {
+    for {
+      // todo: history
+      result <- ZIO.succeed(MockQueryResponse.fromMockResponse(response))
+    } yield result
+  }
+
+  private def processMockTemplate(
+      service: Service,
+      query: MockQuery,
+      mock: Mock
+  ): IO[RestMockerException, MockQueryResponse] = {
+    for {
+      // todo: history
+      modelOpt <- mock.responseModelId match {
+        case Some(id) => modelActions.get(id).asZIO(dbLayer).run
+        case None     => ZIO.succeed(None)
+      }
+      response = modelOpt.map(model => MockQueryResponse.fromModel(model)).getOrElse(MockQueryResponse.default)
+      result <- ZIO.succeed(response)
+    } yield result
   }
 
   private def tryGetResponseFromRealService(
       service: Service,
       mockQuery: MockQuery
   ): IO[RestMockerException, MockQueryResponse] = {
+    // todo: history
     if (service.isProxyEnabled) {
       for {
         request <- buildHttpRequest(service, mockQuery)
@@ -441,7 +468,8 @@ object RestMockerManager {
         MySqlServiceActions(),
         MySqlModelActions(),
         MySqlMockActions(),
-        MySqlMockResponseActions()
+        MySqlMockResponseActions(),
+        MySqlMockHistoryActions()
       )
     }
   }

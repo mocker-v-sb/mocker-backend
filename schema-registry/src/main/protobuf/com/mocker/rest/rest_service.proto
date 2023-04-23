@@ -52,6 +52,7 @@ message GetResponse {
     google.protobuf.StringValue body = 4;
     repeated KVPair headers = 5;
     repeated KVPair query_params = 6;
+    string raw_url = 7;
   }
 
   message Response {

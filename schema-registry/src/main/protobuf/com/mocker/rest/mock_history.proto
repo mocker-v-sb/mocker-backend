@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package com.mocker.rest;
+
+import "scalapb/scalapb.proto";
+
+option (scalapb.options) = {
+  preserve_unknown_fields: false
+};
+
+message ResponseSourceNamespace {
+  enum ResponseSource {
+    EMPTY = 0;
+    STATIC_RESPONSE = 1;
+    MOCK_TEMPLATE = 2;
+    PROXIED_RESPONSE = 3;
+  }
+}

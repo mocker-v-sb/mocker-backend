@@ -1,5 +1,6 @@
 package com.mocker.rest.dao.implicits
 
+import com.mocker.rest.mock_history.ResponseSourceNamespace.ResponseSource
 import com.mocker.rest.model.ResponseTypeNamespace.ResponseType
 import com.mocker.rest.request.{KVPair, Method}
 import slick.jdbc.H2Profile.{BaseColumnType, MappedColumnType}
@@ -34,5 +35,11 @@ object MySqlImplicits {
     MappedColumnType.base[ResponseType, Int](
       responseType => responseType.value,
       code => ResponseType.fromValue(code)
+    )
+
+  implicit val responseSourceCT: BaseColumnType[ResponseSource] =
+    MappedColumnType.base[ResponseSource, Int](
+      responseSource => responseSource.value,
+      code => ResponseSource.fromValue(code)
     )
 }

@@ -23,15 +23,16 @@ object MockRestHandler {
           request <- buildRequest(path, req.headers, req.url.queryParams).either
           response <- request match {
             case Left(_)        => ZIO.succeed(Response.status(HttpStatus.BadRequest))
-            case Right(request) => buildHttpResponse(request.copy(method = common.GET))
+            case Right(request) => buildHttpResponse(request.copy(url = req.url.encode, method = common.GET))
           }
         } yield response
       case req @ DELETE -> "" /: "rest" /: path =>
         for {
           request <- buildRequest(path, req.headers, req.url.queryParams).either
           response <- request match {
-            case Left(_)        => ZIO.succeed(Response.status(HttpStatus.BadRequest))
-            case Right(request) => buildHttpResponse(request.copy(method = common.DELETE))
+            case Left(_) => ZIO.succeed(Response.status(HttpStatus.BadRequest))
+            case Right(request) =>
+              buildHttpResponse(request.copy(url = req.url.encode, method = common.DELETE))
           }
         } yield response
       case req @ POST -> "" /: "rest" /: path =>
@@ -40,7 +41,7 @@ object MockRestHandler {
           request <- buildRequest(path, req.headers, req.url.queryParams, Some(body)).either
           response <- request match {
             case Left(_)        => ZIO.succeed(Response.status(HttpStatus.BadRequest))
-            case Right(request) => buildHttpResponse(request.copy(method = common.POST))
+            case Right(request) => buildHttpResponse(request.copy(url = req.url.encode, method = common.POST))
           }
         } yield response
       case req @ PUT -> "" /: "rest" /: path =>
@@ -49,7 +50,7 @@ object MockRestHandler {
           request <- buildRequest(path, req.headers, req.url.queryParams, Some(body)).either
           response <- request match {
             case Left(_)        => ZIO.succeed(Response.status(HttpStatus.BadRequest))
-            case Right(request) => buildHttpResponse(request.copy(method = common.PUT))
+            case Right(request) => buildHttpResponse(request.copy(url = req.url.encode, method = common.PUT))
           }
         } yield response
       case req @ PATCH -> "" /: "rest" /: path =>
@@ -58,7 +59,7 @@ object MockRestHandler {
           request <- buildRequest(path, req.headers, req.url.queryParams, Some(body)).either
           response <- request match {
             case Left(_)        => ZIO.succeed(Response.status(HttpStatus.BadRequest))
-            case Right(request) => buildHttpResponse(request.copy(method = common.PATCH))
+            case Right(request) => buildHttpResponse(request.copy(url = req.url.encode, method = common.PATCH))
           }
         } yield response
     }

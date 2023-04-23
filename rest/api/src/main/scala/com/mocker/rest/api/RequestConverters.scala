@@ -109,6 +109,7 @@ object RequestConverters {
 
   def convertGetResponseRequest(request: GetResponse.Request): MockQuery = {
     MockQuery(
+      rawUrl = request.rawUrl,
       servicePath = request.servicePath,
       requestPath = request.requestPath,
       method = request.method,
