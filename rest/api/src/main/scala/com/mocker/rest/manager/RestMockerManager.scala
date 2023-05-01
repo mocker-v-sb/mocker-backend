@@ -10,6 +10,7 @@ import com.mocker.rest.dao.mysql.{
 }
 import com.mocker.rest.dao.{MockActions, MockResponseActions, ModelActions, ServiceActions}
 import com.mocker.rest.errors.RestMockerException
+import com.mocker.rest.mock_history.ResponseSourceNamespace.ResponseSource
 import com.mocker.rest.model._
 import com.mocker.rest.utils.HeadersUtils._
 import com.mocker.rest.utils.MethodUtils._
@@ -21,8 +22,10 @@ import com.mocker.rest.utils.RestMockerUtils._
 import slick.dbio.DBIO
 import slick.interop.zio.DatabaseProvider
 import zio.http.{Body, Client, Request, Response, URL}
-import zio.{IO, URLayer, ZIO, ZLayer}
+import zio.{Console, IO, URLayer, ZIO, ZLayer}
 
+import java.sql.Timestamp
+import java.time.Instant
 import scala.concurrent.ExecutionContext
 case class RestMockerManager(
     httpClient: Client,
@@ -82,11 +85,15 @@ case class RestMockerManager(
   private def processStaticResponse(
       service: Service,
       query: MockQuery,
-      response: MockResponse
+      staticResponse: MockResponse
   ): IO[RestMockerException, MockQueryResponse] = {
+    val queryResponse = MockQueryResponse.fromMockResponse(staticResponse)
     for {
-      // todo: history
-      result <- ZIO.succeed(MockQueryResponse.fromMockResponse(response))
+      result <- ZIO.succeed(queryResponse)
+      _ <- mockHistoryActions
+        .insert(prepareHistoryItem(service, query, queryResponse).copy(responseSource = ResponseSource.STATIC_RESPONSE))
+        .asZIO(dbLayer)
+        .catchAll(err => Console.printLineError(err.getMessage).ignoreLogged)
     } yield result
   }
 
@@ -96,29 +103,54 @@ case class RestMockerManager(
       mock: Mock
   ): IO[RestMockerException, MockQueryResponse] = {
     for {
-      // todo: history
       modelOpt <- mock.responseModelId match {
         case Some(id) => modelActions.get(id).asZIO(dbLayer).run
         case None     => ZIO.succeed(None)
       }
       response = modelOpt.map(model => MockQueryResponse.fromModel(model)).getOrElse(MockQueryResponse.default)
       result <- ZIO.succeed(response)
+      _ <- mockHistoryActions
+        .insert(prepareHistoryItem(service, query, response).copy(responseSource = ResponseSource.MOCK_TEMPLATE))
+        .asZIO(dbLayer)
+        .mapError(RestMockerException.internal)
+        .catchAll(err => Console.printLineError(err.getMessage).ignoreLogged)
     } yield result
   }
 
   private def tryGetResponseFromRealService(
       service: Service,
-      mockQuery: MockQuery
+      query: MockQuery
   ): IO[RestMockerException, MockQueryResponse] = {
-    // todo: history
     if (service.isProxyEnabled) {
       for {
-        request <- buildHttpRequest(service, mockQuery)
+        request <- buildHttpRequest(service, query)
         response <- httpClient.request(request).mapError(RestMockerException.cantGetProxiedResponse)
         mockQueryResponse <- buildMockResponse(response)
+        _ <- mockHistoryActions
+          .insert(
+            prepareHistoryItem(service, query, mockQueryResponse)
+              .copy(responseUrl = request.url.encode, responseSource = ResponseSource.PROXIED_RESPONSE)
+          )
+          .asZIO(dbLayer)
+          .mapError(RestMockerException.internal)
+          .catchAll(err => Console.printLineError(err.getMessage).ignoreLogged)
       } yield mockQueryResponse
     } else
       ZIO.fail(RestMockerException.suitableMockNotFound)
+  }
+
+  private def prepareHistoryItem(service: Service, query: MockQuery, response: MockQueryResponse): MockHistoryItem = {
+    MockHistoryItem(
+      serviceId = service.id,
+      method = query.method,
+      queryUrl = query.rawUrl,
+      responseUrl = query.rawUrl,
+      responseSource = ResponseSource.EMPTY,
+      statusCode = response.statusCode,
+      responseHeaders = response.headers,
+      responseTime = Timestamp.from(Instant.now()),
+      response = response.content
+    )
   }
 
   private def buildHttpRequest(service: Service, mockQuery: MockQuery): IO[RestMockerException, Request] = {

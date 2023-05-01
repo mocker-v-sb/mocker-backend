@@ -10,6 +10,7 @@ import slick.dbio.DBIO
 import slick.jdbc.MySQLProfile.api._
 import slick.lifted.{ProvenShape, Tag}
 
+import java.sql.Timestamp
 import scala.concurrent.ExecutionContext
 
 case class MySqlMockHistoryActions()(implicit ec: ExecutionContext) extends MockHistoryActions {
@@ -35,6 +36,7 @@ object MySqlMockHistoryActions {
     def responseSource: Rep[ResponseSource] = column("response_url")
     def statusCode: Rep[Int] = column[Int]("status_code")
     def responseHeaders: Rep[Seq[KVPair]] = column("response_headers")
+    def responseTime: Rep[Timestamp] = column("response_time", O.SqlType("TIMESTAMP"))
     def response: Rep[String] = column[String]("response")
 
     override def * : ProvenShape[MockHistoryItem] =
@@ -47,6 +49,7 @@ object MySqlMockHistoryActions {
         responseSource,
         statusCode,
         responseHeaders,
+        responseTime,
         response
       ) <> ((MockHistoryItem.apply _).tupled, MockHistoryItem.unapply)
   }

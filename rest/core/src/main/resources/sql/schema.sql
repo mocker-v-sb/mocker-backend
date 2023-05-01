@@ -71,6 +71,7 @@ CREATE TABLE `mock_response_history`
     `status_code`      INT(8)        NOT NULL,
     `response_headers` JSON          NULL,
     `response`         MEDIUMTEXT    NOT NULL,
+    `response_time`    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     CONSTRAINT `mock_response_history_ibfk_1` FOREIGN KEY (`service_id`) REFERENCES `service` (`id`) ON DELETE CASCADE
 );
