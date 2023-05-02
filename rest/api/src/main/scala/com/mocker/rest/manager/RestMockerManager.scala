@@ -223,6 +223,14 @@ case class RestMockerManager(
     } yield ()
   }
 
+  def switchServiceHistory(servicePath: String, isHistoryEnabled: Boolean): IO[RestMockerException, Unit] = {
+    for {
+      service <- getService(servicePath)
+      newService = service.copy(isHistoryEnabled = isHistoryEnabled)
+      _ <- serviceActions.upsert(newService).asZIO(dbLayer).run
+    } yield ()
+  }
+
   def updateService(servicePath: String, service: Service): IO[RestMockerException, Unit] = {
     for {
       _ <- if (servicePath != service.path)
