@@ -49,6 +49,17 @@ object MockRestApiServiceHandler {
           }).either
           response <- protoResponse.toHttp
         } yield response
+      case req @ PATCH -> !! / "rest" / "service" / servicePath / "history" =>
+        for {
+          request <- req.body.asString
+            .map(_.fromJson[SwitchServiceHistoryRequest].map(_.copy(servicePath = servicePath)))
+            .tapError(err => ZIO.logErrorCause(Cause.fail(err)))
+          protoResponse <- (request match {
+            case Right(request) => RestMockerClientService.switchServiceHistory(request)
+            case Left(error)    => ZIO.logErrorCause(Cause.fail(error)) *> ZIO.fail(GrpcStatus.INVALID_ARGUMENT)
+          }).either
+          response <- protoResponse.toHttp
+        } yield response
       case req @ DELETE -> !! / "rest" / "service" / servicePath =>
         for {
           protoResponse <- RestMockerClientService.deleteService(DeleteServiceRequest(servicePath)).either

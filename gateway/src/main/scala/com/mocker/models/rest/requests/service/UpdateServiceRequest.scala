@@ -12,7 +12,8 @@ case class UpdateServiceRequest(
     url: Option[String],
     description: Option[String],
     expirationTime: Option[Long],
-    isProxyEnabled: Boolean
+    isProxyEnabled: Boolean,
+    isHistoryEnabled: Boolean
 ) {
 
   def toMessage: ProtoUpdateServiceRequest = {
@@ -23,7 +24,8 @@ case class UpdateServiceRequest(
       url = url,
       description = description,
       expirationTime = expirationTime.map(Timestamps.fromMillis).map(GoogleTimestamp.fromJavaProto),
-      isProxyEnabled = isProxyEnabled
+      isProxyEnabled = isProxyEnabled,
+      isHistoryEnabled = isHistoryEnabled
     )
   }
 }

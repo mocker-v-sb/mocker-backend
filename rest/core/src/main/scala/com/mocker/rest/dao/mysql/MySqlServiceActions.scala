@@ -17,7 +17,7 @@ case class MySqlServiceActions()(implicit ec: ExecutionContext) extends ServiceA
   private lazy val table = TableQuery[ServiceTable]
 
   implicit val getServiceStatsResult: GetResult[ServiceStats] = GetResult(
-    r => ServiceStats(Service(r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<), r.<<, r.<<)
+    r => ServiceStats(Service(r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<), r.<<, r.<<)
   )
 
   override def getWithStats: DBIO[Seq[ServiceStats]] = {
@@ -67,8 +67,10 @@ object MySqlServiceActions {
     def updateTime: Rep[Timestamp] = column("update_time", NotNull, O.SqlType("TIMESTAMP"))
     def expirationTime: Rep[Option[Timestamp]] = column("expiration_time", O.SqlType("TIMESTAMP"))
     def isProxyEnabled: Rep[Boolean] = column[Boolean]("proxy_enabled", NotNull)
+    def isHistoryEnabled: Rep[Boolean] = column[Boolean]("history_enabled", NotNull)
 
     override def * : ProvenShape[Service] =
-      (id, name, path, url, description, createTime, updateTime, expirationTime, isProxyEnabled) <> ((Service.apply _).tupled, Service.unapply)
+      (id, name, path, url, description, createTime, updateTime, expirationTime, isProxyEnabled, isHistoryEnabled) <>
+        ((Service.apply _).tupled, Service.unapply)
   }
 }

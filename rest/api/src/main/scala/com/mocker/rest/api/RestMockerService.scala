@@ -3,6 +3,7 @@ package com.mocker.rest.api
 import com.mocker.rest.api.RequestConverters._
 import com.mocker.rest.api.ResponseConverters._
 import com.mocker.rest.manager.RestMockerManager
+import com.mocker.rest.rest_service
 import com.mocker.rest.rest_service.ZioRestService.RestMocker
 import com.mocker.rest.rest_service._
 import io.grpc.Status
@@ -72,6 +73,16 @@ case class RestMockerService(restMockerManager: RestMockerManager) extends RestM
       .tapError(err => Console.printLineError(err.message).ignoreLogged)
       .mapError(_.status)
       .map(_ => SwitchServiceProxy.Response())
+  }
+
+  override def switchServiceHistory(
+      request: SwitchServiceHistory.Request
+  ): IO[Status, SwitchServiceHistory.Response] = {
+    restMockerManager
+      .switchServiceHistory(request.path, request.isHistoryEnabled)
+      .tapError(err => Console.printLineError(err.message).ignoreLogged)
+      .mapError(_.status)
+      .map(_ => SwitchServiceHistory.Response())
   }
 
   override def getModel(request: GetModel.Request): IO[Status, GetModel.Response] = {

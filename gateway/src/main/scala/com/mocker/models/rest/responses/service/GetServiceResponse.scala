@@ -12,7 +12,8 @@ case class GetServiceResponse(
     creationTime: Option[Long],
     updateTime: Option[Long],
     expirationTime: Option[Long],
-    isProxyEnabled: Boolean
+    isProxyEnabled: Boolean,
+    isHistoryEnabled: Boolean
 )
 
 object GetServiceResponse {
@@ -29,7 +30,8 @@ object GetServiceResponse {
       creationTime = message.creationTime.map(_.asJavaInstant.toEpochMilli),
       updateTime = message.updateTime.map(_.asJavaInstant.toEpochMilli),
       expirationTime = message.expirationTime.map(_.asJavaInstant.toEpochMilli),
-      isProxyEnabled = message.isProxyEnabled
+      isProxyEnabled = message.isProxyEnabled,
+      isHistoryEnabled = message.isHistoryEnabled
     )
   }
 }

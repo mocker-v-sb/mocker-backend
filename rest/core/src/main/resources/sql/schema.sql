@@ -9,6 +9,7 @@ CREATE TABLE `service`
     `update_time`     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `expiration_time` TIMESTAMP    NULL     DEFAULT NULL,
     `proxy_enabled`   BOOLEAN      NOT NULL DEFAULT FALSE,
+    `history_enabled` BOOLEAN      NOT NULL DEFAULT FALSE,
     PRIMARY KEY (`id`)
 );
 
@@ -54,7 +55,23 @@ CREATE TABLE `mock_response`
     `response_headers` JSON         NULL,
     `path_params`      JSON         NULL,
     `query_params`     JSON         NULL,
-    `response`         JSON         NOT NULL,
+    `response`         MEDIUMTEXT   NOT NULL,
     PRIMARY KEY (`id`),
     CONSTRAINT `mock_response_ibfk_1` FOREIGN KEY (`mock_id`) REFERENCES `mock` (`id`) ON DELETE CASCADE
+);
+
+CREATE TABLE `mock_response_history`
+(
+    `id`               BIGINT(16)    NOT NULL AUTO_INCREMENT,
+    `service_id`       BIGINT(16)    NOT NULL,
+    `query_url`        VARCHAR(2048) NULL,
+    `method`           INT(8)        NOT NULL,
+    `response_url`     VARCHAR(2048) NULL,
+    `response_source`  INT(8)        NOT NULL,
+    `status_code`      INT(8)        NOT NULL,
+    `response_headers` JSON          NULL,
+    `response`         MEDIUMTEXT    NOT NULL,
+    `response_time`    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    CONSTRAINT `mock_response_history_ibfk_1` FOREIGN KEY (`service_id`) REFERENCES `service` (`id`) ON DELETE CASCADE
 );

@@ -1,9 +1,16 @@
 package com.mocker.rest.manager
 
 import com.mocker.rest.utils.ZIOSlick._
-import com.mocker.rest.dao.mysql.{MySqlMockActions, MySqlMockResponseActions, MySqlModelActions, MySqlServiceActions}
+import com.mocker.rest.dao.mysql.{
+  MySqlMockActions,
+  MySqlMockHistoryActions,
+  MySqlMockResponseActions,
+  MySqlModelActions,
+  MySqlServiceActions
+}
 import com.mocker.rest.dao.{MockActions, MockResponseActions, ModelActions, ServiceActions}
 import com.mocker.rest.errors.RestMockerException
+import com.mocker.rest.mock_history.ResponseSourceNamespace.ResponseSource
 import com.mocker.rest.model._
 import com.mocker.rest.utils.HeadersUtils._
 import com.mocker.rest.utils.MethodUtils._
@@ -15,8 +22,10 @@ import com.mocker.rest.utils.RestMockerUtils._
 import slick.dbio.DBIO
 import slick.interop.zio.DatabaseProvider
 import zio.http.{Body, Client, Request, Response, URL}
-import zio.{IO, URLayer, ZIO, ZLayer}
+import zio.{Console, IO, URLayer, ZIO, ZLayer}
 
+import java.sql.Timestamp
+import java.time.Instant
 import scala.concurrent.ExecutionContext
 case class RestMockerManager(
     httpClient: Client,
@@ -24,7 +33,8 @@ case class RestMockerManager(
     serviceActions: ServiceActions,
     modelActions: ModelActions,
     mockActions: MockActions,
-    mockResponseActions: MockResponseActions
+    mockResponseActions: MockResponseActions,
+    mockHistoryActions: MySqlMockHistoryActions
 ) {
 
   private val dbLayer = ZLayer.succeed(restMockerDbProvider)
@@ -66,32 +76,81 @@ case class RestMockerManager(
       responses: Seq[MockResponse]
   ): IO[RestMockerException, MockQueryResponse] = {
     (mocks.toList, responses.toList) match {
-      case (_, response :: _) => ZIO.succeed(MockQueryResponse.fromMockResponse(response))
-      case (mock :: _, _) =>
-        for {
-          modelOpt <- mock.responseModelId match {
-            case Some(id) => modelActions.get(id).asZIO(dbLayer).run
-            case None     => ZIO.succeed(None)
-          }
-          response = modelOpt.map(model => MockQueryResponse.fromModel(model)).getOrElse(MockQueryResponse.default)
-          result <- ZIO.succeed(response)
-        } yield result
-      case (_, _) => tryGetResponseFromRealService(service: Service, query: MockQuery)
+      case (_, response :: _) => processStaticResponse(service, query, response)
+      case (mock :: _, _)     => processMockTemplate(service, query, mock)
+      case (_, _)             => tryGetResponseFromRealService(service, query)
     }
+  }
+
+  private def processStaticResponse(
+      service: Service,
+      query: MockQuery,
+      staticResponse: MockResponse
+  ): IO[RestMockerException, MockQueryResponse] = {
+    val queryResponse = MockQueryResponse.fromMockResponse(staticResponse)
+    for {
+      result <- ZIO.succeed(queryResponse)
+      _ <- mockHistoryActions
+        .insert(prepareHistoryItem(service, query, queryResponse).copy(responseSource = ResponseSource.STATIC_RESPONSE))
+        .asZIO(dbLayer)
+        .catchAll(err => Console.printLineError(err.getMessage).ignoreLogged)
+    } yield result
+  }
+
+  private def processMockTemplate(
+      service: Service,
+      query: MockQuery,
+      mock: Mock
+  ): IO[RestMockerException, MockQueryResponse] = {
+    for {
+      modelOpt <- mock.responseModelId match {
+        case Some(id) => modelActions.get(id).asZIO(dbLayer).run
+        case None     => ZIO.succeed(None)
+      }
+      response = modelOpt.map(model => MockQueryResponse.fromModel(model)).getOrElse(MockQueryResponse.default)
+      result <- ZIO.succeed(response)
+      _ <- mockHistoryActions
+        .insert(prepareHistoryItem(service, query, response).copy(responseSource = ResponseSource.MOCK_TEMPLATE))
+        .asZIO(dbLayer)
+        .mapError(RestMockerException.internal)
+        .catchAll(err => Console.printLineError(err.getMessage).ignoreLogged)
+    } yield result
   }
 
   private def tryGetResponseFromRealService(
       service: Service,
-      mockQuery: MockQuery
+      query: MockQuery
   ): IO[RestMockerException, MockQueryResponse] = {
     if (service.isProxyEnabled) {
       for {
-        request <- buildHttpRequest(service, mockQuery)
+        request <- buildHttpRequest(service, query)
         response <- httpClient.request(request).mapError(RestMockerException.cantGetProxiedResponse)
         mockQueryResponse <- buildMockResponse(response)
+        _ <- mockHistoryActions
+          .insert(
+            prepareHistoryItem(service, query, mockQueryResponse)
+              .copy(responseUrl = request.url.encode, responseSource = ResponseSource.PROXIED_RESPONSE)
+          )
+          .asZIO(dbLayer)
+          .mapError(RestMockerException.internal)
+          .catchAll(err => Console.printLineError(err.getMessage).ignoreLogged)
       } yield mockQueryResponse
     } else
       ZIO.fail(RestMockerException.suitableMockNotFound)
+  }
+
+  private def prepareHistoryItem(service: Service, query: MockQuery, response: MockQueryResponse): MockHistoryItem = {
+    MockHistoryItem(
+      serviceId = service.id,
+      method = query.method,
+      queryUrl = query.rawUrl,
+      responseUrl = query.rawUrl,
+      responseSource = ResponseSource.EMPTY,
+      statusCode = response.statusCode,
+      responseHeaders = response.headers,
+      responseTime = Timestamp.from(Instant.now()),
+      response = response.content
+    )
   }
 
   private def buildHttpRequest(service: Service, mockQuery: MockQuery): IO[RestMockerException, Request] = {
@@ -160,6 +219,14 @@ case class RestMockerManager(
       service <- getService(servicePath)
       newService = service.copy(isProxyEnabled = isProxyEnabled)
       _ <- validate(newService)
+      _ <- serviceActions.upsert(newService).asZIO(dbLayer).run
+    } yield ()
+  }
+
+  def switchServiceHistory(servicePath: String, isHistoryEnabled: Boolean): IO[RestMockerException, Unit] = {
+    for {
+      service <- getService(servicePath)
+      newService = service.copy(isHistoryEnabled = isHistoryEnabled)
       _ <- serviceActions.upsert(newService).asZIO(dbLayer).run
     } yield ()
   }
@@ -441,7 +508,8 @@ object RestMockerManager {
         MySqlServiceActions(),
         MySqlModelActions(),
         MySqlMockActions(),
-        MySqlMockResponseActions()
+        MySqlMockResponseActions(),
+        MySqlMockHistoryActions()
       )
     }
   }
