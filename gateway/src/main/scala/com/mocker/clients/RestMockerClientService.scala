@@ -1,6 +1,6 @@
 package com.mocker.clients
 
-import com.mocker.models.rest.requests.{service, GetResponseRequest}
+import com.mocker.models.rest.requests.GetResponseRequest
 import com.mocker.models.rest.requests.mock._
 import com.mocker.models.rest.requests.mock_response._
 import com.mocker.models.rest.requests.model._
