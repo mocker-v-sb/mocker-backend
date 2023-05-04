@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package com.mocker.common;
+
+message Page {
+  int32 num = 1;
+  int32 size = 2;
+}
+
+message Paging {
+  int64 total_items = 1;
+  int64 total_pages = 2;
+  Page page = 3;
+}

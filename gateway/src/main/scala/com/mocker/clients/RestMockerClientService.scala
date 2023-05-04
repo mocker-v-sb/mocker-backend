@@ -1,6 +1,6 @@
 package com.mocker.clients
 
-import com.mocker.models.rest.requests.GetResponseRequest
+import com.mocker.models.rest.requests.{service, GetResponseRequest}
 import com.mocker.models.rest.requests.mock._
 import com.mocker.models.rest.requests.mock_response._
 import com.mocker.models.rest.requests.model._
@@ -20,6 +20,12 @@ object RestMockerClientService {
 
   def getService(request: GetServiceRequest): Response[GetService.Response] = {
     RestMockerClient.getService(request.toMessage)
+  }
+
+  def getServiceResponseHistory(
+      request: GetServiceResponseHistoryRequest
+  ): Response[GetServiceResponseHistory.Response] = {
+    RestMockerClient.getServiceResponseHistory(request.toMessage)
   }
 
   def getAllServices: Response[GetAllServices.Response] = {

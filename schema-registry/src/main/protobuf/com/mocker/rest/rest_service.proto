@@ -4,10 +4,12 @@ package com.mocker.rest;
 
 import "google/protobuf/wrappers.proto";
 import "google/protobuf/timestamp.proto";
+import "com/mocker/common/paging.proto";
 import "com/mocker/rest/request.proto";
 import "com/mocker/rest/service.proto";
 import "com/mocker/rest/model.proto";
 import "com/mocker/rest/mock.proto";
+import "com/mocker/rest/mock_history.proto";
 import "com/mocker/rest/mock_response.proto";
 
 service RestMocker {
@@ -16,6 +18,7 @@ service RestMocker {
   rpc createService(CreateService.Request) returns (CreateService.Response);
   rpc getService(GetService.Request) returns (GetService.Response);
   rpc getAllServices(GetAllServices.Request) returns (GetAllServices.Response);
+  rpc getServiceResponseHistory(GetServiceResponseHistory.Request) returns (GetServiceResponseHistory.Response);
   rpc searchServices(SearchServices.Request) returns (SearchServices.Response);
   rpc switchServiceProxy(SwitchServiceProxy.Request) returns (SwitchServiceProxy.Response);
   rpc switchServiceHistory(SwitchServiceHistory.Request) returns (SwitchServiceHistory.Response);
@@ -95,6 +98,22 @@ message GetService {
     bool is_proxy_enabled = 8;
     int64 id = 9;
     bool is_history_enabled = 10;
+  }
+}
+
+message GetServiceResponseHistory {
+
+  message Request {
+    .com.mocker.common.Page page = 1;
+    int64 id = 2;
+    google.protobuf.Timestamp from = 3;
+    google.protobuf.Timestamp to = 4;
+    google.protobuf.StringValue search_url = 5;
+  }
+
+  message Response {
+    .com.mocker.common.Paging paging = 1;
+    repeated HistoryItem items = 2;
   }
 }
 

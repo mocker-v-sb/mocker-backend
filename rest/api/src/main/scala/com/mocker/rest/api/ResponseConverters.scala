@@ -4,12 +4,21 @@ import com.google.protobuf.util.Timestamps
 import com.google.protobuf.timestamp.{Timestamp => GoogleTimestamp}
 import com.mocker.rest.api.CommonConverters.convertModelResponse
 import com.mocker.rest.mock.MockSnippet
+import com.mocker.rest.mock_history.{HistoryItem => ProtoHistoryItem}
 import com.mocker.rest.mock_response.MockResponseSnippet
 import com.mocker.rest.model.ResponseTypeNamespace.ResponseType
-import com.mocker.rest.model.{Mock, MockQueryResponse, MockResponse, Model, ModelSnippet, Service, ServiceStats}
+import com.mocker.rest.model.{
+  Mock,
+  MockHistoryItem,
+  MockQueryResponse,
+  MockResponse,
+  Model,
+  ModelSnippet,
+  Service,
+  ServiceStats
+}
 import com.mocker.rest.rest_service._
 import com.mocker.rest.service.ServiceSnippet
-import com.mocker.rest.utils.AvroSchemaUtils
 import com.mocker.rest.utils.PathUtils.buildFullPath
 
 import java.sql.Timestamp
@@ -28,6 +37,20 @@ object ResponseConverters {
       isProxyEnabled = service.isProxyEnabled,
       id = service.id,
       isHistoryEnabled = service.isHistoryEnabled
+    )
+  }
+
+  def toGetServiceHistoryItem(item: MockHistoryItem): ProtoHistoryItem = {
+    ProtoHistoryItem(
+      id = item.id,
+      method = item.method,
+      queryUrl = item.queryUrl,
+      responseUrl = item.responseUrl,
+      responseSource = item.responseSource,
+      statusCode = item.statusCode,
+      responseHeaders = item.responseHeaders,
+      responseTime = Some(toProtoTimestamp(item.responseTime)),
+      response = item.response
     )
   }
 

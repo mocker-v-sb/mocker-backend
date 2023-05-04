@@ -206,6 +206,32 @@ case class RestMockerManager(
     } yield service
   }
 
+  def getServiceHistory(
+      serviceId: Long,
+      searchUrl: Option[String],
+      from: Option[Timestamp],
+      to: Option[Timestamp],
+      limit: Int,
+      shift: Int
+  ): IO[RestMockerException, Seq[MockHistoryItem]] = {
+    mockHistoryActions
+      .search(serviceId, searchUrl, from, to, limit, shift)
+      .asZIO(dbLayer)
+      .mapError(RestMockerException.internal)
+  }
+
+  def countHistoryItems(
+      serviceId: Long,
+      searchUrl: Option[String],
+      from: Option[Timestamp],
+      to: Option[Timestamp]
+  ): IO[RestMockerException, Int] = {
+    mockHistoryActions
+      .count(serviceId, searchUrl, from, to)
+      .asZIO(dbLayer)
+      .mapError(RestMockerException.internal)
+  }
+
   def getServicesWithStats: IO[RestMockerException, Seq[ServiceStats]] = {
     serviceActions.getWithStats.asZIO(dbLayer).run
   }

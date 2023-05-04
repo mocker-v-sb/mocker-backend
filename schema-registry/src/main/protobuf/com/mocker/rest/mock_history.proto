@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package com.mocker.rest;
 
+import "com/mocker/rest/request.proto";
+import "google/protobuf/timestamp.proto";
 import "scalapb/scalapb.proto";
 
 option (scalapb.options) = {
@@ -15,4 +17,16 @@ message ResponseSourceNamespace {
     MOCK_TEMPLATE = 2;
     PROXIED_RESPONSE = 3;
   }
+}
+
+message HistoryItem {
+  int64 id = 1;
+  Method method = 2;
+  string query_url = 3;
+  string response_url = 4;
+  ResponseSourceNamespace.ResponseSource response_source = 5;
+  int32 status_code = 6;
+  repeated KVPair response_headers = 7;
+  google.protobuf.Timestamp response_time = 8;
+  string response = 9;
 }
