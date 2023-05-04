@@ -34,10 +34,9 @@ case class MySqlMockHistoryActions()(implicit ec: ExecutionContext) extends Mock
   ): DBIO[Seq[MockHistoryItem]] =
     table
       .filter(_.serviceId === serviceId)
-      .filter(_.queryUrl.like(s"%$searchUrl%"))
       .mapIf(searchUrl.nonEmpty, _.filter(_.queryUrl.like(s"%${searchUrl.get}%")))
       .mapIf(from.nonEmpty, _.filter(_.responseTime >= from))
-      .mapIf(from.nonEmpty, _.filter(_.responseTime <= to))
+      .mapIf(to.nonEmpty, _.filter(_.responseTime <= to))
       .sortBy(_.responseTime.desc)
       .drop(shift)
       .take(limit)
@@ -51,10 +50,9 @@ case class MySqlMockHistoryActions()(implicit ec: ExecutionContext) extends Mock
   ): DBIO[Int] =
     table
       .filter(_.serviceId === serviceId)
-      .filter(_.queryUrl.like(s"%$searchUrl%"))
       .mapIf(searchUrl.nonEmpty, _.filter(_.queryUrl.like(s"%${searchUrl.get}%")))
       .mapIf(from.nonEmpty, _.filter(_.responseTime >= from))
-      .mapIf(from.nonEmpty, _.filter(_.responseTime <= to))
+      .mapIf(to.nonEmpty, _.filter(_.responseTime <= to))
       .size
       .result
 }
