@@ -49,6 +49,26 @@ object MockRestApiServiceHandler {
           }).either
           response <- protoResponse.toHttp
         } yield response
+      case req @ GET -> !! / "rest" / "service" / serviceId / "history" => {
+        val pageNum = req.url.queryParams.get("page").flatMap(_.headOption).flatMap(_.toIntOption)
+        val pageSize = req.url.queryParams.get("pageSize").flatMap(_.headOption).flatMap(_.toIntOption)
+        val from = req.url.queryParams.get("from").flatMap(_.headOption).flatMap(_.toLongOption)
+        val to = req.url.queryParams.get("to").flatMap(_.headOption).flatMap(_.toLongOption)
+        val search = req.url.queryParams.get("search").flatMap(_.headOption)
+        serviceId.toLongOption match {
+          case Some(serviceId) =>
+            ZIO.succeed(Response.status(HttpStatus.BadRequest))
+            for {
+              protoResponse <- RestMockerClientService
+                .getServiceResponseHistory(
+                  GetServiceResponseHistoryRequest(serviceId, pageNum, pageSize, from, to, search)
+                )
+                .either
+              response <- protoResponse.withBody(GetServiceResponseHistoryResponse.fromMessage(_).toJson)
+            } yield response
+          case None => ZIO.succeed(Response.status(HttpStatus.BadRequest))
+        }
+      }
       case req @ PATCH -> !! / "rest" / "service" / servicePath / "history" =>
         for {
           request <- req.body.asString

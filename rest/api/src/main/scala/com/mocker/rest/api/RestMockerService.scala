@@ -1,9 +1,9 @@
 package com.mocker.rest.api
 
+import com.mocker.common.paging.{Page, Paging}
 import com.mocker.rest.api.RequestConverters._
 import com.mocker.rest.api.ResponseConverters._
 import com.mocker.rest.manager.RestMockerManager
-import com.mocker.rest.rest_service
 import com.mocker.rest.rest_service.ZioRestService.RestMocker
 import com.mocker.rest.rest_service._
 import io.grpc.Status
@@ -50,6 +50,48 @@ case class RestMockerService(restMockerManager: RestMockerManager) extends RestM
       .tapError(err => Console.printLineError(err.message).ignoreLogged)
       .mapError(_.status)
       .map(toGetServiceResponse)
+  }
+
+  override def getServiceResponseHistory(
+      request: GetServiceResponseHistory.Request
+  ): IO[Status, GetServiceResponseHistory.Response] = {
+    val pageNum = request.page.map(_.num).getOrElse(0)
+    val pageSize = request.page.map(_.size).getOrElse(10)
+    val shift = pageNum * pageSize
+    val itemsZ = restMockerManager
+      .getServiceHistory(
+        request.id,
+        request.searchUrl,
+        request.from.map(fromProtoTimestamp),
+        request.to.map(fromProtoTimestamp),
+        pageSize,
+        shift
+      )
+      .tapError(err => Console.printLineError(err.message).ignoreLogged)
+      .mapError(_.status)
+      .map(_.map(toGetServiceHistoryItem))
+    val countZ = restMockerManager
+      .countHistoryItems(
+        request.id,
+        request.searchUrl,
+        request.from.map(fromProtoTimestamp),
+        request.to.map(fromProtoTimestamp)
+      )
+      .tapError(err => Console.printLineError(err.message).ignoreLogged)
+      .mapError(_.status)
+    for {
+      result <- itemsZ.zipPar(countZ)
+      (items, count) = result
+    } yield GetServiceResponseHistory.Response(
+      paging = Some(
+        Paging(
+          totalPages = Math.ceil(count.toDouble / pageSize).toInt,
+          totalItems = count,
+          page = Some(Page(num = pageNum, size = pageSize))
+        )
+      ),
+      items = items
+    )
   }
 
   override def getAllServices(request: GetAllServices.Request): IO[Status, GetAllServices.Response] = {

@@ -22,6 +22,12 @@ object RestMockerClientService {
     RestMockerClient.getService(request.toMessage)
   }
 
+  def getServiceResponseHistory(
+      request: GetServiceResponseHistoryRequest
+  ): Response[GetServiceResponseHistory.Response] = {
+    RestMockerClient.getServiceResponseHistory(request.toMessage)
+  }
+
   def getAllServices: Response[GetAllServices.Response] = {
     RestMockerClient.getAllServices(GetAllServices.Request())
   }
