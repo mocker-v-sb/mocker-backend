@@ -76,7 +76,7 @@ case class GraphQlMockerManager(tracing: Tracing) {
 object GraphQlMockerManager {
   val ContentTypeHeader = "Content-Type"
   val RequestIdHeader = "x-request-id"
-  val AcceptHeader = "Content-Type"
+  val AcceptHeader = "Accept"
   val ApplicationJson = "application/json"
 
   def live: ZLayer[Tracing, Nothing, GraphQlMockerManager] =
