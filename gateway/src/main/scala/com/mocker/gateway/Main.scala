@@ -61,8 +61,7 @@ object Main extends ZIOAppDefault {
     JaegerTracer.live("mocker-gateway", ServerAddress("158.160.57.255", 14250))
 
   val restMockerRoutes = MockRestApiServiceHandler.routes ++ MockRestApiModelHandler.routes ++
-    MockRestApiMockHandler.routes ++ MockRestApiMockResponseHandler.routes ++
-    MockRestHandler.routes
+    MockRestApiMockHandler.routes ++ MockRestApiMockResponseHandler.routes
 
   val serverConfig: ServerConfig => ServerConfig = _.port(9000)
 
@@ -71,8 +70,9 @@ object Main extends ZIOAppDefault {
     graphqlMockerManager <- ZIO.service[GraphQlMockerManager]
     mqMockerManager <- ZIO.service[MqMockerManager]
   } yield (authService.routes ++
-    (graphqlMockerManager.routes ++ mqMockerManager.routes ++ restMockerRoutes) @@
-      bearerAuth(AuthenticationService.jwtDecode(_).isDefined)) @@ cors(corsConfig)
+    (graphqlMockerManager.protectedRoutes ++ mqMockerManager.routes ++ restMockerRoutes) @@
+      bearerAuth(AuthenticationService.jwtDecode(_).isDefined) ++
+    MockRestHandler.routes ++ graphqlMockerManager.routes) @@ cors(corsConfig)
 
   val connectionPoolConfig = ZLayer.succeed {
     zio.sql.ConnectionPoolConfig(

@@ -17,11 +17,15 @@ case class GraphQlMockerManager(tracing: Tracing) {
     Environment.conf.getString("graphql-mocker-server.address"),
     Environment.conf.getInt("graphql-mocker-server.port")
   )
-
+  lazy val protectedRoutes: Http[Client, Response, Request, Response] = Http
+    .collectZIO[Request] {
+      case req@_ -> "" /: "mocker" /: _ => proxy(req)
+    }
+    .tapErrorZIO(err => ZIO.logErrorCause(Cause.fail(err)))
+    .mapError(_ => Response.status(HttpStatus.InternalServerError))
   lazy val routes: Http[Client, Response, Request, Response] = Http
     .collectZIO[Request] {
       case req @ _ -> "" /: "graphql" /: _ => proxy(req)
-      case req @ _ -> "" /: "mocker" /: _  => proxy(req)
     }
     .tapErrorZIO(err => ZIO.logErrorCause(Cause.fail(err)))
     .mapError(_ => Response.status(HttpStatus.InternalServerError))
@@ -50,6 +54,7 @@ case class GraphQlMockerManager(tracing: Tracing) {
       _ <- tracing.setAttribute("url", UrlBuilder.asString(url))
       cTypeHeaderValue = request.headers.get(ContentTypeHeader).getOrElse(ApplicationJson)
       acceptHeaderValue = request.headers.get(AcceptHeader).getOrElse(ApplicationJson)
+      authHeaderValue = request.headers.get(AuthorizationHeader).getOrElse("bearer empty")
       proxiedRequest <- ZIO.succeed(
         Request
           .default(
@@ -58,10 +63,10 @@ case class GraphQlMockerManager(tracing: Tracing) {
             method = request.method
           )
           .updateHeaders(
-            _.combine(
-              Header(RequestIdHeader, spanId)
-                .combine(Header(ContentTypeHeader, cTypeHeaderValue))
-            ).combine(Header(AcceptHeader, acceptHeaderValue))
+            _.combine(Header(RequestIdHeader, spanId))
+              .combine(Header(AcceptHeader, acceptHeaderValue))
+              .combine(Header(ContentTypeHeader, cTypeHeaderValue))
+              .combine(Header(AuthorizationHeader, authHeaderValue))
           )
       )
       _ <- ZIO.foreach(proxiedRequest.headersAsList) { h =>
@@ -75,6 +80,7 @@ case class GraphQlMockerManager(tracing: Tracing) {
 
 object GraphQlMockerManager {
   val ContentTypeHeader = "Content-Type"
+  val AuthorizationHeader = "Authorization"
   val RequestIdHeader = "x-request-id"
   val AcceptHeader = "Accept"
   val ApplicationJson = "application/json"
