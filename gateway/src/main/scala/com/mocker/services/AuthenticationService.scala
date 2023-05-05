@@ -171,7 +171,7 @@ object AuthenticationService {
   def generateAccessToken(email: String): String = {
     val json = s"""{"user": "$email"}"""
     val claim = JwtClaim(json).issuedNow
-      .expiresIn(60)
+      .expiresIn(300)
     Jwt.encode(claim, SECRET_KEY, JwtAlgorithm.HS512)
   }
 

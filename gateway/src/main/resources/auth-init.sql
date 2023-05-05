@@ -11,4 +11,3 @@ create table if not exists refresh_tokens
     id uuid not null primary key,
     token varchar not null
 );
-echo "" > $(docker inspect --format='{{.LogPath}}' <>)
