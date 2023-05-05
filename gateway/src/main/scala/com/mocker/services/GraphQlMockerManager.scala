@@ -58,9 +58,10 @@ case class GraphQlMockerManager(tracing: Tracing) {
             method = request.method
           )
           .updateHeaders(
-            _.combine(Header(RequestIdHeader, spanId)
-              .combine(Header(ContentTypeHeader, cTypeHeaderValue)))
-              .combine(Header(AcceptHeader, acceptHeaderValue))
+            _.combine(
+              Header(RequestIdHeader, spanId)
+                .combine(Header(ContentTypeHeader, cTypeHeaderValue))
+            ).combine(Header(AcceptHeader, acceptHeaderValue))
           )
       )
       _ <- ZIO.foreach(proxiedRequest.headersAsList) { h =>
@@ -77,6 +78,7 @@ object GraphQlMockerManager {
   val RequestIdHeader = "x-request-id"
   val AcceptHeader = "Content-Type"
   val ApplicationJson = "application/json"
+
   def live: ZLayer[Tracing, Nothing, GraphQlMockerManager] =
     ZLayer.fromFunction(GraphQlMockerManager.apply _)
 }
