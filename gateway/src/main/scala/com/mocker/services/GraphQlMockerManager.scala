@@ -5,13 +5,13 @@ import com.mocker.models.utils.UrlBuilder
 import io.opentelemetry.api.trace.SpanKind
 import zio.http.URL.Location
 import zio.http._
-import zio.http.model.Headers
 import zio.http.model.Headers.Header
-import zio.http.model.{Headers, Scheme, Status => HttpStatus}
+import zio.http.model.{Scheme, Status => HttpStatus}
 import zio.telemetry.opentelemetry.tracing.Tracing
 import zio.{Cause, ZIO, ZLayer}
 
 case class GraphQlMockerManager(tracing: Tracing) {
+  import com.mocker.services.GraphQlMockerManager._
 
   val gqlMockerAddress: ServerAddress = ServerAddress(
     Environment.conf.getString("graphql-mocker-server.address"),
@@ -48,6 +48,8 @@ case class GraphQlMockerManager(tracing: Tracing) {
         )
       )
       _ <- tracing.setAttribute("url", UrlBuilder.asString(url))
+      cTypeHeaderValue = request.headers.get(ContentTypeHeader).getOrElse(ApplicationJson)
+      acceptHeaderValue = request.headers.get(AcceptHeader).getOrElse(ApplicationJson)
       proxiedRequest <- ZIO.succeed(
         Request
           .default(
@@ -55,7 +57,11 @@ case class GraphQlMockerManager(tracing: Tracing) {
             url = url,
             method = request.method
           )
-          .updateHeaders(_.combine(Header("x-request-id", spanId).combine(request.headers)))
+          .updateHeaders(
+            _.combine(Header(RequestIdHeader, spanId)
+              .combine(Header(ContentTypeHeader, cTypeHeaderValue)))
+              .combine(Header(AcceptHeader, acceptHeaderValue))
+          )
       )
       _ <- ZIO.foreach(proxiedRequest.headersAsList) { h =>
         tracing.setAttribute(h._1.toString, h._2.toString)
@@ -67,7 +73,10 @@ case class GraphQlMockerManager(tracing: Tracing) {
 }
 
 object GraphQlMockerManager {
-
+  val ContentTypeHeader = "Content-Type"
+  val RequestIdHeader = "x-request-id"
+  val AcceptHeader = "Content-Type"
+  val ApplicationJson = "application/json"
   def live: ZLayer[Tracing, Nothing, GraphQlMockerManager] =
     ZLayer.fromFunction(GraphQlMockerManager.apply _)
 }
