@@ -13,21 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Run tests
-        run: sbt coverage test
-      - name: "Tests failed telegram message"
-        if: ${{ failure() }}
-        uses: appleboy/telegram-action@master
-        with:
-          to: ${{ secrets.TELEGRAM_CHAT_ID }}
-          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          message: |
-            Build failed. PR: https://github.com/${{ github.repository }}/pull/${{ github.event.number }}
-      - name: Coverage Report
-        run: sbt coverageReport
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v2
-        with:
-          fail_ci_if_error: true
+        run: sbt test
   lint:
     runs-on: ubuntu-latest
     steps:
