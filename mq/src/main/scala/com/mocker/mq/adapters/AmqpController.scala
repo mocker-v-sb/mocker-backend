@@ -155,6 +155,7 @@ case class AmqpController(channel: Channel, address: ServerAddress, httpClient: 
 }
 
 object AmqpController {
+
   def live = ZLayer.fromZIO {
     for {
       channel <- ZIO.service[Channel]

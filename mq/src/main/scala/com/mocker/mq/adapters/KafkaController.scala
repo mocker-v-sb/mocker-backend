@@ -9,7 +9,7 @@ import org.apache.kafka.clients.consumer.KafkaConsumer
 import zio.kafka.admin.{AdminClient, AdminClientSettings}
 import zio.kafka.producer.{Producer, ProducerSettings}
 import zio.kafka.serde.Serde
-import zio.{Cause, IO, ZIO, ZLayer, durationInt}
+import zio.{durationInt, Cause, IO, ZIO, ZLayer}
 
 import java.time.Duration
 import java.util.Properties
@@ -17,6 +17,7 @@ import scala.collection.mutable
 import scala.jdk.CollectionConverters._
 
 case class KafkaController(adminClient: AdminClient, producer: Producer, address: ServerAddress) extends MqController {
+
   def createQueue(request: CreateTopicRequest): IO[BrokerManagerException, CreateTopicResponse] = {
     lazy val exception =
       BrokerManagerException.couldNotCreateTopic(request.topicName, BrokerType.Kafka, "reason unknown", Status.INTERNAL)
@@ -138,6 +139,7 @@ case class KafkaController(adminClient: AdminClient, producer: Producer, address
 }
 
 object KafkaController {
+
   def live = ZLayer.fromZIO {
     for {
       adminClient <- ZIO.service[AdminClient]

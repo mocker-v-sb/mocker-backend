@@ -10,7 +10,7 @@ import scalapb.zio_grpc.{RequestContext, Server, ServerLayer, ServiceList}
 import zio.http.Client
 import zio.kafka.admin.{AdminClient, AdminClientSettings}
 import zio.kafka.producer.{Producer, ProducerSettings}
-import zio.{ZIO, ZLayer, durationInt}
+import zio.{durationInt, ZIO, ZLayer}
 
 object Main extends zio.ZIOAppDefault {
 
