@@ -16,18 +16,16 @@ import scala.util.{Failure, Success, Try}
 
 object Main extends zio.ZIOAppDefault {
 
-  private def initializeConnection(): Task[Channel] =
-    for {
-      connection <- ZIO.attempt {
-        val connectionFactory: ConnectionFactory = new ConnectionFactory()
-        connectionFactory.setUsername(Environment.conf.getString("rabbitmq.username"))
-        connectionFactory.setPassword(Environment.conf.getString("rabbitmq.password"))
-        connectionFactory.setHost(Environment.conf.getString("rabbitmq.host"))
-        connectionFactory.setPort(Environment.conf.getInt("rabbitmq.port"))
-        connectionFactory.newConnection()
-      }
-      channel <- ZIO.attempt(connection.createChannel())
-    } yield channel
+  val rabbitmqChannel = ZLayer.fromZIO(
+    ZIO.attempt {
+      val connectionFactory: ConnectionFactory = new ConnectionFactory()
+      connectionFactory.setUsername(Environment.conf.getString("rabbitmq.username"))
+      connectionFactory.setPassword(Environment.conf.getString("rabbitmq.password"))
+      connectionFactory.setHost(Environment.conf.getString("rabbitmq.host"))
+      connectionFactory.setPort(Environment.conf.getInt("rabbitmq.port"))
+      connectionFactory.newConnection().createChannel()
+    }
+  )
 
   val mqServerAddress = ServerAddress(
     Environment.conf.getString("mq-server-server.address"),
@@ -68,6 +66,7 @@ object Main extends zio.ZIOAppDefault {
   )
 
   val service = ZLayer.make[Server](
+    rabbitmqChannel,
     adminClientSettings,
     AdminClient.live,
     kafkaProducer,
