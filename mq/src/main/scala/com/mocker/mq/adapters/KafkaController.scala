@@ -1,15 +1,15 @@
 package com.mocker.mq.adapters
 
-import com.mocker.common.utils.ServerAddress
+import com.mocker.common.utils.{Environment, ServerAddress}
 import com.mocker.mq.mq_service.{BrokerType => ProtoBrokerType, _}
 import com.mocker.mq.ports.MqController
 import com.mocker.mq.utils.{BrokerManagerException, BrokerType}
 import io.grpc.Status
 import org.apache.kafka.clients.consumer.KafkaConsumer
-import zio.kafka.admin.AdminClient
-import zio.kafka.producer.Producer
+import zio.kafka.admin.{AdminClient, AdminClientSettings}
+import zio.kafka.producer.{Producer, ProducerSettings}
 import zio.kafka.serde.Serde
-import zio.{Cause, IO, ZIO}
+import zio.{Cause, IO, ZIO, ZLayer, durationInt}
 
 import java.time.Duration
 import java.util.Properties
@@ -17,19 +17,12 @@ import scala.collection.mutable
 import scala.jdk.CollectionConverters._
 
 case class KafkaController(adminClient: AdminClient, producer: Producer, address: ServerAddress) extends MqController {
-
-  import KafkaController._
-
   def createQueue(request: CreateTopicRequest): IO[BrokerManagerException, CreateTopicResponse] = {
-    def topicCreationException(
-        reason: String = "reason unknown",
-        status: Status = Status.INTERNAL
-    ): BrokerManagerException =
-      BrokerManagerException.couldNotCreateTopic(request.topicName, BrokerType.Kafka, reason, status)
-
+    lazy val exception =
+      BrokerManagerException.couldNotCreateTopic(request.topicName, BrokerType.Kafka, "reason unknown", Status.INTERNAL)
     for {
       newTopic <- ZIO.succeed(AdminClient.NewTopic(request.topicName, 1, 1))
-      _ <- adminClient.createTopic(newTopic).orElseFail(topicCreationException())
+      _ <- adminClient.createTopic(newTopic).orElseFail(exception)
       topics <- adminClient.listTopics().orElseSucceed(Map.empty)
       response <- ZIO.ifZIO(ZIO.succeed(topics.keySet.contains(request.topicName)))(
         onTrue = ZIO.succeed(
@@ -39,12 +32,12 @@ case class KafkaController(adminClient: AdminClient, producer: Producer, address
             topicName = request.topicName
           )
         ),
-        onFalse = ZIO.fail(topicCreationException())
+        onFalse = ZIO.fail(exception)
       )
     } yield response
   }
 
-  override def deleteTopic(request: DeleteTopicRequest): IO[BrokerManagerException, DeleteTopicResponse] =
+  override def deleteQueue(request: DeleteTopicRequest): IO[BrokerManagerException, DeleteTopicResponse] =
     adminClient
       .deleteTopic(request.topicName)
       .mapBoth(
@@ -70,12 +63,20 @@ case class KafkaController(adminClient: AdminClient, producer: Producer, address
             valueSerializer = Serde.string
           )
           .mapError { error =>
-            eventSendErrorBuilder(messagesContainer.queue, BrokerType.Kafka, error.getMessage, Status.INTERNAL)
+            BrokerManagerException.couldNotSendEvent(
+              messagesContainer.queue,
+              BrokerType.Kafka,
+              error.getMessage,
+              Status.INTERNAL
+            )
           }
           .repeatN(request.repeat - 1)
           .as(SendMessageResponse(success = true))
       case None =>
-        ZIO.fail(eventSendErrorBuilder("UNKNOWN", BrokerType.Unknown, "Missing Content", Status.INVALID_ARGUMENT))
+        ZIO.fail(
+          BrokerManagerException
+            .couldNotSendEvent("UNKNOWN", BrokerType.Unknown, "Missing Content", Status.INVALID_ARGUMENT)
+        )
     }
   }
 
@@ -137,12 +138,11 @@ case class KafkaController(adminClient: AdminClient, producer: Producer, address
 }
 
 object KafkaController {
-
-  def eventSendErrorBuilder(
-      topicName: String,
-      brokerType: BrokerType = BrokerType.Unknown,
-      reason: String,
-      grpcStatus: Status
-  ): BrokerManagerException =
-    BrokerManagerException.couldNotSendEvent(topicName, brokerType, reason, grpcStatus)
+  def live = ZLayer.fromZIO {
+    for {
+      adminClient <- ZIO.service[AdminClient]
+      producer <- ZIO.service[Producer]
+      brokerAddress <- ZIO.service[ServerAddress]
+    } yield KafkaController(adminClient, producer, brokerAddress)
+  }
 }

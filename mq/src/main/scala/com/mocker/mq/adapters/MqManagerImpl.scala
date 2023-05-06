@@ -56,8 +56,8 @@ case class MqManagerImpl(kafkaController: KafkaController, rabbitmqController: A
 
   def deleteTopic(request: DeleteTopicRequest): IO[BrokerManagerException, DeleteTopicResponse] =
     request.brokerType match {
-      case ProtoBrokerType.BROKER_TYPE_KAFKA    => kafkaController.deleteTopic(request)
-      case ProtoBrokerType.BROKER_TYPE_RABBITMQ => rabbitmqController.deleteTopic(request)
+      case ProtoBrokerType.BROKER_TYPE_KAFKA    => kafkaController.deleteQueue(request)
+      case ProtoBrokerType.BROKER_TYPE_RABBITMQ => rabbitmqController.deleteQueue(request)
       case _ =>
         ZIO.fail(
           BrokerManagerException.couldNotDeleteTopic(
@@ -87,15 +87,11 @@ case class MqManagerImpl(kafkaController: KafkaController, rabbitmqController: A
 
 object MqManagerImpl {
 
-  def layer: ZLayer[AdminClient with Producer with ServerAddress with Channel, Nothing, MqManagerImpl] = {
+  def layer: ZLayer[AmqpController with KafkaController, Nothing, MqManagerImpl] = {
     ZLayer.fromZIO {
       for {
-        adminClient <- ZIO.service[AdminClient]
-        producer <- ZIO.service[Producer]
-        brokerAddress <- ZIO.service[ServerAddress]
-        channel <- ZIO.service[Channel]
-        kafkaController = adapters.KafkaController(adminClient, producer, brokerAddress)
-        rabbitmqController = adapters.AmqpController(channel)
+        kafkaController <- ZIO.service[KafkaController]
+        rabbitmqController <- ZIO.service[AmqpController]
       } yield MqManagerImpl(kafkaController, rabbitmqController)
     }
   }

@@ -9,7 +9,7 @@ trait MqController {
 
   def getQueues(request: GetTopicsRequest): IO[BrokerManagerException, GetTopicsResponse]
 
-  def deleteTopic(request: DeleteTopicRequest): IO[BrokerManagerException, DeleteTopicResponse]
+  def deleteQueue(request: DeleteTopicRequest): IO[BrokerManagerException, DeleteTopicResponse]
 
   def sendMessages(request: SendMessageRequest): IO[BrokerManagerException, SendMessageResponse]
 
