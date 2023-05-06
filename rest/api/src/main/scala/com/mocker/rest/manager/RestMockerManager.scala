@@ -112,7 +112,6 @@ case class RestMockerManager(
       _ <- mockHistoryActions
         .insert(prepareHistoryItem(service, query, response).copy(responseSource = ResponseSource.MOCK_TEMPLATE))
         .asZIO(dbLayer)
-        .mapError(RestMockerException.internal)
         .catchAll(err => Console.printLineError(err.getMessage).ignoreLogged)
     } yield result
   }
@@ -132,7 +131,6 @@ case class RestMockerManager(
               .copy(responseUrl = request.url.encode, responseSource = ResponseSource.PROXIED_RESPONSE)
           )
           .asZIO(dbLayer)
-          .mapError(RestMockerException.internal)
           .catchAll(err => Console.printLineError(err.getMessage).ignoreLogged)
       } yield mockQueryResponse
     } else
@@ -148,6 +146,7 @@ case class RestMockerManager(
       responseSource = ResponseSource.EMPTY,
       statusCode = response.statusCode,
       responseHeaders = response.headers,
+      requestHeaders = query.headers,
       responseTime = Timestamp.from(Instant.now()),
       response = response.content
     )

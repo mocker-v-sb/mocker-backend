@@ -13,6 +13,7 @@ case class MockHistoryItem(
     responseUrl: String,
     responseSource: ResponseSource,
     statusCode: Int,
+    requestHeaders: Seq[KVPair],
     responseHeaders: Seq[KVPair],
     responseTime: Timestamp,
     response: String

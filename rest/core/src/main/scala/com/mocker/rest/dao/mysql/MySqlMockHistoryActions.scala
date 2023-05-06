@@ -68,6 +68,7 @@ object MySqlMockHistoryActions {
     def responseUrl: Rep[String] = column[String]("response_url")
     def responseSource: Rep[ResponseSource] = column("response_source")
     def statusCode: Rep[Int] = column[Int]("status_code")
+    def requestHeaders: Rep[Seq[KVPair]] = column("request_headers")
     def responseHeaders: Rep[Seq[KVPair]] = column("response_headers")
     def responseTime: Rep[Timestamp] = column("response_time", O.SqlType("TIMESTAMP"))
     def response: Rep[String] = column[String]("response")
@@ -81,6 +82,7 @@ object MySqlMockHistoryActions {
         responseUrl,
         responseSource,
         statusCode,
+        requestHeaders,
         responseHeaders,
         responseTime,
         response

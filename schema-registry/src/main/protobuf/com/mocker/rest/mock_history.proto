@@ -29,4 +29,5 @@ message HistoryItem {
   repeated KVPair response_headers = 7;
   google.protobuf.Timestamp response_time = 8;
   string response = 9;
+  repeated KVPair request_headers = 10;
 }
