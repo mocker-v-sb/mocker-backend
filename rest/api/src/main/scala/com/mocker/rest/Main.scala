@@ -2,7 +2,14 @@ package com.mocker.rest
 
 import com.mocker.common.utils.{Environment, ServerAddress}
 import com.mocker.rest.api.RestMockerService
-import com.mocker.rest.manager.RestMockerManager
+import com.mocker.rest.manager.{
+  RestHistoryManager,
+  RestMockManager,
+  RestMockResponseManager,
+  RestModelManager,
+  RestResponseManager,
+  RestServiceManager
+}
 import com.mocker.rest.rest_service.ZioRestService.ZRestMocker
 import com.mocker.rest.scheduler.RestExpiredServiceCleanerTask
 import io.grpc.protobuf.services.ProtoReflectionService
@@ -45,7 +52,12 @@ object Main extends zio.ZIOAppDefault {
   private val service = ZLayer.make[Server](
     dbProviderLayer,
     Client.default,
-    RestMockerManager.layer,
+    RestServiceManager.layer,
+    RestModelManager.layer,
+    RestMockManager.layer,
+    RestMockResponseManager.layer,
+    RestResponseManager.layer,
+    RestHistoryManager.layer,
     RestMockerService.layer,
     serverLayer
   )
