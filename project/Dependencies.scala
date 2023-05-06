@@ -4,7 +4,8 @@ object Dependencies {
 
   lazy val coreZio = Seq(
     "dev.zio" %% "zio" % "2.0.12",
-    "dev.zio" %% "zio-json" % "0.4.2"
+    "dev.zio" %% "zio-json" % "0.4.2",
+    "dev.zio" %% "zio-streams" % "2.0.10",
   )
 
   lazy val zioHttp = Seq(
@@ -22,9 +23,10 @@ object Dependencies {
   )
 
   lazy val kafka = Seq(
-    "dev.zio" %% "zio-streams" % "2.0.10",
     "dev.zio" %% "zio-kafka" % "2.2"
   )
+
+  lazy val rabbitmq = Seq("com.rabbitmq" % "amqp-client" % "5.17.0")
 
   lazy val typesafeConfig = "com.typesafe" % "config" % "1.4.2"
 

@@ -36,7 +36,7 @@ case class MqMockerService(brokerManager: MqManager) extends MqMocker {
 
 object MqMockerService {
 
-  def layer: ZLayer[DefaultMqManager, Nothing, MqMockerService] = {
+  def layer: ZLayer[MqManagerImpl, Nothing, MqMockerService] = {
     ZLayer.fromZIO {
       for {
         mqManager <- ZIO.service[MqManager]
