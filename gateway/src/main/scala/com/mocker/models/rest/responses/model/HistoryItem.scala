@@ -11,6 +11,7 @@ case class HistoryItem(
     responseUrl: String,
     responseSource: ResponseSource,
     statusCode: Int,
+    requestHeaders: Seq[KVPair],
     responseHeaders: Seq[KVPair],
     responseTime: Option[Long],
     response: String
@@ -28,6 +29,7 @@ object HistoryItem {
       responseUrl = item.responseUrl,
       responseSource = ResponseSource.forName(item.responseSource.name),
       statusCode = item.statusCode,
+      requestHeaders = item.requestHeaders.map(KVPair.fromProto),
       responseHeaders = item.responseHeaders.map(KVPair.fromProto),
       responseTime = item.responseTime.map(_.asJavaInstant.toEpochMilli),
       response = item.response

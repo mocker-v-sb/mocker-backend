@@ -49,7 +49,7 @@ object MockRestApiServiceHandler {
           }).either
           response <- protoResponse.toHttp
         } yield response
-      case req @ GET -> !! / "rest" / "service" / serviceId / "history" => {
+      case req @ GET -> !! / "rest" / "service" / serviceId / "history" =>
         val pageNum = req.url.queryParams.get("page").flatMap(_.headOption).flatMap(_.toIntOption)
         val pageSize = req.url.queryParams.get("pageSize").flatMap(_.headOption).flatMap(_.toIntOption)
         val from = req.url.queryParams.get("from").flatMap(_.headOption).flatMap(_.toLongOption)
@@ -68,7 +68,6 @@ object MockRestApiServiceHandler {
             } yield response
           case None => ZIO.succeed(Response.status(HttpStatus.BadRequest))
         }
-      }
       case req @ PATCH -> !! / "rest" / "service" / servicePath / "history" =>
         for {
           request <- req.body.asString

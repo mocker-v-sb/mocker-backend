@@ -69,6 +69,7 @@ CREATE TABLE `mock_response_history`
     `response_url`     VARCHAR(2048) NULL,
     `response_source`  INT(8)        NOT NULL,
     `status_code`      INT(8)        NOT NULL,
+    `request_headers`  JSON          NULL,
     `response_headers` JSON          NULL,
     `response`         MEDIUMTEXT    NOT NULL,
     `response_time`    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
