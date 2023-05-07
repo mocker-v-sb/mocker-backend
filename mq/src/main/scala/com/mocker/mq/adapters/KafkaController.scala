@@ -1,15 +1,15 @@
 package com.mocker.mq.adapters
 
-import com.mocker.common.utils.{Environment, ServerAddress}
+import com.mocker.common.utils.ServerAddress
 import com.mocker.mq.mq_service.{BrokerType => ProtoBrokerType, _}
 import com.mocker.mq.ports.MqController
 import com.mocker.mq.utils.{BrokerManagerException, BrokerType}
 import io.grpc.Status
 import org.apache.kafka.clients.consumer.KafkaConsumer
-import zio.kafka.admin.{AdminClient, AdminClientSettings}
+import zio.kafka.admin.AdminClient
 import zio.kafka.producer.{Producer, ProducerSettings}
 import zio.kafka.serde.Serde
-import zio.{durationInt, Cause, IO, ZIO, ZLayer}
+import zio.{Cause, IO, ZIO, ZLayer}
 
 import java.time.Duration
 import java.util.Properties
@@ -143,8 +143,8 @@ object KafkaController {
   def live = ZLayer.fromZIO {
     for {
       adminClient <- ZIO.service[AdminClient]
-      producer <- ZIO.service[Producer]
       brokerAddress <- ZIO.service[ServerAddress]
+      producer <- Producer.make(ProducerSettings(List(brokerAddress)))
     } yield KafkaController(adminClient, producer, brokerAddress)
   }
 }

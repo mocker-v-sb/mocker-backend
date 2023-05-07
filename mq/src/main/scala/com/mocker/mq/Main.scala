@@ -32,8 +32,6 @@ object Main extends zio.ZIOAppDefault {
   val rabbitmqChannel = ZLayer.fromZIO(
     ZIO.attempt {
       val connectionFactory: ConnectionFactory = new ConnectionFactory()
-      connectionFactory.setUsername(Environment.conf.getString("rabbitmq.username"))
-      connectionFactory.setPassword(Environment.conf.getString("rabbitmq.password"))
       connectionFactory.setHost(rabbitmqAddress.host)
       connectionFactory.setPort(rabbitmqAddress.port)
       connectionFactory.newConnection().createChannel()
@@ -64,10 +62,11 @@ object Main extends zio.ZIOAppDefault {
   )
 
   val kafkaController = ZLayer.make[KafkaController](
+    kafkaProducer,
     adminClientSettings,
     AdminClient.live,
-    kafkaProducer,
     ZLayer.succeed(kafkaAddress),
+    zio.Scope.default,
     KafkaController.live
   )
 
@@ -79,8 +78,8 @@ object Main extends zio.ZIOAppDefault {
   )
 
   val service = ZLayer.make[Server](
-    kafkaController,
     rabbitmqController,
+    kafkaController,
     MqManagerImpl.layer,
     MqMockerService.layer,
     serverLayer

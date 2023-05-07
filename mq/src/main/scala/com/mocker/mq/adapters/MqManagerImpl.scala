@@ -90,8 +90,8 @@ object MqManagerImpl {
   def layer: ZLayer[RabbitMqController with KafkaController, Nothing, MqManagerImpl] = {
     ZLayer.fromZIO {
       for {
-        kafkaController <- ZIO.service[KafkaController]
         rabbitmqController <- ZIO.service[RabbitMqController]
+        kafkaController <- ZIO.service[KafkaController]
       } yield MqManagerImpl(kafkaController, rabbitmqController)
     }
   }
