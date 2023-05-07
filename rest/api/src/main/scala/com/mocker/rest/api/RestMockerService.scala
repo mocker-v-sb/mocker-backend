@@ -78,6 +78,10 @@ case class RestMockerService(
         request.searchUrl,
         request.from.map(fromProtoTimestamp),
         request.to.map(fromProtoTimestamp),
+        request.statusCodes.toSet,
+        request.responseSources.toSet,
+        request.requestMethods.toSet,
+        request.responseTimeSort,
         pageSize,
         shift
       )
@@ -89,7 +93,10 @@ case class RestMockerService(
         request.id,
         request.searchUrl,
         request.from.map(fromProtoTimestamp),
-        request.to.map(fromProtoTimestamp)
+        request.to.map(fromProtoTimestamp),
+        request.statusCodes.toSet,
+        request.responseSources.toSet,
+        request.requestMethods.toSet
       )
       .tapError(err => Console.printLineError(err.message).ignoreLogged)
       .mapError(_.status)

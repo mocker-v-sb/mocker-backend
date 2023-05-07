@@ -19,6 +19,12 @@ message ResponseSourceNamespace {
   }
 }
 
+enum ResponseTimeSort {
+  UNKNOWN = 0;
+  DESC = 1;
+  ASC = 2;
+}
+
 message HistoryItem {
   int64 id = 1;
   Method method = 2;
