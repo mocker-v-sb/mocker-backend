@@ -76,8 +76,8 @@ case class RestMockerService(
       .getServiceHistory(
         request.id,
         request.searchUrl,
-        request.from.map(fromProtoTimestamp),
-        request.to.map(fromProtoTimestamp),
+        request.from.map(_.asJavaInstant),
+        request.to.map(_.asJavaInstant),
         request.statusCodes.toSet,
         request.responseSources.toSet,
         request.requestMethods.toSet,
@@ -92,8 +92,8 @@ case class RestMockerService(
       .countHistoryItems(
         request.id,
         request.searchUrl,
-        request.from.map(fromProtoTimestamp),
-        request.to.map(fromProtoTimestamp),
+        request.from.map(_.asJavaInstant),
+        request.to.map(_.asJavaInstant),
         request.statusCodes.toSet,
         request.responseSources.toSet,
         request.requestMethods.toSet

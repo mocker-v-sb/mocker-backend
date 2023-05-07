@@ -12,7 +12,7 @@ import slick.dbio.DBIO
 import slick.jdbc.MySQLProfile.api._
 import slick.lifted.{ProvenShape, Tag}
 
-import java.sql.Timestamp
+import java.time.Instant
 import scala.concurrent.ExecutionContext
 
 case class MySqlMockHistoryActions()(implicit ec: ExecutionContext) extends MockHistoryActions {
@@ -28,8 +28,8 @@ case class MySqlMockHistoryActions()(implicit ec: ExecutionContext) extends Mock
   override def search(
       serviceId: Long,
       searchUrl: Option[String],
-      from: Option[Timestamp],
-      to: Option[Timestamp],
+      from: Option[Instant],
+      to: Option[Instant],
       statusCodes: Set[Int],
       responseSources: Set[ResponseSource],
       methods: Set[Method],
@@ -59,8 +59,8 @@ case class MySqlMockHistoryActions()(implicit ec: ExecutionContext) extends Mock
   override def count(
       serviceId: Long,
       searchUrl: Option[String],
-      from: Option[Timestamp],
-      to: Option[Timestamp],
+      from: Option[Instant],
+      to: Option[Instant],
       statusCodes: Set[Int],
       responseSources: Set[ResponseSource],
       methods: Set[Method]
@@ -90,7 +90,7 @@ object MySqlMockHistoryActions {
     def statusCode: Rep[Int] = column[Int]("status_code")
     def requestHeaders: Rep[Seq[KVPair]] = column("request_headers")
     def responseHeaders: Rep[Seq[KVPair]] = column("response_headers")
-    def responseTime: Rep[Timestamp] = column("response_time", O.SqlType("TIMESTAMP"))
+    def responseTime: Rep[Instant] = column("response_time", O.SqlType("TIMESTAMP"))
     def response: Rep[String] = column[String]("response")
 
     override def * : ProvenShape[MockHistoryItem] =

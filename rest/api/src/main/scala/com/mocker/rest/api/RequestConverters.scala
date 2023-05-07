@@ -15,9 +15,9 @@ object RequestConverters {
       path = request.path,
       url = request.url,
       description = request.description,
-      creationTime = Timestamp.from(Instant.now()),
-      updateTime = Timestamp.from(Instant.now()),
-      expirationTime = request.expirationTime.map(fromProtoTimestamp),
+      creationTime = Instant.now(),
+      updateTime = Instant.now(),
+      expirationTime = request.expirationTime.map(_.asJavaInstant),
       isProxyEnabled = request.isProxyEnabled,
       isHistoryEnabled = request.isHistoryEnabled
     )
@@ -29,9 +29,9 @@ object RequestConverters {
       path = request.path,
       url = request.url,
       description = request.description,
-      creationTime = Timestamp.from(Instant.now()),
-      updateTime = Timestamp.from(Instant.now()),
-      expirationTime = request.expirationTime.map(t => Timestamp.from(t.asJavaInstant)),
+      creationTime = Instant.now(),
+      updateTime = Instant.now(),
+      expirationTime = request.expirationTime.map(t => t.asJavaInstant),
       isProxyEnabled = request.isProxyEnabled,
       isHistoryEnabled = request.isHistoryEnabled
     )
@@ -117,10 +117,6 @@ object RequestConverters {
       headers = request.headers,
       queryParams = request.queryParams
     )
-  }
-
-  def fromProtoTimestamp(timestamp: com.google.protobuf.timestamp.Timestamp): Timestamp = {
-    Timestamp.from(timestamp.asJavaInstant)
   }
 
 }

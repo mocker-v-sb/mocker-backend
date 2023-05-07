@@ -1,27 +1,17 @@
 package com.mocker.rest.api
 
-import com.google.protobuf.util.Timestamps
 import com.google.protobuf.timestamp.{Timestamp => GoogleTimestamp}
+import com.google.protobuf.util.Timestamps
 import com.mocker.rest.api.CommonConverters.convertModelResponse
 import com.mocker.rest.mock.MockSnippet
 import com.mocker.rest.mock_history.{HistoryItem => ProtoHistoryItem}
 import com.mocker.rest.mock_response.MockResponseSnippet
-import com.mocker.rest.model.ResponseTypeNamespace.ResponseType
-import com.mocker.rest.model.{
-  Mock,
-  MockHistoryItem,
-  MockQueryResponse,
-  MockResponse,
-  Model,
-  ModelSnippet,
-  Service,
-  ServiceStats
-}
+import com.mocker.rest.model._
 import com.mocker.rest.rest_service._
 import com.mocker.rest.service.ServiceSnippet
 import com.mocker.rest.utils.PathUtils.buildFullPath
 
-import java.sql.Timestamp
+import java.time.Instant
 
 object ResponseConverters {
 
@@ -155,7 +145,7 @@ object ResponseConverters {
     )
   }
 
-  private def toProtoTimestamp(ts: Timestamp): GoogleTimestamp = {
-    GoogleTimestamp.fromJavaProto(Timestamps.fromMillis(ts.getTime))
+  private def toProtoTimestamp(instant: Instant): GoogleTimestamp = {
+    GoogleTimestamp.fromJavaProto(Timestamps.fromMillis(instant.toEpochMilli))
   }
 }

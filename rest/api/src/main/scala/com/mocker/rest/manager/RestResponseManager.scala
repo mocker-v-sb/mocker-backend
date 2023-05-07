@@ -150,7 +150,7 @@ case class RestResponseManager(
       statusCode = response.statusCode,
       responseHeaders = response.headers,
       requestHeaders = query.headers,
-      responseTime = Timestamp.from(Instant.now()),
+      responseTime = Instant.now(),
       response = response.content
     )
   }

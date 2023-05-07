@@ -5,9 +5,9 @@ CREATE TABLE `service`
     `path`            VARCHAR(128) NOT NULL UNIQUE,
     `url`             VARCHAR(128) NULL,
     `description`     VARCHAR(128) NULL,
-    `creation_time`   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `update_time`     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `expiration_time` TIMESTAMP    NULL     DEFAULT NULL,
+    `creation_time`   TEXT         NOT NULL,
+    `update_time`     TEXT         NOT NULL,
+    `expiration_time` TEXT         NULL     DEFAULT NULL,
     `proxy_enabled`   BOOLEAN      NOT NULL DEFAULT FALSE,
     `history_enabled` BOOLEAN      NOT NULL DEFAULT FALSE,
     PRIMARY KEY (`id`)
@@ -72,7 +72,7 @@ CREATE TABLE `mock_response_history`
     `request_headers`  JSON          NULL,
     `response_headers` JSON          NULL,
     `response`         MEDIUMTEXT    NOT NULL,
-    `response_time`    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `response_time`    TEXT          NOT NULL,
     PRIMARY KEY (`id`),
     CONSTRAINT `mock_response_history_ibfk_1` FOREIGN KEY (`service_id`) REFERENCES `service` (`id`) ON DELETE CASCADE
 );
