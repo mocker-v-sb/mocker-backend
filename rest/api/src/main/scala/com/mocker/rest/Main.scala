@@ -16,6 +16,9 @@ import io.grpc.protobuf.services.ProtoReflectionService
 import scalapb.zio_grpc.{RequestContext, Server, ServerLayer, ServiceList}
 import slick.interop.zio.DatabaseProvider
 import zio.http.Client
+import zio.redis._
+import zio.schema._
+import zio.schema.codec._
 import zio.{Schedule, Scope, ZIO, ZIOAppArgs, ZLayer}
 
 import scala.concurrent.ExecutionContext
@@ -26,8 +29,17 @@ object Main extends zio.ZIOAppDefault {
     new java.util.concurrent.ForkJoinPool(1)
   )
 
+  object ProtobufCodecSupplier extends CodecSupplier {
+    def get[A: Schema]: BinaryCodec[A] = ProtobufCodec.protobufCodec
+  }
+
   private val dbConfig = ZLayer.succeed(Environment.conf.getConfig("mysql.rest"))
   private val dbBackendLayer = ZLayer.succeed(slick.jdbc.H2Profile)
+
+  private val redisConfig =
+    ZLayer.succeed[RedisConfig](
+      RedisConfig(Environment.conf.getString("redis.rest.host"), Environment.conf.getInt("redis.rest.port"))
+    )
 
   private val restServerAddress = ServerAddress(
     Environment.conf.getString("rest-server.address"),
@@ -52,6 +64,10 @@ object Main extends zio.ZIOAppDefault {
   private val service = ZLayer.make[Server](
     dbProviderLayer,
     Client.default,
+    redisConfig,
+    RedisExecutor.layer,
+    ZLayer.succeed[CodecSupplier](ProtobufCodecSupplier),
+    Redis.layer,
     RestServiceManager.layer,
     RestModelManager.layer,
     RestMockManager.layer,

@@ -13,6 +13,7 @@ import com.mocker.rest.utils.PathUtils._
 import com.mocker.rest.utils.ZIOSlick._
 import slick.interop.zio.DatabaseProvider
 import zio.http._
+import zio.redis.Redis
 import zio.{Console, IO, URLayer, ZIO, ZLayer}
 
 import java.sql.Timestamp
@@ -22,6 +23,7 @@ import scala.concurrent.ExecutionContext
 case class RestResponseManager(
     httpClient: Client,
     restMockerDbProvider: DatabaseProvider,
+    redisClient: Redis,
     serviceManager: RestServiceManager,
     modelManager: RestModelManager,
     mockManager: RestMockManager,
@@ -195,11 +197,12 @@ object RestResponseManager {
 
   def layer(
       implicit ec: ExecutionContext
-  ): URLayer[DatabaseProvider with Client with RestServiceManager with RestMockManager with RestModelManager with RestMockResponseManager, RestResponseManager] = {
+  ): URLayer[DatabaseProvider with Client with Redis with RestServiceManager with RestMockManager with RestModelManager with RestMockResponseManager, RestResponseManager] = {
     ZLayer.fromZIO {
       for {
         httpClient <- ZIO.service[Client]
         restMockerDatabase <- ZIO.service[DatabaseProvider]
+        redisClient <- ZIO.service[Redis]
         serviceManager <- ZIO.service[RestServiceManager]
         modelManager <- ZIO.service[RestModelManager]
         mockManager <- ZIO.service[RestMockManager]
@@ -207,6 +210,7 @@ object RestResponseManager {
       } yield RestResponseManager(
         httpClient,
         restMockerDatabase,
+        redisClient,
         serviceManager,
         modelManager,
         mockManager,

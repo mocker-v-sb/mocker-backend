@@ -4,7 +4,6 @@ import com.mocker.rest.api.CommonConverters.convertModelSchema
 import com.mocker.rest.model._
 import com.mocker.rest.rest_service._
 
-import java.sql.Timestamp
 import java.time.Instant
 
 object RequestConverters {

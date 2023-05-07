@@ -67,6 +67,10 @@ object Dependencies {
 
   lazy val zioRedis = "dev.zio" %% "zio-redis" % "0.2.0"
 
+  lazy val zioSchema = Seq(
+    "dev.zio" %% "zio-schema-protobuf" % "0.4.10"
+  )
+
   lazy val otel = Seq(
     "dev.zio" %% "zio-opentelemetry" % "3.0.0-RC7",
     "io.opentelemetry" % "opentelemetry-exporter-jaeger" % "1.24.0",

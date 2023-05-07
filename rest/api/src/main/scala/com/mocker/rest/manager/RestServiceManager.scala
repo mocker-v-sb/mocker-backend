@@ -7,11 +7,16 @@ import com.mocker.rest.model.{Service, ServiceStats}
 import com.mocker.rest.utils.RestMockerUtils._
 import com.mocker.rest.utils.ZIOSlick._
 import slick.interop.zio.DatabaseProvider
+import zio.redis.Redis
 import zio.{IO, URLayer, ZIO, ZLayer}
 
 import scala.concurrent.ExecutionContext
 
-case class RestServiceManager(restMockerDbProvider: DatabaseProvider, serviceActions: ServiceActions) {
+case class RestServiceManager(
+    restMockerDbProvider: DatabaseProvider,
+    redisClient: Redis,
+    serviceActions: ServiceActions
+) {
 
   private val dbLayer = ZLayer.succeed(restMockerDbProvider)
 
@@ -100,12 +105,14 @@ case class RestServiceManager(restMockerDbProvider: DatabaseProvider, serviceAct
 
 object RestServiceManager {
 
-  def layer(implicit ec: ExecutionContext): URLayer[DatabaseProvider, RestServiceManager] = {
+  def layer(implicit ec: ExecutionContext): URLayer[DatabaseProvider with Redis, RestServiceManager] = {
     ZLayer.fromZIO {
       for {
         restMockerDatabase <- ZIO.service[DatabaseProvider]
+        redisClient <- ZIO.service[Redis]
       } yield RestServiceManager(
         restMockerDatabase,
+        redisClient,
         MySqlServiceActions()
       )
     }
