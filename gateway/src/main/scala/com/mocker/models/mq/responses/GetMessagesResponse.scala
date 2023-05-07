@@ -1,8 +1,7 @@
 package com.mocker.models.mq.responses
 
-import GetMessagesResponse.Event
-import com.mocker.mq.mq_service.KafkaEvent.Value
-import com.mocker.mq.mq_service.{KafkaContainer, GetMessagesResponse => ProtoGetMessagesResponse}
+import com.mocker.models.mq.responses.GetMessagesResponse.Event
+import com.mocker.mq.mq_service.{MessagesContainer, GetMessagesResponse => ProtoGetMessagesResponse}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}
 
 case class GetMessagesResponse(messages: Seq[Event])
@@ -12,26 +11,17 @@ object GetMessagesResponse {
 
   object Event {
 
-    def fromMessage(kafkaContainer: KafkaContainer): Either[String, Event] = {
-      kafkaContainer.content.map(
-        ke =>
-          Event(key = ke.key, content = ke.value match {
-            case Value.Empty            => "NAN"
-            case Value.StringValue(str) => str
-          })
-      )
-    }.toRight(s"Could not parse kafka event response:\n${kafkaContainer.toProtoString}")
+    def fromMessage(messagesContainer: MessagesContainer): Event = {
+      Event(messagesContainer.key, messagesContainer.value)
+    }
 
     implicit val encoder = DeriveJsonEncoder.gen[Event]
     implicit val decoder = DeriveJsonDecoder.gen[Event]
   }
 
-  def fromMessage(message: ProtoGetMessagesResponse): Either[String, GetMessagesResponse] = {
-    val errorsAndEvents: Seq[Either[String, Event]] =
-      message.messages.flatMap(container => container.container.kafkaContainer.map(Event.fromMessage))
-    val errors = errorsAndEvents.collect { case Left(error)  => error }
-    val events = errorsAndEvents.collect { case Right(event) => event }
-    if (errors.isEmpty) Right(GetMessagesResponse(events)) else Left(errors.head)
+  def fromMessage(response: ProtoGetMessagesResponse): GetMessagesResponse = {
+    val events: Seq[Event] = response.messages.map(Event.fromMessage)
+    GetMessagesResponse(events)
   }
 
   implicit val encoder = DeriveJsonEncoder.gen[GetMessagesResponse]

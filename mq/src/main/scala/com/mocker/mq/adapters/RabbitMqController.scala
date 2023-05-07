@@ -6,10 +6,7 @@ import com.mocker.mq.ports.MqController
 import com.mocker.mq.utils.{BrokerManagerException, BrokerType}
 import com.rabbitmq.client.Channel
 import io.grpc.Status
-import zio.http.URL.Location
-import zio.http.model.{Method, Scheme}
-import zio.http.{Client, Path, Request, URL}
-import zio.json.DecoderOps
+import zio.http.Client
 import zio.{IO, ZIO, ZLayer}
 
 import java.nio.charset.StandardCharsets
@@ -17,6 +14,7 @@ import scala.collection.mutable.ListBuffer
 import scala.util.control.Breaks._
 
 case class RabbitMqController(channel: Channel, address: ServerAddress, httpClient: Client) extends MqController {
+  private var queues = Set.empty[String]
   override def createQueue(request: CreateTopicRequest): IO[BrokerManagerException, CreateTopicResponse] =
     ZIO
       .attempt(channel.queueDeclare(request.topicName, false, false, false, null))
@@ -34,7 +32,11 @@ case class RabbitMqController(channel: Channel, address: ServerAddress, httpClie
             port = address.port,
             topicName = request.topicName
           )
-      )
+      ).tap { r =>
+        ZIO.succeed {
+          queues += r.topicName
+        }
+      }
 
   override def deleteQueue(request: DeleteTopicRequest): IO[BrokerManagerException, DeleteTopicResponse] =
     ZIO
@@ -51,80 +53,42 @@ case class RabbitMqController(channel: Channel, address: ServerAddress, httpClie
       )
 
   override def getQueues(request: GetTopicsRequest): IO[BrokerManagerException, GetTopicsResponse] =
-    for {
-      url <- ZIO.succeed(
-        URL(
-          kind = Location.Absolute(
-            scheme = Scheme.HTTP,
-            host = address.host,
-            port = address.port
-          ),
-          path = Path.decode("/api/queues")
-        )
-      )
-      fullResponse <- httpClient
-        .request(
-          Request.default(
-            method = Method.GET,
-            url = url
-          )
-        )
-        .tapError { error =>
-          ZIO.logError(error.getStackTrace.mkString("\n"))
-        }
-        .mapError { error =>
-          {
-            BrokerManagerException.couldNotGetTopicsList(
-              BrokerType.Kafka,
-              s"List topics request failed due to: ${error.getStackTrace.mkString("\n")}",
-              Status.INTERNAL
-            )
-          }
-        }
-      rawResponse <- fullResponse.body.asString.mapBoth(
-        error =>
-          BrokerManagerException.couldNotGetTopicsList(
-            BrokerType.Kafka,
-            s"Failed to parse topics list due to: ${error.getMessage},\nraw response: ${fullResponse.body.asString}",
-            Status.INTERNAL
-          ),
-        _.fromJson[Seq[String]]
-      )
-      response <- rawResponse match {
-        case Left(error) =>
-          ZIO.fail(
-            BrokerManagerException.couldNotGetTopicsList(
-              BrokerType.Kafka,
-              s"Failed to parse topics list due to: $error,\nraw response: ${fullResponse.body.asString}",
-              Status.INTERNAL
-            )
-          )
-        case Right(qs) => ZIO.succeed(GetTopicsResponse(qs.map(q => Queue(ProtoBrokerType.BROKER_TYPE_KAFKA, q))))
-      }
-    } yield response
+    ZIO.succeed(GetTopicsResponse(queues.map(q => Queue(ProtoBrokerType.BROKER_TYPE_KAFKA, q)).toSeq))
 
   override def sendMessages(request: SendMessageRequest): IO[BrokerManagerException, SendMessageResponse] =
     request.messagesContainer match {
       case Some(messagesContainer) =>
-        ZIO
-          .attempt {
-            channel.basicPublish(
-              "",
-              messagesContainer.queue,
-              null,
-              messagesContainer.value.getBytes(StandardCharsets.UTF_8)
-            )
-          }
-          .mapBoth(
-            error =>
-              BrokerManagerException.couldNotSendEvent(
-                messagesContainer.queue,
-                BrokerType.RabbitMQ,
-                s"Encountered error while publishing: ${error.getMessage}",
-                Status.INVALID_ARGUMENT
-              ),
-            _ => SendMessageResponse(success = true)
-          )
+        for {
+         _ <- ZIO.attempt(channel.queueDeclare(messagesContainer.queue, false, false, false, null))
+           .mapError { error =>
+             BrokerManagerException.couldNotSendEvent(
+               messagesContainer.queue,
+               BrokerType.RabbitMQ,
+               s"Failed to recreate queue due to: ${error.getMessage}\n${error.getStackTrace.mkString("\n\t")}",
+               Status.NOT_FOUND
+             )
+           }
+         response <- ZIO
+           .attempt {
+             channel.basicPublish(
+               "",
+               messagesContainer.queue,
+               null,
+               messagesContainer.value.getBytes(StandardCharsets.UTF_8)
+             )
+           }
+           .repeatN(request.repeat - 1)
+           .mapBoth(
+             error =>
+               BrokerManagerException.couldNotSendEvent(
+                 messagesContainer.queue,
+                 BrokerType.RabbitMQ,
+                 s"Encountered error while publishing: ${error.getMessage}",
+                 Status.INVALID_ARGUMENT
+               ),
+             _ => SendMessageResponse(success = true)
+           )
+        } yield response
       case None =>
         ZIO.fail(
           BrokerManagerException.couldNotSendEvent(
@@ -140,7 +104,7 @@ case class RabbitMqController(channel: Channel, address: ServerAddress, httpClie
     val messages = ListBuffer.empty[String]
     breakable {
       while (true) {
-        val message = channel.basicGet(request.topic, false)
+        val message = channel.basicGet(request.topic, true)
         if (message == null) break
         messages += new String(message.getBody, "UTF-8")
       }
