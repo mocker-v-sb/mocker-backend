@@ -4,6 +4,7 @@ import com.mocker.rest.dao.MockHistoryActions
 import com.mocker.rest.dao.implicits.MySqlImplicits._
 import com.mocker.rest.dao.mysql.MySqlMockHistoryActions.MockHistoryTable
 import com.mocker.rest.mock_history.ResponseSourceNamespace.ResponseSource
+import com.mocker.rest.mock_history.ResponseTimeSort
 import com.mocker.rest.model.MockHistoryItem
 import com.mocker.rest.request.{KVPair, Method}
 import com.mocker.rest.utils.Implicits.MapAny
@@ -29,6 +30,9 @@ case class MySqlMockHistoryActions()(implicit ec: ExecutionContext) extends Mock
       searchUrl: Option[String],
       from: Option[Timestamp],
       to: Option[Timestamp],
+      statusCodes: Set[Int],
+      responseSources: Set[ResponseSource],
+      sort: ResponseTimeSort,
       limit: Int,
       shift: Int
   ): DBIO[Seq[MockHistoryItem]] =
@@ -37,7 +41,15 @@ case class MySqlMockHistoryActions()(implicit ec: ExecutionContext) extends Mock
       .mapIf(searchUrl.nonEmpty, _.filter(_.queryUrl.like(s"%${searchUrl.get}%")))
       .mapIf(from.nonEmpty, _.filter(_.responseTime >= from))
       .mapIf(to.nonEmpty, _.filter(_.responseTime <= to))
-      .sortBy(_.responseTime.desc)
+      .mapIf(statusCodes.nonEmpty, _.filter(_.statusCode.inSet(statusCodes)))
+      .mapIf(responseSources.nonEmpty, _.filter(_.responseSource.inSet(responseSources)))
+      .sortBy { item =>
+        sort match {
+          case ResponseTimeSort.DESC => item.responseTime.desc
+          case ResponseTimeSort.ASC  => item.responseTime.asc
+          case _                     => item.responseTime.desc
+        }
+      }
       .drop(shift)
       .take(limit)
       .result
@@ -46,13 +58,17 @@ case class MySqlMockHistoryActions()(implicit ec: ExecutionContext) extends Mock
       serviceId: Long,
       searchUrl: Option[String],
       from: Option[Timestamp],
-      to: Option[Timestamp]
+      to: Option[Timestamp],
+      statusCodes: Set[Int],
+      responseSources: Set[ResponseSource]
   ): DBIO[Int] =
     table
       .filter(_.serviceId === serviceId)
       .mapIf(searchUrl.nonEmpty, _.filter(_.queryUrl.like(s"%${searchUrl.get}%")))
       .mapIf(from.nonEmpty, _.filter(_.responseTime >= from))
       .mapIf(to.nonEmpty, _.filter(_.responseTime <= to))
+      .mapIf(statusCodes.nonEmpty, _.filter(_.statusCode.inSet(statusCodes)))
+      .mapIf(responseSources.nonEmpty, _.filter(_.responseSource.inSet(responseSources)))
       .size
       .result
 }

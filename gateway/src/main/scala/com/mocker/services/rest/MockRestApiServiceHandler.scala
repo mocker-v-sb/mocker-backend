@@ -1,6 +1,7 @@
 package com.mocker.services.rest
 
 import com.mocker.clients.RestMockerClientService
+import com.mocker.models.rest.common.{ResponseSource, ResponseTimeSort}
 import com.mocker.services.utils.Response._
 import com.mocker.models.rest.requests.service._
 import com.mocker.models.rest.responses.service._
@@ -50,18 +51,38 @@ object MockRestApiServiceHandler {
           response <- protoResponse.toHttp
         } yield response
       case req @ GET -> !! / "rest" / "service" / serviceId / "history" =>
-        val pageNum = req.url.queryParams.get("page").flatMap(_.headOption).flatMap(_.toIntOption)
-        val pageSize = req.url.queryParams.get("pageSize").flatMap(_.headOption).flatMap(_.toIntOption)
-        val from = req.url.queryParams.get("from").flatMap(_.headOption).flatMap(_.toLongOption)
-        val to = req.url.queryParams.get("to").flatMap(_.headOption).flatMap(_.toLongOption)
-        val search = req.url.queryParams.get("search").flatMap(_.headOption)
+        val params = req.url.queryParams
+
+        val pageNum = params.get("page").flatMap(_.headOption).flatMap(_.toIntOption)
+        val pageSize = params.get("pageSize").flatMap(_.headOption).flatMap(_.toIntOption)
+        val from = params.get("from").flatMap(_.headOption).flatMap(_.toLongOption)
+        val to = params.get("to").flatMap(_.headOption).flatMap(_.toLongOption)
+        val search = params.get("search").flatMap(_.headOption)
+        val statusCodes = params.get("status_codes").getOrElse(Seq.empty).flatMap(_.toIntOption)
+        val responseSources = params.get("response_sources").getOrElse(Seq.empty).flatMap(ResponseSource.forNameOpt)
+        val timeSort = params
+          .get("time_sort")
+          .flatMap(_.headOption)
+          .flatMap(ResponseTimeSort.forNameOpt)
+          .getOrElse(ResponseTimeSort.default)
+
         serviceId.toLongOption match {
           case Some(serviceId) =>
             ZIO.succeed(Response.status(HttpStatus.BadRequest))
             for {
               protoResponse <- RestMockerClientService
                 .getServiceResponseHistory(
-                  GetServiceResponseHistoryRequest(serviceId, pageNum, pageSize, from, to, search)
+                  GetServiceResponseHistoryRequest(
+                    serviceId,
+                    pageNum,
+                    pageSize,
+                    from,
+                    to,
+                    search,
+                    statusCodes,
+                    responseSources,
+                    timeSort
+                  )
                 )
                 .either
               response <- protoResponse.withBody(GetServiceResponseHistoryResponse.fromMessage(_).toJson)

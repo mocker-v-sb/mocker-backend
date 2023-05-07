@@ -1,5 +1,7 @@
 package com.mocker.rest.dao
 
+import com.mocker.rest.mock_history.ResponseSourceNamespace.ResponseSource
+import com.mocker.rest.mock_history.ResponseTimeSort
 import com.mocker.rest.model.MockHistoryItem
 import slick.dbio.DBIO
 
@@ -14,6 +16,9 @@ trait MockHistoryActions {
       searchUrl: Option[String],
       from: Option[Timestamp],
       to: Option[Timestamp],
+      statusCodes: Set[Int],
+      responseSources: Set[ResponseSource],
+      sort: ResponseTimeSort,
       limit: Int,
       shift: Int
   ): DBIO[Seq[MockHistoryItem]]
@@ -22,7 +27,9 @@ trait MockHistoryActions {
       serviceId: Long,
       searchUrl: Option[String],
       from: Option[Timestamp],
-      to: Option[Timestamp]
+      to: Option[Timestamp],
+      statusCodes: Set[Int],
+      responseSources: Set[ResponseSource]
   ): DBIO[Int]
 
   def insert(item: MockHistoryItem): DBIO[Unit]
