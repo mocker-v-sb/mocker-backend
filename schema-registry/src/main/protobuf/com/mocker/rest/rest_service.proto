@@ -111,7 +111,8 @@ message GetServiceResponseHistory {
     google.protobuf.StringValue search_url = 5;
     repeated int32 status_codes = 6;
     repeated ResponseSourceNamespace.ResponseSource response_sources = 7;
-    ResponseTimeSort response_time_sort = 8;
+    repeated Method request_methods = 8;
+    ResponseTimeSort response_time_sort = 9;
   }
 
   message Response {

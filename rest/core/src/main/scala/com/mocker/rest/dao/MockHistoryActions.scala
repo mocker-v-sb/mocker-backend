@@ -3,6 +3,7 @@ package com.mocker.rest.dao
 import com.mocker.rest.mock_history.ResponseSourceNamespace.ResponseSource
 import com.mocker.rest.mock_history.ResponseTimeSort
 import com.mocker.rest.model.MockHistoryItem
+import com.mocker.rest.request.Method
 import slick.dbio.DBIO
 
 import java.sql.Timestamp
@@ -18,6 +19,7 @@ trait MockHistoryActions {
       to: Option[Timestamp],
       statusCodes: Set[Int],
       responseSources: Set[ResponseSource],
+      methods: Set[Method],
       sort: ResponseTimeSort,
       limit: Int,
       shift: Int
@@ -29,7 +31,8 @@ trait MockHistoryActions {
       from: Option[Timestamp],
       to: Option[Timestamp],
       statusCodes: Set[Int],
-      responseSources: Set[ResponseSource]
+      responseSources: Set[ResponseSource],
+      methods: Set[Method]
   ): DBIO[Int]
 
   def insert(item: MockHistoryItem): DBIO[Unit]

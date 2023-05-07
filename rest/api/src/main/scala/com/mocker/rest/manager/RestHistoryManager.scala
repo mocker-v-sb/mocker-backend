@@ -6,6 +6,7 @@ import com.mocker.rest.errors.RestMockerException
 import com.mocker.rest.mock_history.ResponseSourceNamespace.ResponseSource
 import com.mocker.rest.mock_history.ResponseTimeSort
 import com.mocker.rest.model.MockHistoryItem
+import com.mocker.rest.request.Method
 import com.mocker.rest.utils.ZIOSlick._
 import slick.interop.zio.DatabaseProvider
 import zio.{IO, URLayer, ZIO, ZLayer}
@@ -24,12 +25,13 @@ case class RestHistoryManager(restMockerDbProvider: DatabaseProvider, mockHistor
       to: Option[Timestamp],
       statusCodes: Set[Int],
       responseSources: Set[ResponseSource],
+      methods: Set[Method],
       sort: ResponseTimeSort,
       limit: Int,
       shift: Int
   ): IO[RestMockerException, Seq[MockHistoryItem]] = {
     mockHistoryActions
-      .search(serviceId, searchUrl, from, to, statusCodes, responseSources, sort, limit, shift)
+      .search(serviceId, searchUrl, from, to, statusCodes, responseSources, methods, sort, limit, shift)
       .asZIO(dbLayer)
       .mapError(RestMockerException.internal)
   }
@@ -40,10 +42,11 @@ case class RestHistoryManager(restMockerDbProvider: DatabaseProvider, mockHistor
       from: Option[Timestamp],
       to: Option[Timestamp],
       statusCodes: Set[Int],
-      responseSources: Set[ResponseSource]
+      responseSources: Set[ResponseSource],
+      methods: Set[Method]
   ): IO[RestMockerException, Int] = {
     mockHistoryActions
-      .count(serviceId, searchUrl, from, to, statusCodes, responseSources)
+      .count(serviceId, searchUrl, from, to, statusCodes, responseSources, methods)
       .asZIO(dbLayer)
       .mapError(RestMockerException.internal)
   }

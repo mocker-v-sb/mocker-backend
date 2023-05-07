@@ -32,6 +32,7 @@ case class MySqlMockHistoryActions()(implicit ec: ExecutionContext) extends Mock
       to: Option[Timestamp],
       statusCodes: Set[Int],
       responseSources: Set[ResponseSource],
+      methods: Set[Method],
       sort: ResponseTimeSort,
       limit: Int,
       shift: Int
@@ -43,6 +44,7 @@ case class MySqlMockHistoryActions()(implicit ec: ExecutionContext) extends Mock
       .mapIf(to.nonEmpty, _.filter(_.responseTime <= to))
       .mapIf(statusCodes.nonEmpty, _.filter(_.statusCode.inSet(statusCodes)))
       .mapIf(responseSources.nonEmpty, _.filter(_.responseSource.inSet(responseSources)))
+      .mapIf(methods.nonEmpty, _.filter(_.method.inSet(methods)))
       .sortBy { item =>
         sort match {
           case ResponseTimeSort.DESC => item.responseTime.desc
@@ -60,7 +62,8 @@ case class MySqlMockHistoryActions()(implicit ec: ExecutionContext) extends Mock
       from: Option[Timestamp],
       to: Option[Timestamp],
       statusCodes: Set[Int],
-      responseSources: Set[ResponseSource]
+      responseSources: Set[ResponseSource],
+      methods: Set[Method]
   ): DBIO[Int] =
     table
       .filter(_.serviceId === serviceId)
@@ -69,6 +72,7 @@ case class MySqlMockHistoryActions()(implicit ec: ExecutionContext) extends Mock
       .mapIf(to.nonEmpty, _.filter(_.responseTime <= to))
       .mapIf(statusCodes.nonEmpty, _.filter(_.statusCode.inSet(statusCodes)))
       .mapIf(responseSources.nonEmpty, _.filter(_.responseSource.inSet(responseSources)))
+      .mapIf(methods.nonEmpty, _.filter(_.method.inSet(methods)))
       .size
       .result
 }

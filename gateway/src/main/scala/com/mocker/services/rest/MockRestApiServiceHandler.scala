@@ -1,17 +1,17 @@
 package com.mocker.services.rest
 
 import com.mocker.clients.RestMockerClientService
-import com.mocker.models.rest.common.{ResponseSource, ResponseTimeSort}
-import com.mocker.services.utils.Response._
+import com.mocker.models.rest.common.{Method, ResponseSource, ResponseTimeSort}
 import com.mocker.models.rest.requests.service._
 import com.mocker.models.rest.responses.service._
 import com.mocker.rest.rest_service.ZioRestService.RestMockerClient
+import com.mocker.services.utils.Response._
 import io.grpc.{Status => GrpcStatus}
-import zio.http.model.Method.{DELETE, GET, PATCH, POST, PUT}
-import zio.http.model.{Status => HttpStatus}
 import zio.http._
+import zio.http.model.Method._
+import zio.http.model.{Status => HttpStatus}
 import zio.json.{DecoderOps, EncoderOps}
-import zio.{Cause, Console, ZIO}
+import zio.{Cause, ZIO}
 
 object MockRestApiServiceHandler {
 
@@ -60,6 +60,7 @@ object MockRestApiServiceHandler {
         val search = params.get("search").flatMap(_.headOption)
         val statusCodes = params.get("status_codes").getOrElse(Seq.empty).flatMap(_.toIntOption)
         val responseSources = params.get("response_sources").getOrElse(Seq.empty).flatMap(ResponseSource.forNameOpt)
+        val requestMethods = params.get("request_methods").getOrElse(Seq.empty).flatMap(Method.forNameOpt)
         val timeSort = params
           .get("time_sort")
           .flatMap(_.headOption)
@@ -81,6 +82,7 @@ object MockRestApiServiceHandler {
                     search,
                     statusCodes,
                     responseSources,
+                    requestMethods,
                     timeSort
                   )
                 )

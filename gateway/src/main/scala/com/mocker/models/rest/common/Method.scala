@@ -22,6 +22,10 @@ object Method {
   def forName(name: String): Method = {
     all.find(_.name == name).getOrElse(throw new IllegalArgumentException(s"Not found method for name $name"))
   }
+
+  def forNameOpt(name: String): Option[Method] = {
+    all.find(_.name == name)
+  }
 }
 
 case object GET extends Method {
