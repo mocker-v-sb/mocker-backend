@@ -9,10 +9,12 @@ case class GetMessagesRequest(brokerType: String, topicName: String, repeat: Int
   def toMessage: Either[String, ProtoGetMessagesRequest] = {
     ScalaBrokerType.getBrokerType(brokerType) match {
       case Right(bt) =>
-        Right(ProtoGetMessagesRequest(
-          brokerType = bt,
-          topic = topicName
-        ))
+        Right(
+          ProtoGetMessagesRequest(
+            brokerType = bt,
+            topic = topicName
+          )
+        )
       case Left(error) => Left(error)
     }
   }

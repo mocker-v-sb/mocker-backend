@@ -9,7 +9,7 @@ import io.grpc.protobuf.services.ProtoReflectionService
 import scalapb.zio_grpc.{RequestContext, Server, ServerLayer, ServiceList}
 import zio.http.Client
 import zio.kafka.admin.{AdminClient, AdminClientSettings}
-import zio.{Console, ZIO, ZLayer, durationInt}
+import zio.{durationInt, Console, ZIO, ZLayer}
 
 import scala.util.Try
 
@@ -31,14 +31,16 @@ object Main extends zio.ZIOAppDefault {
   )
 
   val rabbitmqChannel = ZLayer.fromZIO(
-    ZIO.fromTry {
-      Try {
-        val connectionFactory: ConnectionFactory = new ConnectionFactory()
-        connectionFactory.setHost(rabbitmqAddress.host)
-        connectionFactory.setPort(rabbitmqAddress.port)
-        connectionFactory.newConnection().createChannel()
+    ZIO
+      .fromTry {
+        Try {
+          val connectionFactory: ConnectionFactory = new ConnectionFactory()
+          connectionFactory.setHost(rabbitmqAddress.host)
+          connectionFactory.setPort(rabbitmqAddress.port)
+          connectionFactory.newConnection().createChannel()
+        }
       }
-    }.tapError(error => Console.printError(s"${error.getMessage}\n${error.getStackTrace.mkString("\n\t")}"))
+      .tapError(error => Console.printError(s"${error.getMessage}\n${error.getStackTrace.mkString("\n\t")}"))
   )
 
   val serviceList = ServiceList.addFromEnvironment[ZMqMocker[RequestContext]]

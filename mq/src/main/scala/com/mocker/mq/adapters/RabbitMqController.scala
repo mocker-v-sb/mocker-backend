@@ -32,7 +32,8 @@ case class RabbitMqController(channel: Channel, address: ServerAddress, httpClie
             port = address.port,
             topicName = request.topicName
           )
-      ).tap { r =>
+      )
+      .tap { r =>
         ZIO.succeed {
           queues += r.topicName
         }
@@ -59,35 +60,36 @@ case class RabbitMqController(channel: Channel, address: ServerAddress, httpClie
     request.messagesContainer match {
       case Some(messagesContainer) =>
         for {
-         _ <- ZIO.attempt(channel.queueDeclare(messagesContainer.queue, false, false, false, null))
-           .mapError { error =>
-             BrokerManagerException.couldNotSendEvent(
-               messagesContainer.queue,
-               BrokerType.RabbitMQ,
-               s"Failed to recreate queue due to: ${error.getMessage}\n${error.getStackTrace.mkString("\n\t")}",
-               Status.NOT_FOUND
-             )
-           }
-         response <- ZIO
-           .attempt {
-             channel.basicPublish(
-               "",
-               messagesContainer.queue,
-               null,
-               messagesContainer.value.getBytes(StandardCharsets.UTF_8)
-             )
-           }
-           .repeatN(request.repeat - 1)
-           .mapBoth(
-             error =>
-               BrokerManagerException.couldNotSendEvent(
-                 messagesContainer.queue,
-                 BrokerType.RabbitMQ,
-                 s"Encountered error while publishing: ${error.getMessage}",
-                 Status.INVALID_ARGUMENT
-               ),
-             _ => SendMessageResponse(success = true)
-           )
+          _ <- ZIO
+            .attempt(channel.queueDeclare(messagesContainer.queue, false, false, false, null))
+            .mapError { error =>
+              BrokerManagerException.couldNotSendEvent(
+                messagesContainer.queue,
+                BrokerType.RabbitMQ,
+                s"Failed to recreate queue due to: ${error.getMessage}\n${error.getStackTrace.mkString("\n\t")}",
+                Status.NOT_FOUND
+              )
+            }
+          response <- ZIO
+            .attempt {
+              channel.basicPublish(
+                "",
+                messagesContainer.queue,
+                null,
+                messagesContainer.value.getBytes(StandardCharsets.UTF_8)
+              )
+            }
+            .repeatN(request.repeat - 1)
+            .mapBoth(
+              error =>
+                BrokerManagerException.couldNotSendEvent(
+                  messagesContainer.queue,
+                  BrokerType.RabbitMQ,
+                  s"Encountered error while publishing: ${error.getMessage}",
+                  Status.INVALID_ARGUMENT
+                ),
+              _ => SendMessageResponse(success = true)
+            )
         } yield response
       case None =>
         ZIO.fail(
