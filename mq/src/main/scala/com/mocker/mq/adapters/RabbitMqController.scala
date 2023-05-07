@@ -16,7 +16,7 @@ import java.nio.charset.StandardCharsets
 import scala.collection.mutable.ListBuffer
 import scala.util.control.Breaks._
 
-case class AmqpController(channel: Channel, address: ServerAddress, httpClient: Client) extends MqController {
+case class RabbitMqController(channel: Channel, address: ServerAddress, httpClient: Client) extends MqController {
   override def createQueue(request: CreateTopicRequest): IO[BrokerManagerException, CreateTopicResponse] =
     ZIO
       .attempt(channel.queueDeclare(request.topicName, false, false, false, null))
@@ -154,13 +154,13 @@ case class AmqpController(channel: Channel, address: ServerAddress, httpClient: 
   }
 }
 
-object AmqpController {
+object RabbitMqController {
 
   def live = ZLayer.fromZIO {
     for {
       channel <- ZIO.service[Channel]
       brokerAddress <- ZIO.service[ServerAddress]
       httpClient <- ZIO.service[Client]
-    } yield AmqpController(channel, brokerAddress, httpClient)
+    } yield RabbitMqController(channel, brokerAddress, httpClient)
   }
 }

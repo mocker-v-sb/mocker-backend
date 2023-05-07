@@ -1,7 +1,7 @@
 package com.mocker.mq
 
 import com.mocker.common.utils.{Environment, ServerAddress}
-import com.mocker.mq.adapters.{AmqpController, KafkaController, MqManagerImpl, MqMockerService}
+import com.mocker.mq.adapters.{RabbitMqController, KafkaController, MqManagerImpl, MqMockerService}
 import com.mocker.mq.mq_service.ZioMqService.ZMqMocker
 import com.rabbitmq.client.ConnectionFactory
 import io.grpc.ServerBuilder
@@ -15,8 +15,8 @@ import zio.{durationInt, ZIO, ZLayer}
 object Main extends zio.ZIOAppDefault {
 
   val mqServerAddress = ServerAddress(
-    Environment.conf.getString("mq-server-server.address"),
-    Environment.conf.getInt("mq-server-server.port")
+    Environment.conf.getString("mq-server.address"),
+    Environment.conf.getInt("mq-server.port")
   )
 
   val kafkaAddress = ServerAddress(
@@ -71,11 +71,11 @@ object Main extends zio.ZIOAppDefault {
     KafkaController.live
   )
 
-  val rabbitmqController = ZLayer.make[AmqpController](
+  val rabbitmqController = ZLayer.make[RabbitMqController](
     rabbitmqChannel,
     ZLayer.succeed(rabbitmqAddress),
     Client.default,
-    AmqpController.live
+    RabbitMqController.live
   )
 
   val service = ZLayer.make[Server](

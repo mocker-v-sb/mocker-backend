@@ -13,7 +13,7 @@ import zio.{IO, ZIO, ZLayer}
 
 import scala.util.Random
 
-case class MqManagerImpl(kafkaController: KafkaController, rabbitmqController: AmqpController) extends MqManager {
+case class MqManagerImpl(kafkaController: KafkaController, rabbitmqController: RabbitMqController) extends MqManager {
   override def createTopic(request: CreateTopicRequest): IO[BrokerManagerException, CreateTopicResponse] =
     request.brokerType match {
       case ProtoBrokerType.BROKER_TYPE_KAFKA    => kafkaController.createQueue(request)
@@ -87,11 +87,11 @@ case class MqManagerImpl(kafkaController: KafkaController, rabbitmqController: A
 
 object MqManagerImpl {
 
-  def layer: ZLayer[AmqpController with KafkaController, Nothing, MqManagerImpl] = {
+  def layer: ZLayer[RabbitMqController with KafkaController, Nothing, MqManagerImpl] = {
     ZLayer.fromZIO {
       for {
         kafkaController <- ZIO.service[KafkaController]
-        rabbitmqController <- ZIO.service[AmqpController]
+        rabbitmqController <- ZIO.service[RabbitMqController]
       } yield MqManagerImpl(kafkaController, rabbitmqController)
     }
   }
