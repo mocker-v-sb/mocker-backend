@@ -79,10 +79,16 @@ case class RestResponseManager(
     val queryResponse = MockQueryResponse.fromMockResponse(staticResponse)
     for {
       result <- ZIO.succeed(queryResponse)
-      _ <- mockHistoryActions
-        .insert(prepareHistoryItem(service, query, queryResponse).copy(responseSource = ResponseSource.STATIC_RESPONSE))
-        .asZIO(dbLayer)
-        .catchAll(err => Console.printLineError(err.getMessage).ignoreLogged)
+      _ <- if (service.isHistoryEnabled) {
+        mockHistoryActions
+          .insert(
+            prepareHistoryItem(service, query, queryResponse).copy(responseSource = ResponseSource.STATIC_RESPONSE)
+          )
+          .asZIO(dbLayer)
+          .catchAll(err => Console.printLineError(err.getMessage).ignoreLogged)
+      } else {
+        ZIO.unit
+      }
     } yield result
   }
 
@@ -98,10 +104,14 @@ case class RestResponseManager(
       }
       response = modelOpt.map(model => MockQueryResponse.fromModel(model)).getOrElse(MockQueryResponse.default)
       result <- ZIO.succeed(response)
-      _ <- mockHistoryActions
-        .insert(prepareHistoryItem(service, query, response).copy(responseSource = ResponseSource.MOCK_TEMPLATE))
-        .asZIO(dbLayer)
-        .catchAll(err => Console.printLineError(err.getMessage).ignoreLogged)
+      _ <- if (service.isHistoryEnabled) {
+        mockHistoryActions
+          .insert(prepareHistoryItem(service, query, response).copy(responseSource = ResponseSource.MOCK_TEMPLATE))
+          .asZIO(dbLayer)
+          .catchAll(err => Console.printLineError(err.getMessage).ignoreLogged)
+      } else {
+        ZIO.unit
+      }
     } yield result
   }
 
@@ -114,13 +124,17 @@ case class RestResponseManager(
         request <- buildHttpRequest(service, query)
         response <- httpClient.request(request).mapError(RestMockerException.cantGetProxiedResponse)
         mockQueryResponse <- buildMockResponse(response)
-        _ <- mockHistoryActions
-          .insert(
-            prepareHistoryItem(service, query, mockQueryResponse)
-              .copy(responseUrl = request.url.encode, responseSource = ResponseSource.PROXIED_RESPONSE)
-          )
-          .asZIO(dbLayer)
-          .catchAll(err => Console.printLineError(err.getMessage).ignoreLogged)
+        _ <- if (service.isHistoryEnabled) {
+          mockHistoryActions
+            .insert(
+              prepareHistoryItem(service, query, mockQueryResponse)
+                .copy(responseUrl = request.url.encode, responseSource = ResponseSource.PROXIED_RESPONSE)
+            )
+            .asZIO(dbLayer)
+            .catchAll(err => Console.printLineError(err.getMessage).ignoreLogged)
+        } else {
+          ZIO.unit
+        }
       } yield mockQueryResponse
     } else
       ZIO.fail(RestMockerException.suitableMockNotFound)
