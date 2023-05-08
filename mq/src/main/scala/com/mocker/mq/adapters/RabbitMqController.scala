@@ -3,26 +3,24 @@ package com.mocker.mq.adapters
 import com.mocker.common.utils.ServerAddress
 import com.mocker.mq.mq_service.{BrokerType => ProtoBrokerType, _}
 import com.mocker.mq.ports.MqController
-import com.mocker.mq.utils.{BrokerManagerException, BrokerType}
+import com.mocker.mq.utils.{BrokerManagerException, BrokerType, RabbitMqQueuesResponse}
 import com.rabbitmq.client.Channel
 import io.grpc.Status
-import zio.http.Client
+import zio.http.URL.Location
+import zio.http.{Client, Path, Request, URL}
+import zio.http.model.{Header, Method, Scheme}
+import zio.json.DecoderOps
 import zio.{IO, ZIO, ZLayer}
 
 import java.nio.charset.StandardCharsets
+import java.util.Base64
 import scala.collection.mutable.ListBuffer
 import scala.util.control.Breaks._
 
 case class RabbitMqController(channel: Channel, address: ServerAddress, httpClient: Client) extends MqController {
-  private var queues = Set.empty[String]
   override def createQueue(request: CreateTopicRequest): IO[BrokerManagerException, CreateTopicResponse] =
     ZIO
       .attempt(channel.queueDeclare(request.topicName, false, false, false, null))
-      .zipLeft {
-        ZIO.succeed {
-          queues = queues + request.topicName
-        }
-      }
       .mapBoth(
         _ =>
           BrokerManagerException.couldNotCreateTopic(
@@ -43,11 +41,6 @@ case class RabbitMqController(channel: Channel, address: ServerAddress, httpClie
   override def deleteQueue(request: DeleteTopicRequest): IO[BrokerManagerException, DeleteTopicResponse] =
     ZIO
       .attempt(channel.queueDelete(request.topicName))
-      .zipLeft {
-        ZIO.attempt {
-          queues = queues - request.topicName
-        }
-      }
       .mapBoth(
         _ =>
           BrokerManagerException.couldNotDeleteTopic(
@@ -59,8 +52,57 @@ case class RabbitMqController(channel: Channel, address: ServerAddress, httpClie
         _ => DeleteTopicResponse(success = true)
       )
 
+  private val rabbitServerAuthCreds = (new Base64.Encoder().encodeToString("guest:guest".getBytes))
   override def getQueues(request: GetTopicsRequest): IO[BrokerManagerException, GetTopicsResponse] =
-    ZIO.succeed(GetTopicsResponse(queues.map(q => Queue(ProtoBrokerType.BROKER_TYPE_RABBITMQ, q)).toSeq))
+    for {
+      url <- ZIO.succeed(
+        URL(
+          kind = Location.Absolute(
+            scheme = Scheme.HTTP,
+            host = s"localhost",
+            port = 15672
+          ),
+          path = Path.decode("/api/queues")
+        )
+      )
+      fullResponse <- httpClient
+        .request(
+          Request.get(url = url).updateHeaders(_.combine(Header("Authorization", s"Basic $rabbitServerAuthCreds")))
+        )
+        .tapError { error =>
+          ZIO.logError(error.getStackTrace.mkString("\n\t"))
+        }
+        .mapError { error =>
+          {
+            BrokerManagerException.couldNotGetTopicsList(
+              BrokerType.Kafka,
+              s"List topics request failed due to: ${error.getStackTrace.mkString("\n")}",
+              Status.INTERNAL
+            )
+          }
+        }
+      rawResponse <- fullResponse.body.asString.mapBoth(
+        error =>
+          BrokerManagerException.couldNotGetTopicsList(
+            BrokerType.Kafka,
+            s"Failed to parse topics list due to: ${error.getMessage},\nraw response: ${fullResponse.body.asString}",
+            Status.INTERNAL
+          ),
+        _.fromJson[Seq[RabbitMqQueuesResponse]]
+      )
+      response <- rawResponse match {
+        case Left(error) =>
+          ZIO.fail(
+            BrokerManagerException.couldNotGetTopicsList(
+              BrokerType.Kafka,
+              s"Failed to parse topics list due to: $error,\nraw response: ${fullResponse.body.asString}",
+              Status.INTERNAL
+            )
+          )
+        case Right(qs) =>
+          ZIO.succeed(GetTopicsResponse(qs.map(q => Queue(ProtoBrokerType.BROKER_TYPE_RABBITMQ, q.name))))
+      }
+    } yield response
 
   override def sendMessages(request: SendMessageRequest): IO[BrokerManagerException, SendMessageResponse] =
     request.messagesContainer match {
