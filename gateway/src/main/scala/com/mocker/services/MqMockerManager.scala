@@ -134,7 +134,14 @@ case class MqMockerManager(tracing: Tracing) {
         val brokerType = req.url.queryParams.get("brokerType").flatMap(_.headOption)
         val topicName = req.url.queryParams.get("topicName").flatMap(_.headOption)
         if (brokerType.isEmpty || topicName.isEmpty) ZIO.succeed(Response.status(HttpStatus.BadRequest))
-        else ZIO.succeed(Response.json(ScalaGetTopicResponse.fromMessage().copy(topicName = topicName.get).toJson))
+        else ZIO.succeed(
+          Response.json(
+            ScalaGetTopicResponse(
+              brokerType = brokerType.get, topicName = topicName.get, host = "158.160.57.255", port =
+                if (brokerType.getOrElse("KAFKA").equals("KAFKA")) 9092 else 5672
+            ).toJson
+          )
+        )
     }
     .tapErrorZIO(err => ZIO.logErrorCause(Cause.fail(err)))
     .mapError(_ => Response.status(HttpStatus.InternalServerError))
