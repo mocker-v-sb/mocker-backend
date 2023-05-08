@@ -23,6 +23,10 @@ object ResponseSource {
   def forName(name: String): ResponseSource = {
     all.find(_.name == name).getOrElse(throw new IllegalArgumentException(s"Not found response source for name $name"))
   }
+
+  def forNameOpt(name: String): Option[ResponseSource] = {
+    all.find(_.name == name)
+  }
 }
 
 case object EMPTY extends ResponseSource {

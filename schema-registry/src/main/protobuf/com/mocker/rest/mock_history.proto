@@ -19,6 +19,12 @@ message ResponseSourceNamespace {
   }
 }
 
+enum ResponseTimeSort {
+  UNKNOWN = 0;
+  DESC = 1;
+  ASC = 2;
+}
+
 message HistoryItem {
   int64 id = 1;
   Method method = 2;
@@ -29,4 +35,5 @@ message HistoryItem {
   repeated KVPair response_headers = 7;
   google.protobuf.Timestamp response_time = 8;
   string response = 9;
+  repeated KVPair request_headers = 10;
 }
