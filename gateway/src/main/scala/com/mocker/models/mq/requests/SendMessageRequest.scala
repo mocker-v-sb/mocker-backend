@@ -8,7 +8,7 @@ import com.mocker.mq.mq_service.{
 }
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}
 
-case class SendMessageRequest(brokerType: String, topicName: String, key: String, content: String, repeat: Int) {
+case class SendMessageRequest(brokerType: String, topicName: String, key: String = "", content: String, repeat: Int) {
 
   def toMessage: Either[String, ProtoSendMessageRequest] = {
     ScalaBrokerType.getBrokerType(brokerType) match {
@@ -16,7 +16,9 @@ case class SendMessageRequest(brokerType: String, topicName: String, key: String
         bt match {
           case ProtoBrokerType.BROKER_TYPE_KAFKA | ProtoBrokerType.BROKER_TYPE_RABBITMQ =>
             val messagesContainer = MessagesContainer(topicName, key, content)
-            Right(ProtoSendMessageRequest(messagesContainer = Some(messagesContainer), repeat = repeat))
+            Right(
+              ProtoSendMessageRequest(brokerType = bt, messagesContainer = Some(messagesContainer), repeat = repeat)
+            )
           case _ => Left("Broker type not defined")
         }
       case Left(error) => Left(error)

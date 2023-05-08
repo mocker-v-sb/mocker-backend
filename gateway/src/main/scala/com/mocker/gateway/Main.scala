@@ -30,9 +30,6 @@ object Main extends ZIOAppDefault {
     allowedMethods = Some(Set(Method.GET, Method.POST, Method.PUT, Method.PATCH, Method.DELETE))
   )
 
-  // val serverAddress: ServerAddress =
-  //  ServerAddress(Environment.conf.getString("gateway-server.address"), Environment.conf.getInt("gateway-server.port"))
-
   val mqMockerClient: Layer[Throwable, MqMockerClient.Service] =
     MqMockerClient.live(
       ZManagedChannel(

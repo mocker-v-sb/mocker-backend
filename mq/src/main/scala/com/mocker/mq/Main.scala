@@ -9,6 +9,7 @@ import io.grpc.protobuf.services.ProtoReflectionService
 import scalapb.zio_grpc.{RequestContext, Server, ServerLayer, ServiceList}
 import zio.http.Client
 import zio.kafka.admin.{AdminClient, AdminClientSettings}
+import zio.kafka.producer.{Producer, ProducerSettings}
 import zio.{durationInt, Console, ZIO, ZLayer}
 
 import scala.util.Try
@@ -60,11 +61,13 @@ object Main extends zio.ZIOAppDefault {
     )
   )
 
+  val producer = ZLayer.scoped(Producer.make(ProducerSettings(List(kafkaAddress))))
+
   val kafkaController = ZLayer.make[KafkaController](
+    producer,
     adminClientSettings,
     AdminClient.live,
     ZLayer.succeed(kafkaAddress),
-    zio.Scope.default,
     KafkaController.live
   )
 

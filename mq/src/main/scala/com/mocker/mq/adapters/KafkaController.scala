@@ -83,7 +83,7 @@ case class KafkaController(adminClient: AdminClient, producer: Producer, address
   }
 
   private val props: Properties = new Properties()
-  props.put("bootstrap.servers", s"$address")
+  props.put("bootstrap.servers", s"${address.host}:${address.port}")
   props.put("group.id", "kafka-mocker")
   props.put("enable.auto.commit", "true")
   props.put("auto.commit.interval.ms", "1000")
@@ -98,7 +98,7 @@ case class KafkaController(adminClient: AdminClient, producer: Producer, address
         val events = mutable.ListBuffer.empty[MessagesContainer]
         consumer.subscribe(List(request.topic).asJava)
         consumer
-          .poll(Duration.ofMillis(1000))
+          .poll(Duration.ofMillis(5000))
           .asScala
           .foreach(
             kv =>
@@ -145,7 +145,7 @@ object KafkaController {
     for {
       adminClient <- ZIO.service[AdminClient]
       brokerAddress <- ZIO.service[ServerAddress]
-      producer <- Producer.make(ProducerSettings(List(brokerAddress)))
+      producer <- ZIO.service[Producer]
     } yield KafkaController(adminClient, producer, brokerAddress)
   }
 }
