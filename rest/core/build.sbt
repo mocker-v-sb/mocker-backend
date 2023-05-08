@@ -5,7 +5,7 @@ name := "rest-core"
 lazy val testDependencies =
   (TestContainers.libraries :+ mySqlConnector :+ scalaTest).map(_ % Test)
 
-libraryDependencies ++= coreZio ++ slick ++ testDependencies
+libraryDependencies ++= coreZio ++ slick ++ zioSchema ++ testDependencies
 libraryDependencies ++= Seq(
   "io.circe" %% "circe-core" % "0.14.5",
   "io.circe" %% "circe-generic" % "0.14.5",
