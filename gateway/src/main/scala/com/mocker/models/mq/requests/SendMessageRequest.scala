@@ -16,7 +16,9 @@ case class SendMessageRequest(brokerType: String, topicName: String, key: String
         bt match {
           case ProtoBrokerType.BROKER_TYPE_KAFKA | ProtoBrokerType.BROKER_TYPE_RABBITMQ =>
             val messagesContainer = MessagesContainer(topicName, key, content)
-            Right(ProtoSendMessageRequest(brokerType = bt, messagesContainer = Some(messagesContainer), repeat = repeat))
+            Right(
+              ProtoSendMessageRequest(brokerType = bt, messagesContainer = Some(messagesContainer), repeat = repeat)
+            )
           case _ => Left("Broker type not defined")
         }
       case Left(error) => Left(error)
