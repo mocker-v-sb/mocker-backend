@@ -18,6 +18,11 @@ case class RabbitMqController(channel: Channel, address: ServerAddress, httpClie
   override def createQueue(request: CreateTopicRequest): IO[BrokerManagerException, CreateTopicResponse] =
     ZIO
       .attempt(channel.queueDeclare(request.topicName, false, false, false, null))
+      .zipLeft { _ =>
+        ZIO.succeed {
+          queues = queues + request.topicName
+        }
+      }
       .mapBoth(
         _ =>
           BrokerManagerException.couldNotCreateTopic(
@@ -33,15 +38,13 @@ case class RabbitMqController(channel: Channel, address: ServerAddress, httpClie
             topicName = request.topicName
           )
       )
-      .tap { r =>
-        ZIO.succeed {
-          queues += r.topicName
-        }
-      }
 
   override def deleteQueue(request: DeleteTopicRequest): IO[BrokerManagerException, DeleteTopicResponse] =
     ZIO
       .attempt(channel.queueDelete(request.topicName))
+      .zipLeft {
+        ZIO.attempt(queues = queues - request.topicName)
+      }
       .mapBoth(
         _ =>
           BrokerManagerException.couldNotDeleteTopic(
