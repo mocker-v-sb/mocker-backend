@@ -59,7 +59,7 @@ case class RabbitMqController(channel: Channel, address: ServerAddress, httpClie
         URL(
           kind = Location.Absolute(
             scheme = Scheme.HTTP,
-            host = s"localhost",
+            host = address.host,
             port = 15672
           ),
           path = Path.decode("/api/queues")

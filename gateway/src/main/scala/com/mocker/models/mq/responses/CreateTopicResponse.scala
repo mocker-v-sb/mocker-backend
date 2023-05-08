@@ -1,5 +1,6 @@
 package com.mocker.models.mq.responses
 
+import com.mocker.models.mq.ScalaBrokerType
 import com.mocker.mq.mq_service.{CreateTopicResponse => ProtoCreateTopicResponse}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}
 
@@ -11,7 +12,7 @@ object CreateTopicResponse {
 
   def fromMessage(message: ProtoCreateTopicResponse): CreateTopicResponse = {
     CreateTopicResponse(
-      brokerType = "KAFKA",
+      brokerType = ScalaBrokerType.fromMessage(message.brokerType).getOrElse("UNKNOWN"),
       host = "158.160.57.255",
       port = message.port,
       topicName = message.topicName
