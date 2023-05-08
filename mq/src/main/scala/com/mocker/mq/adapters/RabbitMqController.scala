@@ -43,7 +43,8 @@ case class RabbitMqController(channel: Channel, address: ServerAddress, httpClie
   override def deleteQueue(request: DeleteTopicRequest): IO[BrokerManagerException, DeleteTopicResponse] =
     ZIO
       .attempt(channel.queueDelete(request.topicName))
-      .zipLeft { ZIO.attempt {
+      .zipLeft {
+        ZIO.attempt {
           queues = queues - request.topicName
         }
       }
