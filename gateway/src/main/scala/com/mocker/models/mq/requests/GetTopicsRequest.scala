@@ -11,7 +11,7 @@ case class GetTopicsRequest(brokerType: String) {
       case Right(bt) =>
         bt match {
           case BrokerType.BROKER_TYPE_KAFKA               => Right(ProtoGetTopicsRequest(brokerType = bt))
-          case BrokerType.BROKER_TYPE_RABBITMQ            => Left("RabbitMQ support is not implemented yet.")
+          case BrokerType.BROKER_TYPE_RABBITMQ            => Right(ProtoGetTopicsRequest(brokerType = bt))
           case BrokerType.BROKER_TYPE_UNDEFINED           => Right(ProtoGetTopicsRequest())
           case BrokerType.Unrecognized(unrecognizedValue) => Left(s"Broker type $unrecognizedValue not recognized")
           case _                                          => Left("Broker type not defined")

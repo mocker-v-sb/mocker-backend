@@ -1,7 +1,7 @@
 package com.mocker.models.mq
 
 import com.mocker.mq.mq_service.{BrokerType => ProtoBrokerType}
-import com.mocker.mq.mq_service.BrokerType.{BROKER_TYPE_KAFKA, BROKER_TYPE_UNDEFINED}
+import com.mocker.mq.mq_service.BrokerType.{BROKER_TYPE_KAFKA, BROKER_TYPE_RABBITMQ, BROKER_TYPE_UNDEFINED}
 
 object ScalaBrokerType {
   val KAFKA = "KAFKA"
@@ -10,7 +10,7 @@ object ScalaBrokerType {
 
   def getBrokerType(brokerType: String): Either[String, ProtoBrokerType] = {
     if (brokerType.equals(KAFKA)) Right(BROKER_TYPE_KAFKA)
-    else if (brokerType.equals(RABBITMQ)) Left("Rabbit MQ is not supported yet")
+    else if (brokerType.equals(RABBITMQ)) Right(BROKER_TYPE_RABBITMQ)
     else if (brokerType.equals(ANY)) Right(BROKER_TYPE_UNDEFINED)
     else Left("Broker not defined")
   }
