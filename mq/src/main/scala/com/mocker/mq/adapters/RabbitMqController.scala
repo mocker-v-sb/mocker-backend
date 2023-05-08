@@ -18,7 +18,7 @@ case class RabbitMqController(channel: Channel, address: ServerAddress, httpClie
   override def createQueue(request: CreateTopicRequest): IO[BrokerManagerException, CreateTopicResponse] =
     ZIO
       .attempt(channel.queueDeclare(request.topicName, false, false, false, null))
-      .zipLeft { _ =>
+      .zipLeft {
         ZIO.succeed {
           queues = queues + request.topicName
         }
@@ -33,6 +33,7 @@ case class RabbitMqController(channel: Channel, address: ServerAddress, httpClie
           ),
         _ =>
           CreateTopicResponse(
+            brokerType = ProtoBrokerType.BROKER_TYPE_RABBITMQ,
             host = address.host,
             port = address.port,
             topicName = request.topicName
@@ -42,8 +43,9 @@ case class RabbitMqController(channel: Channel, address: ServerAddress, httpClie
   override def deleteQueue(request: DeleteTopicRequest): IO[BrokerManagerException, DeleteTopicResponse] =
     ZIO
       .attempt(channel.queueDelete(request.topicName))
-      .zipLeft {
-        ZIO.attempt(queues = queues - request.topicName)
+      .zipLeft { ZIO.attempt {
+          queues = queues - request.topicName
+        }
       }
       .mapBoth(
         _ =>
@@ -57,7 +59,7 @@ case class RabbitMqController(channel: Channel, address: ServerAddress, httpClie
       )
 
   override def getQueues(request: GetTopicsRequest): IO[BrokerManagerException, GetTopicsResponse] =
-    ZIO.succeed(GetTopicsResponse(queues.map(q => Queue(ProtoBrokerType.BROKER_TYPE_KAFKA, q)).toSeq))
+    ZIO.succeed(GetTopicsResponse(queues.map(q => Queue(ProtoBrokerType.BROKER_TYPE_RABBITMQ, q)).toSeq))
 
   override def sendMessages(request: SendMessageRequest): IO[BrokerManagerException, SendMessageResponse] =
     request.messagesContainer match {

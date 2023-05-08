@@ -28,6 +28,7 @@ case class KafkaController(adminClient: AdminClient, producer: Producer, address
       response <- ZIO.ifZIO(ZIO.succeed(topics.keySet.contains(request.topicName)))(
         onTrue = ZIO.succeed(
           CreateTopicResponse(
+            brokerType = ProtoBrokerType.BROKER_TYPE_KAFKA,
             host = address.host,
             port = address.port,
             topicName = request.topicName
