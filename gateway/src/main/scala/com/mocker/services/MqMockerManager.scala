@@ -62,12 +62,7 @@ case class MqMockerManager(tracing: Tracing) {
             protoResponse <- MqMockerClientService.getMessages(request).either
             response <- protoResponse match {
               case Right(pResp) =>
-                ScalaGetMessagesResponse.fromMessage(pResp) match {
-                  case Right(resp) => ZIO.succeed(Response.json(resp.toJson))
-                  case Left(error) =>
-                    ZIO.logErrorCause(Cause.fail(error)) *>
-                      ZIO.succeed(Response.status(HttpStatus.InternalServerError))
-                }
+                ZIO.succeed(Response.json(ScalaGetMessagesResponse.fromMessage(pResp).toJson))
               case Left(errSt) => ZIO.succeed(Response.status(StatusMapper.grpc2Http(errSt)))
             }
           } yield response

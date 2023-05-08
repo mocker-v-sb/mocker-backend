@@ -2,8 +2,6 @@ syntax = "proto3";
 
 package com.mocker.mq;
 
-//import "google/protobuf/timestamp.proto";
-
 message CreateTopicRequest {
   BrokerType broker_type = 1;
 
@@ -21,30 +19,27 @@ message CreateTopicResponse {
 }
 
 message SendMessageRequest {
-  BrokerInfoContainer broker_info_container = 1;
+  BrokerType broker_type = 1;
+
+  MessagesContainer messages_container = 2;
 
   int32 repeat = 10;
 }
 
 message SendMessageResponse {
   bool success = 1;
-
-//  google.protobuf.Timestamp last_timestamp = 2;
 }
 
 message GetMessagesRequest {
-  BrokerRequestContainer broker_request = 1;
+  BrokerType broker_type = 1;
 
-  enum ValueParseType {
-    PLAIN = 0;
-    STRING = 1;
-  }
-
-  ValueParseType bytes_parse_type = 2;
+  string topic = 2;
 }
 
 message GetMessagesResponse {
-  repeated BrokerInfoContainer messages = 1;
+  BrokerType broker_type = 1;
+
+  repeated MessagesContainer messages = 2;
 }
 
 message GetTopicsRequest {
@@ -60,38 +55,10 @@ message Queue {
   string topic_name = 2;
 }
 
-message BrokerRequestContainer {
-  BrokerType broker_type = 1;
-
-  string topic = 2;
-}
-
-message BrokerInfoContainer {
-  oneof container {
-    KafkaContainer kafka_container = 1;
-    RabbitMqContainer rabbit_mq_container = 2;
-  }
-}
-
-message KafkaContainer {
-  string topic = 1;
-
-  KafkaEvent content = 2;
-}
-
-message KafkaEvent {
-  string key = 1;
-  oneof value {
-    string string_value = 2;
-  }
-}
-
-message RabbitMqContainer {
-  RabbitMqMessage content = 1;
-}
-
-message RabbitMqMessage {
-
+message MessagesContainer {
+  string queue = 1;
+  string key = 2;
+  string value = 3;
 }
 
 enum BrokerType {

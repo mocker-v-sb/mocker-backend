@@ -1,20 +1,23 @@
 package com.mocker.mq
 
 import com.mocker.common.utils.{Environment, ServerAddress}
+import com.mocker.mq.adapters.{KafkaController, MqManagerImpl, MqMockerService, RabbitMqController}
 import com.mocker.mq.mq_service.ZioMqService.ZMqMocker
-import com.mocker.mq.adapters.{DefaultMqManager, MqMockerService}
+import com.rabbitmq.client.ConnectionFactory
 import io.grpc.ServerBuilder
 import io.grpc.protobuf.services.ProtoReflectionService
 import scalapb.zio_grpc.{RequestContext, Server, ServerLayer, ServiceList}
-import zio.{durationInt, ZLayer}
+import zio.http.Client
 import zio.kafka.admin.{AdminClient, AdminClientSettings}
-import zio.kafka.producer.{Producer, ProducerSettings}
+import zio.{durationInt, Console, ZIO, ZLayer}
+
+import scala.util.Try
 
 object Main extends zio.ZIOAppDefault {
 
   val mqServerAddress = ServerAddress(
-    Environment.conf.getString("mq-server-server.address"),
-    Environment.conf.getInt("mq-server-server.port")
+    Environment.conf.getString("mq-server.address"),
+    Environment.conf.getInt("mq-server.port")
   )
 
   val kafkaAddress = ServerAddress(
@@ -22,9 +25,22 @@ object Main extends zio.ZIOAppDefault {
     Environment.conf.getInt("kafka.port")
   )
 
-  val publicKafkaAddress = ServerAddress(
-    Environment.conf.getString("public-kafka.address"),
-    Environment.conf.getInt("kafka.port")
+  val rabbitmqAddress = ServerAddress(
+    Environment.conf.getString("rabbitmq.host"),
+    Environment.conf.getInt("rabbitmq.port")
+  )
+
+  val rabbitmqChannel = ZLayer.fromZIO(
+    ZIO
+      .fromTry {
+        Try {
+          val connectionFactory: ConnectionFactory = new ConnectionFactory()
+          connectionFactory.setHost(rabbitmqAddress.host)
+          connectionFactory.setPort(rabbitmqAddress.port)
+          connectionFactory.newConnection().createChannel()
+        }
+      }
+      .tapError(error => Console.printError(s"${error.getMessage}\n${error.getStackTrace.mkString("\n\t")}"))
   )
 
   val serviceList = ServiceList.addFromEnvironment[ZMqMocker[RequestContext]]
@@ -36,12 +52,6 @@ object Main extends zio.ZIOAppDefault {
     serviceList
   )
 
-  val kafkaProducer = ZLayer.scoped(
-    Producer.make(
-      ProducerSettings(List(kafkaAddress))
-    )
-  )
-
   val adminClientSettings = ZLayer.succeed(
     AdminClientSettings(
       List(kafkaAddress),
@@ -50,12 +60,25 @@ object Main extends zio.ZIOAppDefault {
     )
   )
 
-  val service = ZLayer.make[Server](
+  val kafkaController = ZLayer.make[KafkaController](
     adminClientSettings,
     AdminClient.live,
-    kafkaProducer,
     ZLayer.succeed(kafkaAddress),
-    DefaultMqManager.layer,
+    zio.Scope.default,
+    KafkaController.live
+  )
+
+  val rabbitmqController = ZLayer.make[RabbitMqController](
+    rabbitmqChannel,
+    ZLayer.succeed(rabbitmqAddress),
+    Client.default,
+    RabbitMqController.live
+  )
+
+  val service = ZLayer.make[Server](
+    rabbitmqController,
+    kafkaController,
+    MqManagerImpl.layer,
     MqMockerService.layer,
     serverLayer
   )
