@@ -52,7 +52,7 @@ case class RabbitMqController(channel: Channel, address: ServerAddress, httpClie
         _ => DeleteTopicResponse(success = true)
       )
 
-  private val rabbitServerAuthCreds = (new Base64.Encoder().encodeToString("guest:guest".getBytes))
+  private val rabbitServerAuthCreds = Base64.getEncoder.encodeToString("guest:guest".getBytes)
   override def getQueues(request: GetTopicsRequest): IO[BrokerManagerException, GetTopicsResponse] =
     for {
       url <- ZIO.succeed(
