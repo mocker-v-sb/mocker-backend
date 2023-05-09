@@ -11,7 +11,7 @@ import com.mocker.rest.manager.{
   RestServiceManager
 }
 import com.mocker.rest.rest_service.ZioRestService.ZRestMocker
-import com.mocker.rest.scheduler.RestExpiredServiceCleanerTask
+import com.mocker.rest.scheduler.{RestExpiredServiceCleanerTask, RestOldHistoryCleanerTask}
 import io.grpc.protobuf.services.ProtoReflectionService
 import scalapb.zio_grpc.{RequestContext, Server, ServerLayer, ServiceList}
 import slick.interop.zio.DatabaseProvider
@@ -84,6 +84,11 @@ object Main extends zio.ZIOAppDefault {
         .dropExpiredServices()
         .provide(dbProviderLayer)
         .schedule(Schedule.secondOfMinute(0))
+        .forkDaemon
+      _ <- RestOldHistoryCleanerTask
+        .dropOldHistoryRecords()
+        .provide(dbProviderLayer)
+        .schedule(Schedule.minuteOfHour(0))
         .forkDaemon
       _ <- service.launch
     } yield ()
