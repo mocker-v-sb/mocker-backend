@@ -75,8 +75,8 @@ case class RestMockResponseManager(
       mock <- mockManager.getMock(servicePath, mockId)
       _ <- if (isMockResponseValid(mock, mockResponse)) {
         for {
-          oldResponse <- mockResponseActions.get(mockId, responseId).asZIO(dbLayer).run
-          _ <- redisClient.del(getRedisKey(servicePath, mock, oldResponse.getOrElse(mockResponse))).run
+          //oldResponse <- mockResponseActions.get(mockId, responseId).asZIO(dbLayer).run
+          //_ <- redisClient.del(getRedisKey(servicePath, mock, oldResponse.getOrElse(mockResponse))).run
           _ <- mockResponseActions.upsert(mockResponse.copy(id = responseId)).asZIO(dbLayer).run
         } yield ()
       } else
@@ -113,14 +113,14 @@ case class RestMockResponseManager(
       result <- dbResponse match {
         case Some(response) =>
           for {
-            _ <- redisClient
+            /*_ <- redisClient
               .set(
                 getRedisKey(servicePath, mock, response),
                 response,
                 expireTime = Some(zio.Duration.fromScala(2.minutes))
               )
               .run
-              .catchAll(err => Console.printLineError(err.getMessage).ignoreLogged)
+              .catchAll(err => Console.printLineError(err.getMessage).ignoreLogged)*/
             result <- ZIO.succeed(response)
           } yield result
         case None => ZIO.fail(RestMockerException.responseNotExists(mockId = mock.id, responseId = responseId))
