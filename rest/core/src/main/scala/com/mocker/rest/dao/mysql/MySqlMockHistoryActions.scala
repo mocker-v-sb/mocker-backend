@@ -14,6 +14,7 @@ import slick.lifted.{ProvenShape, Tag}
 
 import java.time.Instant
 import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.DurationInt
 
 case class MySqlMockHistoryActions()(implicit ec: ExecutionContext) extends MockHistoryActions {
 
@@ -21,6 +22,9 @@ case class MySqlMockHistoryActions()(implicit ec: ExecutionContext) extends Mock
 
   override def get(serviceId: Long): DBIO[Seq[MockHistoryItem]] =
     table.filter(_.serviceId === serviceId).result
+
+  override def deleteOldRecords(): DBIO[Unit] =
+    table.filter(_.responseTime <= Instant.now().minusNanos(7.days.toNanos)).delete.map(_ => ())
 
   override def insert(item: MockHistoryItem): DBIO[Unit] =
     (table += item).map(_ => ())

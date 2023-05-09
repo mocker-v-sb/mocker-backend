@@ -12,6 +12,8 @@ trait MockHistoryActions {
 
   def get(serviceId: Long): DBIO[Seq[MockHistoryItem]]
 
+  def deleteOldRecords(): DBIO[Unit]
+
   def search(
       serviceId: Long,
       searchUrl: Option[String],
