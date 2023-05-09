@@ -27,7 +27,7 @@ case class RestServiceManager(
     for {
       _ <- checkServiceNotExists(service)
       _ <- validate(service)
-      _ <- serviceActions.insert(service).asZIO(dbLayer).run
+      _ <- serviceActions.upsert(service).asZIO(dbLayer).run
     } yield ()
   }
 
@@ -64,6 +64,7 @@ case class RestServiceManager(
   def deleteService(path: String): IO[RestMockerException, Unit] = {
     for {
       service <- getService(path)
+      _ <- redisClient.del(getRedisKey(path)).run
       _ <- serviceActions.delete(service.id).asZIO(dbLayer).run
     } yield ()
   }
@@ -116,7 +117,7 @@ case class RestServiceManager(
   private def updateServiceState(path: String, newService: Service) = {
     for {
       _ <- redisClient.del(getRedisKey(path)).run
-      _ <- serviceActions.update(newService).asZIO(dbLayer).run
+      _ <- serviceActions.upsert(newService).asZIO(dbLayer).run
     } yield ()
   }
 

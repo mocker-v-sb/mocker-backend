@@ -16,8 +16,6 @@ case class MySqlServiceActions()(implicit ec: ExecutionContext) extends ServiceA
 
   private lazy val table = TableQuery[ServiceTable]
 
-  private val insertQuery = table.returning(table.map(_.id)).into((service, id) => service.copy(id = id))
-
   implicit val getServiceStatsResult: GetResult[ServiceStats] = GetResult(
     r => ServiceStats(Service(r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<), r.<<, r.<<)
   )
@@ -54,11 +52,8 @@ case class MySqlServiceActions()(implicit ec: ExecutionContext) extends ServiceA
   override def getAll: DBIO[Seq[Service]] =
     table.result
 
-  override def insert(service: Service): DBIO[Service] =
-    insertQuery += service
-
-  override def update(service: Service): DBIO[Unit] =
-    table.update(service).map(_ => ())
+  override def upsert(service: Service): DBIO[Unit] =
+    table.insertOrUpdate(service).map(_ => ())
 
   override def delete(serviceId: Long): DBIO[Unit] =
     table.filter(_.id === serviceId).delete.map(_ => ())

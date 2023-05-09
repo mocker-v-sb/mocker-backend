@@ -39,7 +39,8 @@ case class RestResponseManager(
   def getMockResponse(query: MockQuery): IO[RestMockerException, MockQueryResponse] = {
     for {
       service <- serviceManager.getService(query.servicePath)
-      cachedResponse <- redisClient
+      result <- findMockResponse(service, query)
+      /*cachedResponse <- redisClient
         .get(getRedisKey(service.path, query))
         .returning[MockResponse]
         .run
@@ -50,7 +51,7 @@ case class RestResponseManager(
       result <- cachedResponse match {
         case Some(response) => processStaticResponse(service, query, response, isCached = true)
         case None           => findMockResponse(service, query)
-      }
+      }*/
     } yield result
   }
 
@@ -101,14 +102,14 @@ case class RestResponseManager(
   ): IO[RestMockerException, MockQueryResponse] = {
     val queryResponse = MockQueryResponse.fromMockResponse(staticResponse)
     for {
-      _ <- if (!isCached) {
+      /*_ <- if (!isCached) {
         redisClient
           .set(getRedisKey(service.path, query), staticResponse, expireTime = Some(zio.Duration.fromScala(2.minutes)))
           .run
           .catchAll(err => Console.printLineError(err.getMessage).ignoreLogged)
       } else {
-        Console.printLine(s"Got response ${staticResponse.id} from cache").mapError(RestMockerException.internal)
-      }
+        Console.printLine(s"Got response ${staticResponse.id} from cache").run
+      }*/
       result <- ZIO.succeed(queryResponse)
       _ <- if (service.isHistoryEnabled) {
         mockHistoryActions

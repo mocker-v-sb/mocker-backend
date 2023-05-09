@@ -29,7 +29,7 @@ class MySqlMockActionsSpec
     "insert non-existing mock" in withContainers { _ =>
       // Create service to connect mocks with it
       val service = sample(serviceGen)
-      database.run(serviceActions.update(service)).futureValue
+      database.run(serviceActions.upsert(service)).futureValue
 
       // Create model for service
       val mock = sample(mockGen).copy(serviceId = service.id)
@@ -41,7 +41,7 @@ class MySqlMockActionsSpec
     "insert mock with reference to models" in withContainers { _ =>
       // Create service to connect mocks with it
       val service = sample(serviceGen)
-      database.run(serviceActions.update(service)).futureValue
+      database.run(serviceActions.upsert(service)).futureValue
 
       // Create model example
       val model = sample(modelGen).copy(serviceId = service.id)
