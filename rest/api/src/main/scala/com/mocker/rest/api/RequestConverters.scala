@@ -3,6 +3,7 @@ package com.mocker.rest.api
 import com.mocker.rest.api.CommonConverters.convertModelSchema
 import com.mocker.rest.model._
 import com.mocker.rest.rest_service._
+import com.mocker.rest.utils.Orderings._
 
 import java.time.Instant
 
@@ -85,10 +86,10 @@ object RequestConverters {
       mockId = request.mockId,
       name = request.name,
       statusCode = request.statusCode,
-      requestHeaders = request.requestHeaders,
-      responseHeaders = request.responseHeaders,
-      queryParams = request.queryParams,
-      pathParams = request.pathParams,
+      requestHeaders = request.requestHeaders.toSet,
+      responseHeaders = request.responseHeaders.toSet,
+      queryParams = request.queryParams.toSet,
+      pathParams = request.pathParams.toSet,
       response = request.responseContent
     )
   }
@@ -98,10 +99,10 @@ object RequestConverters {
       mockId = request.mockId,
       name = request.name,
       statusCode = request.statusCode,
-      requestHeaders = request.requestHeaders,
-      responseHeaders = request.responseHeaders,
-      queryParams = request.queryParams,
-      pathParams = request.pathParams,
+      requestHeaders = request.requestHeaders.toSet,
+      responseHeaders = request.responseHeaders.toSet,
+      queryParams = request.queryParams.toSet,
+      pathParams = request.pathParams.toSet,
       response = request.responseContent
     )
   }
@@ -113,8 +114,8 @@ object RequestConverters {
       requestPath = request.requestPath,
       method = request.method,
       body = request.body,
-      headers = request.headers,
-      queryParams = request.queryParams
+      headers = request.headers.distinct.sorted,
+      queryParams = request.queryParams.distinct.sorted
     )
   }
 

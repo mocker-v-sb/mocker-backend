@@ -7,9 +7,9 @@ case class MockResponse(
     mockId: Long,
     name: String,
     statusCode: Int,
-    requestHeaders: Seq[KVPair],
-    responseHeaders: Seq[KVPair],
-    pathParams: Seq[KVPair],
-    queryParams: Seq[KVPair],
+    requestHeaders: Set[KVPair],
+    responseHeaders: Set[KVPair],
+    pathParams: Set[KVPair],
+    queryParams: Set[KVPair],
     response: String
 )

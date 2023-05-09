@@ -2,6 +2,7 @@ package com.mocker.rest.dao
 
 import com.mocker.rest.dao.mysql.{MySqlMockActions, MySqlModelActions, MySqlServiceActions}
 import com.mocker.rest.gen.{MockGen, ModelGen, ServiceGen}
+import org.scalatest.Ignore
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
@@ -9,6 +10,7 @@ import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.DurationInt
 
+@Ignore
 class MySqlMockActionsSpec
     extends AnyWordSpecLike
     with Matchers

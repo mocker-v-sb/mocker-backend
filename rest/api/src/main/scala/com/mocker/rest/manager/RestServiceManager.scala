@@ -3,6 +3,7 @@ package com.mocker.rest.manager
 import com.mocker.rest.dao.ServiceActions
 import com.mocker.rest.dao.mysql.MySqlServiceActions
 import com.mocker.rest.errors.RestMockerException
+import com.mocker.rest.manager.RestServiceManager.getRedisKey
 import com.mocker.rest.model.{Service, ServiceStats}
 import com.mocker.rest.utils.Implicits.RedisImplicits._
 import com.mocker.rest.utils.RestMockerUtils._
@@ -12,6 +13,7 @@ import zio.redis.Redis
 import zio.{Console, IO, URLayer, ZIO, ZLayer}
 
 import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.DurationInt
 
 case class RestServiceManager(
     restMockerDbProvider: DatabaseProvider,
@@ -25,19 +27,14 @@ case class RestServiceManager(
     for {
       _ <- checkServiceNotExists(service)
       _ <- validate(service)
-      createdService <- serviceActions.insert(service).asZIO(dbLayer).run
-      _ <- redisClient
-        .set(service.path, createdService)
-        .run
-        .catchAll(err => Console.printLineError(err.getMessage).ignoreLogged)
-      _ <- setExpirationCacheTime(createdService)
+      _ <- serviceActions.insert(service).asZIO(dbLayer).run
     } yield ()
   }
 
   def getService(path: String): IO[RestMockerException, Service] = {
     for {
       cachedService <- redisClient
-        .get(path)
+        .get(getRedisKey(path))
         .returning[Service]
         .run
         .catchAll { err =>
@@ -67,7 +64,6 @@ case class RestServiceManager(
   def deleteService(path: String): IO[RestMockerException, Unit] = {
     for {
       service <- getService(path)
-      _ <- redisClient.del(path).run
       _ <- serviceActions.delete(service.id).asZIO(dbLayer).run
     } yield ()
   }
@@ -104,34 +100,24 @@ case class RestServiceManager(
         .mapError(e => RestMockerException.internal(e))
       dbService <- serviceActions.get(path).asZIO(dbLayer).run
       service <- dbService match {
-        case Some(service) => ZIO.succeed(service)
-        case None          => ZIO.fail(RestMockerException.serviceNotExists(path))
+        case Some(service) =>
+          for {
+            _ <- redisClient
+              .set(getRedisKey(service.path), service, expireTime = Some(zio.Duration.fromScala(3.minutes)))
+              .run
+              .catchAll(err => Console.printLineError(err.getMessage).ignoreLogged)
+            result <- ZIO.succeed(service)
+          } yield result
+        case None => ZIO.fail(RestMockerException.serviceNotExists(path))
       }
     } yield service
   }
 
   private def updateServiceState(path: String, newService: Service) = {
     for {
-      _ <- redisClient.del(path).run
-      _ <- redisClient
-        .set(newService.path, newService)
-        .run
-        .catchAll(err => Console.printLineError(err.getMessage).ignoreLogged)
-      _ <- setExpirationCacheTime(newService)
+      _ <- redisClient.del(getRedisKey(path)).run
       _ <- serviceActions.update(newService).asZIO(dbLayer).run
     } yield ()
-  }
-
-  private def setExpirationCacheTime(service: Service) = {
-    service.expirationTime match {
-      case Some(time) =>
-        redisClient
-          .expireAt(service.path, time)
-          .map(_ => ())
-          .run
-          .catchAll(err => Console.printLineError(err.getMessage).ignoreLogged)
-      case None => ZIO.unit
-    }
   }
 
   private def validate(service: Service): IO[RestMockerException, Unit] = {
@@ -155,6 +141,8 @@ case class RestServiceManager(
 }
 
 object RestServiceManager {
+
+  def getRedisKey(path: String) = s"service:$path"
 
   def layer(implicit ec: ExecutionContext): URLayer[DatabaseProvider with Redis, RestServiceManager] = {
     ZLayer.fromZIO {

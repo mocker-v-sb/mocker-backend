@@ -11,4 +11,4 @@ libraryDependencies ++= Seq(
   "io.circe" %% "circe-generic" % "0.14.5",
   "io.circe" %% "circe-generic-extras" % "0.14.3",
   "io.circe" %% "circe-parser" % "0.14.5"
-) :+ apacheAvro
+) :+ apacheAvro :+ "org.scala-lang" % "scala-reflect" % "2.13.10"

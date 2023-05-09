@@ -26,7 +26,7 @@ import scala.concurrent.ExecutionContext
 object Main extends zio.ZIOAppDefault {
 
   implicit val ec: ExecutionContext = ExecutionContext.fromExecutor(
-    new java.util.concurrent.ForkJoinPool(1)
+    new java.util.concurrent.ForkJoinPool(3)
   )
 
   object ProtobufCodecSupplier extends CodecSupplier {

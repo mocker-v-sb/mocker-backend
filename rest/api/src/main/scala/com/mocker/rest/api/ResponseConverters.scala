@@ -92,10 +92,10 @@ object ResponseConverters {
       mockId = mockResponse.mockId,
       name = mockResponse.name,
       statusCode = mockResponse.statusCode,
-      requestHeaders = mockResponse.requestHeaders,
-      responseHeaders = mockResponse.responseHeaders,
-      queryParams = mockResponse.queryParams,
-      pathParams = mockResponse.pathParams,
+      requestHeaders = mockResponse.requestHeaders.toSeq,
+      responseHeaders = mockResponse.responseHeaders.toSeq,
+      queryParams = mockResponse.queryParams.toSeq,
+      pathParams = mockResponse.pathParams.toSeq,
       responseContent = mockResponse.response
     )
   }

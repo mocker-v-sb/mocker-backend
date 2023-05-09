@@ -39,10 +39,10 @@ object MySqlMockResponseActions {
     def mockId: Rep[Long] = column[Long]("mock_id")
     def name: Rep[String] = column[String]("name")
     def statusCode: Rep[Int] = column[Int]("status_code")
-    def requestHeaders: Rep[Seq[KVPair]] = column("request_headers")
-    def responseHeaders: Rep[Seq[KVPair]] = column("response_headers")
-    def pathParams: Rep[Seq[KVPair]] = column("path_params")
-    def queryParams: Rep[Seq[KVPair]] = column("query_params")
+    def requestHeaders: Rep[Set[KVPair]] = column("request_headers")
+    def responseHeaders: Rep[Set[KVPair]] = column("response_headers")
+    def pathParams: Rep[Set[KVPair]] = column("path_params")
+    def queryParams: Rep[Set[KVPair]] = column("query_params")
     def response: Rep[String] = column[String]("response")
 
     override def * : ProvenShape[MockResponse] =
