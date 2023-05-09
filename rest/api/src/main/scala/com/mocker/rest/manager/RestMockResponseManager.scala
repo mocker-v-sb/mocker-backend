@@ -3,17 +3,23 @@ package com.mocker.rest.manager
 import com.mocker.rest.dao.MockResponseActions
 import com.mocker.rest.dao.mysql.MySqlMockResponseActions
 import com.mocker.rest.errors.RestMockerException
-import com.mocker.rest.model.{Mock, MockResponse}
+import com.mocker.rest.manager.RestMockResponseManager.getRedisKey
+import com.mocker.rest.model.{Mock, MockQuery, MockResponse}
+import com.mocker.rest.utils.Hash
+import com.mocker.rest.utils.Implicits.RedisImplicits._
 import com.mocker.rest.utils.RestMockerUtils._
 import com.mocker.rest.utils.ZIOSlick._
 import slick.dbio.DBIO
 import slick.interop.zio.DatabaseProvider
-import zio.{IO, URLayer, ZIO, ZLayer}
+import zio.redis.Redis
+import zio.{Console, IO, URLayer, ZIO, ZLayer}
 
 import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.DurationInt
 
 case class RestMockResponseManager(
     restMockerDbProvider: DatabaseProvider,
+    redisClient: Redis,
     serviceManager: RestServiceManager,
     mockManager: RestMockManager,
     mockResponseActions: MockResponseActions
@@ -40,7 +46,7 @@ case class RestMockResponseManager(
     for {
       service <- serviceManager.getService(servicePath)
       mock <- mockManager.checkMockExists(service, mockId)
-      mockResponse <- getMockResponse(mock.id, responseId)
+      mockResponse <- getMockResponseFromDatabase(service.path, mock, responseId)
     } yield mockResponse
   }
 
@@ -67,9 +73,13 @@ case class RestMockResponseManager(
   ): IO[RestMockerException, Unit] = {
     for {
       mock <- mockManager.getMock(servicePath, mockId)
-      _ <- if (isMockResponseValid(mock, mockResponse))
-        mockResponseActions.upsert(mockResponse.copy(id = responseId)).asZIO(dbLayer).run
-      else
+      _ <- if (isMockResponseValid(mock, mockResponse)) {
+        for {
+          //oldResponse <- mockResponseActions.get(mockId, responseId).asZIO(dbLayer).run
+          //_ <- redisClient.del(getRedisKey(servicePath, mock, oldResponse.getOrElse(mockResponse))).run
+          _ <- mockResponseActions.upsert(mockResponse.copy(id = responseId)).asZIO(dbLayer).run
+        } yield ()
+      } else
         ZIO.fail(RestMockerException.invalidMockResponse(mock.path, mockResponse.name))
     } yield ()
   }
@@ -90,15 +100,30 @@ case class RestMockResponseManager(
     } yield ()
   }
 
-  private def getMockResponse(mockId: Long, responseId: Long): IO[RestMockerException, MockResponse] = {
+  private def getMockResponseFromDatabase(
+      servicePath: String,
+      mock: Mock,
+      responseId: Long
+  ): IO[RestMockerException, MockResponse] = {
     for {
       dbResponse <- mockResponseActions
-        .get(mockId = mockId, responseId = responseId)
+        .get(mockId = mock.id, responseId = responseId)
         .asZIO(dbLayer)
         .run
       result <- dbResponse match {
-        case Some(response) => ZIO.succeed(response)
-        case None           => ZIO.fail(RestMockerException.responseNotExists(mockId = mockId, responseId = responseId))
+        case Some(response) =>
+          for {
+            /*_ <- redisClient
+              .set(
+                getRedisKey(servicePath, mock, response),
+                response,
+                expireTime = Some(zio.Duration.fromScala(2.minutes))
+              )
+              .run
+              .catchAll(err => Console.printLineError(err.getMessage).ignoreLogged)*/
+            result <- ZIO.succeed(response)
+          } yield result
+        case None => ZIO.fail(RestMockerException.responseNotExists(mockId = mock.id, responseId = responseId))
       }
     } yield result
   }
@@ -113,16 +138,24 @@ case class RestMockResponseManager(
 
 object RestMockResponseManager {
 
+  def getRedisKey(servicePath: String, mock: Mock, mockResponse: MockResponse) =
+    s"response:${Hash.getHash(servicePath, mock, mockResponse)}"
+
+  def getRedisKey(servicePath: String, query: MockQuery) =
+    s"response:${Hash.getHash(servicePath, query.requestPath, query.method, query.queryParams.toSet, query.headers.toSet)}"
+
   def layer(
       implicit ec: ExecutionContext
-  ): URLayer[DatabaseProvider with RestServiceManager with RestMockManager, RestMockResponseManager] = {
+  ): URLayer[DatabaseProvider with Redis with RestServiceManager with RestMockManager, RestMockResponseManager] = {
     ZLayer.fromZIO {
       for {
         restMockerDatabase <- ZIO.service[DatabaseProvider]
+        redisClient <- ZIO.service[Redis]
         serviceManager <- ZIO.service[RestServiceManager]
         mockManager <- ZIO.service[RestMockManager]
       } yield RestMockResponseManager(
         restMockerDatabase,
+        redisClient,
         serviceManager,
         mockManager,
         MySqlMockResponseActions()

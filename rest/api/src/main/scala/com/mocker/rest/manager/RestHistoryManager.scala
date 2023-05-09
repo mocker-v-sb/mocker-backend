@@ -11,7 +11,7 @@ import com.mocker.rest.utils.ZIOSlick._
 import slick.interop.zio.DatabaseProvider
 import zio.{IO, URLayer, ZIO, ZLayer}
 
-import java.sql.Timestamp
+import java.time.Instant
 import scala.concurrent.ExecutionContext
 
 case class RestHistoryManager(restMockerDbProvider: DatabaseProvider, mockHistoryActions: MockHistoryActions) {
@@ -21,8 +21,8 @@ case class RestHistoryManager(restMockerDbProvider: DatabaseProvider, mockHistor
   def getServiceHistory(
       serviceId: Long,
       searchUrl: Option[String],
-      from: Option[Timestamp],
-      to: Option[Timestamp],
+      from: Option[Instant],
+      to: Option[Instant],
       statusCodes: Set[Int],
       responseSources: Set[ResponseSource],
       methods: Set[Method],
@@ -39,8 +39,8 @@ case class RestHistoryManager(restMockerDbProvider: DatabaseProvider, mockHistor
   def countHistoryItems(
       serviceId: Long,
       searchUrl: Option[String],
-      from: Option[Timestamp],
-      to: Option[Timestamp],
+      from: Option[Instant],
+      to: Option[Instant],
       statusCodes: Set[Int],
       responseSources: Set[ResponseSource],
       methods: Set[Method]

@@ -13,7 +13,7 @@ object MockQueryResponse {
   def fromMockResponse(mockResponse: MockResponse): MockQueryResponse = {
     MockQueryResponse(
       statusCode = mockResponse.statusCode,
-      headers = mockResponse.responseHeaders,
+      headers = mockResponse.responseHeaders.toSeq,
       content = mockResponse.response
     )
   }

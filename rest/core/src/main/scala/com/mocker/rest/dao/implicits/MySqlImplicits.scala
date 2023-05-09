@@ -19,7 +19,13 @@ object MySqlImplicits {
       string => string.fromJson[Seq[String]].getOrElse(Seq.empty)
     )
 
-  implicit val headersCT: BaseColumnType[Seq[KVPair]] =
+  implicit val headersSetCT: BaseColumnType[Set[KVPair]] =
+    MappedColumnType.base[Set[KVPair], String](
+      headers => headers.toJson,
+      string => string.fromJson[Set[KVPair]].getOrElse(Set.empty)
+    )
+
+  implicit val headersSeqCT: BaseColumnType[Seq[KVPair]] =
     MappedColumnType.base[Seq[KVPair], String](
       headers => headers.toJson,
       string => string.fromJson[Seq[KVPair]].getOrElse(Seq.empty)

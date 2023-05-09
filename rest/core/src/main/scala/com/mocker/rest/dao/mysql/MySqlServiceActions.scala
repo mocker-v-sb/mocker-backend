@@ -9,7 +9,7 @@ import slick.jdbc.MySQLProfile.api._
 import slick.lifted.{ProvenShape, Tag}
 import slick.sql.SqlProfile.ColumnOption.NotNull
 
-import java.sql.Timestamp
+import java.time.Instant
 import scala.concurrent.ExecutionContext
 
 case class MySqlServiceActions()(implicit ec: ExecutionContext) extends ServiceActions {
@@ -18,6 +18,14 @@ case class MySqlServiceActions()(implicit ec: ExecutionContext) extends ServiceA
 
   implicit val getServiceStatsResult: GetResult[ServiceStats] = GetResult(
     r => ServiceStats(Service(r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<), r.<<, r.<<)
+  )
+
+  implicit val gInstant: GetResult[Instant] = GetResult(
+    r => Instant.parse(r.nextString())
+  )
+
+  implicit val gInstantOpt: GetResult[Option[Instant]] = GetResult(
+    r => r.nextStringOption().map(Instant.parse)
   )
 
   override def getWithStats: DBIO[Seq[ServiceStats]] = {
@@ -63,9 +71,9 @@ object MySqlServiceActions {
     def path: Rep[String] = column[String]("path", O.Unique)
     def url: Rep[Option[String]] = column[Option[String]]("url")
     def description: Rep[Option[String]] = column[Option[String]]("description")
-    def createTime: Rep[Timestamp] = column("creation_time", NotNull, O.SqlType("TIMESTAMP"))
-    def updateTime: Rep[Timestamp] = column("update_time", NotNull, O.SqlType("TIMESTAMP"))
-    def expirationTime: Rep[Option[Timestamp]] = column("expiration_time", O.SqlType("TIMESTAMP"))
+    def createTime: Rep[Instant] = column("creation_time", NotNull)
+    def updateTime: Rep[Instant] = column("update_time", NotNull)
+    def expirationTime: Rep[Option[Instant]] = column("expiration_time")
     def isProxyEnabled: Rep[Boolean] = column[Boolean]("proxy_enabled", NotNull)
     def isHistoryEnabled: Rep[Boolean] = column[Boolean]("history_enabled", NotNull)
 

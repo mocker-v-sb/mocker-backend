@@ -9,10 +9,14 @@ object PathUtils {
 
   type Path = String
 
-  def buildFullPath(mock: Mock, mockResponse: MockResponse): Path = {
-    val urlWithPathParams = mockResponse.pathParams.foldLeft(mock.path) {
+  def buildWithPathParams(mock: Mock, mockResponse: MockResponse): Path = {
+    mockResponse.pathParams.foldLeft(mock.path) {
       case (path, param) => path.replace(s"{${param.name}}", s"${param.value}")
     }
+  }
+
+  def buildFullPath(mock: Mock, mockResponse: MockResponse): Path = {
+    val urlWithPathParams = buildWithPathParams(mock, mockResponse)
     mockResponse.queryParams.toList match {
       case Nil         => urlWithPathParams
       case head :: Nil => urlWithPathParams + s"?${head.name}=${head.value}"

@@ -6,7 +6,7 @@ import com.mocker.rest.model.MockHistoryItem
 import com.mocker.rest.request.Method
 import slick.dbio.DBIO
 
-import java.sql.Timestamp
+import java.time.Instant
 
 trait MockHistoryActions {
 
@@ -15,8 +15,8 @@ trait MockHistoryActions {
   def search(
       serviceId: Long,
       searchUrl: Option[String],
-      from: Option[Timestamp],
-      to: Option[Timestamp],
+      from: Option[Instant],
+      to: Option[Instant],
       statusCodes: Set[Int],
       responseSources: Set[ResponseSource],
       methods: Set[Method],
@@ -28,8 +28,8 @@ trait MockHistoryActions {
   def count(
       serviceId: Long,
       searchUrl: Option[String],
-      from: Option[Timestamp],
-      to: Option[Timestamp],
+      from: Option[Instant],
+      to: Option[Instant],
       statusCodes: Set[Int],
       responseSources: Set[ResponseSource],
       methods: Set[Method]

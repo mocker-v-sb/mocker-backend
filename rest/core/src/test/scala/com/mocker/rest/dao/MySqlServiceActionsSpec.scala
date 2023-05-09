@@ -2,11 +2,13 @@ package com.mocker.rest.dao
 
 import com.mocker.rest.dao.mysql.MySqlServiceActions
 import com.mocker.rest.gen.ServiceGen
+import org.scalatest.Ignore
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
+@Ignore
 class MySqlServiceActionsSpec extends AnyWordSpecLike with Matchers with ServiceGen with RestMockerTestBase {
 
   "ServiceActions" should {

@@ -3,7 +3,7 @@ package com.mocker.rest.model
 import com.mocker.rest.mock_history.ResponseSourceNamespace.ResponseSource
 import com.mocker.rest.request.{KVPair, Method}
 
-import java.sql.Timestamp
+import java.time.Instant
 
 case class MockHistoryItem(
     id: Long = 0,
@@ -15,6 +15,6 @@ case class MockHistoryItem(
     statusCode: Int,
     requestHeaders: Seq[KVPair],
     responseHeaders: Seq[KVPair],
-    responseTime: Timestamp,
+    responseTime: Instant,
     response: String
 )

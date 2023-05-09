@@ -3,8 +3,8 @@ package com.mocker.rest.api
 import com.mocker.rest.api.CommonConverters.convertModelSchema
 import com.mocker.rest.model._
 import com.mocker.rest.rest_service._
+import com.mocker.rest.utils.Orderings._
 
-import java.sql.Timestamp
 import java.time.Instant
 
 object RequestConverters {
@@ -15,9 +15,9 @@ object RequestConverters {
       path = request.path,
       url = request.url,
       description = request.description,
-      creationTime = Timestamp.from(Instant.now()),
-      updateTime = Timestamp.from(Instant.now()),
-      expirationTime = request.expirationTime.map(fromProtoTimestamp),
+      creationTime = Instant.now(),
+      updateTime = Instant.now(),
+      expirationTime = request.expirationTime.map(_.asJavaInstant),
       isProxyEnabled = request.isProxyEnabled,
       isHistoryEnabled = request.isHistoryEnabled
     )
@@ -29,9 +29,9 @@ object RequestConverters {
       path = request.path,
       url = request.url,
       description = request.description,
-      creationTime = Timestamp.from(Instant.now()),
-      updateTime = Timestamp.from(Instant.now()),
-      expirationTime = request.expirationTime.map(t => Timestamp.from(t.asJavaInstant)),
+      creationTime = Instant.now(),
+      updateTime = Instant.now(),
+      expirationTime = request.expirationTime.map(t => t.asJavaInstant),
       isProxyEnabled = request.isProxyEnabled,
       isHistoryEnabled = request.isHistoryEnabled
     )
@@ -86,10 +86,10 @@ object RequestConverters {
       mockId = request.mockId,
       name = request.name,
       statusCode = request.statusCode,
-      requestHeaders = request.requestHeaders,
-      responseHeaders = request.responseHeaders,
-      queryParams = request.queryParams,
-      pathParams = request.pathParams,
+      requestHeaders = request.requestHeaders.toSet,
+      responseHeaders = request.responseHeaders.toSet,
+      queryParams = request.queryParams.toSet,
+      pathParams = request.pathParams.toSet,
       response = request.responseContent
     )
   }
@@ -99,10 +99,10 @@ object RequestConverters {
       mockId = request.mockId,
       name = request.name,
       statusCode = request.statusCode,
-      requestHeaders = request.requestHeaders,
-      responseHeaders = request.responseHeaders,
-      queryParams = request.queryParams,
-      pathParams = request.pathParams,
+      requestHeaders = request.requestHeaders.toSet,
+      responseHeaders = request.responseHeaders.toSet,
+      queryParams = request.queryParams.toSet,
+      pathParams = request.pathParams.toSet,
       response = request.responseContent
     )
   }
@@ -114,13 +114,9 @@ object RequestConverters {
       requestPath = request.requestPath,
       method = request.method,
       body = request.body,
-      headers = request.headers,
-      queryParams = request.queryParams
+      headers = request.headers.distinct.sorted,
+      queryParams = request.queryParams.distinct.sorted
     )
-  }
-
-  def fromProtoTimestamp(timestamp: com.google.protobuf.timestamp.Timestamp): Timestamp = {
-    Timestamp.from(timestamp.asJavaInstant)
   }
 
 }
