@@ -25,12 +25,12 @@ case class RestServiceManager(
     for {
       _ <- checkServiceNotExists(service)
       _ <- validate(service)
-      _ <- serviceActions.upsert(service).asZIO(dbLayer).run
+      createdService <- serviceActions.insert(service).asZIO(dbLayer).run
       _ <- redisClient
-        .set(service.path, service)
+        .set(service.path, createdService)
         .run
         .catchAll(err => Console.printLineError(err.getMessage).ignoreLogged)
-      _ <- setExpirationCacheTime(service)
+      _ <- setExpirationCacheTime(createdService)
     } yield ()
   }
 
@@ -118,7 +118,7 @@ case class RestServiceManager(
         .run
         .catchAll(err => Console.printLineError(err.getMessage).ignoreLogged)
       _ <- setExpirationCacheTime(newService)
-      _ <- serviceActions.upsert(newService).asZIO(dbLayer).run
+      _ <- serviceActions.update(newService).asZIO(dbLayer).run
     } yield ()
   }
 

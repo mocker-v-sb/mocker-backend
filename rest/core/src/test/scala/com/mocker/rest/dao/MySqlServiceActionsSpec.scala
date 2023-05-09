@@ -16,19 +16,19 @@ class MySqlServiceActionsSpec extends AnyWordSpecLike with Matchers with Service
 
     "insert non-existing service values" in withContainers { _ =>
       val service = sample(serviceGen)
-      database.run(serviceActions.upsert(service)).futureValue
+      database.run(serviceActions.update(service)).futureValue
       database.run(serviceActions.getAll).futureValue.toList shouldBe Seq(service)
     }
 
     "update existing service values with new fields (by id)" in withContainers { _ =>
       // Create and insert service, check it
       val service = sample(serviceGen)
-      database.run(serviceActions.upsert(service)).futureValue
+      database.run(serviceActions.update(service)).futureValue
       database.run(serviceActions.getAll).futureValue.toList shouldBe Seq(service)
 
       // Create new name for service, update row
       val updatedService = service.copy(name = service.name + "-1")
-      database.run(serviceActions.upsert(updatedService)).futureValue
+      database.run(serviceActions.update(updatedService)).futureValue
 
       database.run(serviceActions.getAll).futureValue.toList shouldBe Seq(updatedService)
     }
@@ -36,7 +36,7 @@ class MySqlServiceActionsSpec extends AnyWordSpecLike with Matchers with Service
     "delete service by id" in withContainers { _ =>
       // Create and insert service, check it
       val service = sample(serviceGen)
-      database.run(serviceActions.upsert(service)).futureValue
+      database.run(serviceActions.update(service)).futureValue
       database.run(serviceActions.getAll).futureValue.toList shouldBe Seq(service)
 
       database.run(serviceActions.delete(service.id)).futureValue

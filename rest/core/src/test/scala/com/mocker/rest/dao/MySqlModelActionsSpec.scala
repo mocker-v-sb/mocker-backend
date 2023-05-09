@@ -25,7 +25,7 @@ class MySqlModelActionsSpec
     "insert non-existing model" in withContainers { _ =>
       // Create service to connect models with it
       val service = sample(serviceGen)
-      database.run(serviceActions.upsert(service)).futureValue
+      database.run(serviceActions.update(service)).futureValue
 
       // Create model for service
       val model = sample(modelGen).copy(serviceId = service.id)
@@ -45,7 +45,7 @@ class MySqlModelActionsSpec
     "update existing models (by pk)" in withContainers { _ =>
       // Create service to connect models with it
       val service = sample(serviceGen)
-      database.run(serviceActions.upsert(service)).futureValue
+      database.run(serviceActions.update(service)).futureValue
 
       // Create model for service
       val model = sample(modelGen).copy(serviceId = service.id)
