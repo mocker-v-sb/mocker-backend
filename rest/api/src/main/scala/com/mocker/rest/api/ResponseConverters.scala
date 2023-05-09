@@ -38,6 +38,7 @@ object ResponseConverters {
       responseUrl = item.responseUrl,
       responseSource = item.responseSource,
       statusCode = item.statusCode,
+      requestHeaders = item.requestHeaders,
       responseHeaders = item.responseHeaders,
       responseTime = Some(toProtoTimestamp(item.responseTime)),
       response = item.response
