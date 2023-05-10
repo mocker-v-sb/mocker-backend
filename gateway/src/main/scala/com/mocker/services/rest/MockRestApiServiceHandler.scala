@@ -1,10 +1,13 @@
 package com.mocker.services.rest
 
 import com.mocker.clients.RestMockerClientService
+import com.mocker.common.auth.Authorization
 import com.mocker.models.rest.common.{Method, ResponseSource, ResponseTimeSort}
 import com.mocker.models.rest.requests.service._
 import com.mocker.models.rest.responses.service._
+import com.mocker.models.rest.utils.AuthUtils
 import com.mocker.rest.rest_service.ZioRestService.RestMockerClient
+import com.mocker.services.utils.Request.RequestOps
 import com.mocker.services.utils.Response._
 import io.grpc.{Status => GrpcStatus}
 import zio.http._
@@ -19,33 +22,36 @@ object MockRestApiServiceHandler {
     .collectZIO[Request] {
       case req @ POST -> !! / "rest" / "service" =>
         for {
+          auth <- req.getUser.map(AuthUtils.buildAuthorization)
           request <- req.body.asString
             .map(_.fromJson[CreateServiceRequest])
             .tapError(err => ZIO.logErrorCause(Cause.fail(err)))
           protoResponse <- (request match {
-            case Right(request) => RestMockerClientService.createService(request)
+            case Right(request) => RestMockerClientService.createService(request)(auth)
             case Left(error)    => ZIO.logErrorCause(Cause.fail(error)) *> ZIO.fail(GrpcStatus.INVALID_ARGUMENT)
           }).either
           response <- protoResponse.toHttp
         } yield response
       case req @ PUT -> !! / "rest" / "service" / servicePath =>
         for {
+          auth <- req.getUser.map(AuthUtils.buildAuthorization)
           request <- req.body.asString
             .map(_.fromJson[UpdateServiceRequest].map(_.copy(servicePath = servicePath)))
             .tapError(err => ZIO.logErrorCause(Cause.fail(err)))
           protoResponse <- (request match {
-            case Right(request) => RestMockerClientService.updateService(request)
+            case Right(request) => RestMockerClientService.updateService(request)(auth)
             case Left(error)    => ZIO.logErrorCause(Cause.fail(error)) *> ZIO.fail(GrpcStatus.INVALID_ARGUMENT)
           }).either
           response <- protoResponse.toHttp
         } yield response
       case req @ PATCH -> !! / "rest" / "service" / servicePath / "proxy" =>
         for {
+          auth <- req.getUser.map(AuthUtils.buildAuthorization)
           request <- req.body.asString
             .map(_.fromJson[SwitchServiceProxyRequest].map(_.copy(servicePath = servicePath)))
             .tapError(err => ZIO.logErrorCause(Cause.fail(err)))
           protoResponse <- (request match {
-            case Right(request) => RestMockerClientService.switchServiceProxy(request)
+            case Right(request) => RestMockerClientService.switchServiceProxy(request)(auth)
             case Left(error)    => ZIO.logErrorCause(Cause.fail(error)) *> ZIO.fail(GrpcStatus.INVALID_ARGUMENT)
           }).either
           response <- protoResponse.toHttp
@@ -71,6 +77,7 @@ object MockRestApiServiceHandler {
           case Some(serviceId) =>
             ZIO.succeed(Response.status(HttpStatus.BadRequest))
             for {
+              auth <- req.getUser.map(AuthUtils.buildAuthorization)
               protoResponse <- RestMockerClientService
                 .getServiceResponseHistory(
                   GetServiceResponseHistoryRequest(
@@ -85,7 +92,7 @@ object MockRestApiServiceHandler {
                     requestMethods,
                     timeSort
                   )
-                )
+                )(auth)
                 .either
               response <- protoResponse.withBody(GetServiceResponseHistoryResponse.fromMessage(_).toJson)
             } yield response
@@ -93,47 +100,51 @@ object MockRestApiServiceHandler {
         }
       case req @ PATCH -> !! / "rest" / "service" / servicePath / "history" =>
         for {
+          auth <- req.getUser.map(AuthUtils.buildAuthorization)
           request <- req.body.asString
             .map(_.fromJson[SwitchServiceHistoryRequest].map(_.copy(servicePath = servicePath)))
             .tapError(err => ZIO.logErrorCause(Cause.fail(err)))
           protoResponse <- (request match {
-            case Right(request) => RestMockerClientService.switchServiceHistory(request)
+            case Right(request) => RestMockerClientService.switchServiceHistory(request)(auth)
             case Left(error)    => ZIO.logErrorCause(Cause.fail(error)) *> ZIO.fail(GrpcStatus.INVALID_ARGUMENT)
           }).either
           response <- protoResponse.toHttp
         } yield response
       case req @ DELETE -> !! / "rest" / "service" / servicePath =>
         for {
-          protoResponse <- RestMockerClientService.deleteService(DeleteServiceRequest(servicePath)).either
+          auth <- req.getUser.map(AuthUtils.buildAuthorization)
+          protoResponse <- RestMockerClientService.deleteService(DeleteServiceRequest(servicePath))(auth).either
           response <- protoResponse.toHttp
         } yield response
       case req @ GET -> !! / "rest" / "services" =>
         val search = req.url.queryParams.get("search").flatMap(_.headOption)
         for {
+          auth <- req.getUser.map(AuthUtils.buildAuthorization)
           result <- search match {
-            case Some(query) => searchServices(query)
-            case None        => getAllServices
+            case Some(query) => searchServices(query)(auth)
+            case None        => getAllServices(auth)
           }
         } yield result
       case req @ GET -> !! / "rest" / "service" / servicePath =>
         for {
-          protoResponse <- RestMockerClientService.getService(GetServiceRequest(servicePath)).either
+          auth <- req.getUser.map(AuthUtils.buildAuthorization)
+          protoResponse <- RestMockerClientService.getService(GetServiceRequest(servicePath))(auth).either
           response <- protoResponse.withBody(GetServiceResponse.fromMessage(_).toJson)
         } yield response
     }
     .tapErrorZIO(err => ZIO.logErrorCause(Cause.fail(err)))
     .mapError(_ => Response.status(HttpStatus.InternalServerError))
 
-  private def getAllServices = {
+  private def getAllServices(auth: Authorization) = {
     for {
-      protoResponse <- RestMockerClientService.getAllServices.either
+      protoResponse <- RestMockerClientService.getAllServices(auth).either
       response <- protoResponse.withBody(GetAllServicesResponse.fromMessage(_).toJson)
     } yield response
   }
 
-  private def searchServices(query: String) = {
+  private def searchServices(query: String)(auth: Authorization) = {
     for {
-      protoResponse <- RestMockerClientService.searchServices(SearchServicesRequest(query)).either
+      protoResponse <- RestMockerClientService.searchServices(SearchServicesRequest(query))(auth).either
       response <- protoResponse.withBody(SearchServicesResponse.fromMessage(_).toJson)
     } yield response
   }
