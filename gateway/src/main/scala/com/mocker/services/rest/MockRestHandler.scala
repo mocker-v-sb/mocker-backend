@@ -16,6 +16,8 @@ import zio.http._
 
 object MockRestHandler {
 
+  private val systemHeaders = Set("Authorization")
+
   lazy val routes: Http[RestMockerClient.Service, Response, Request, Response] = Http
     .collectZIO[Request] {
       case req @ GET -> "" /: "rest" /: path =>
@@ -85,7 +87,10 @@ object MockRestHandler {
       requestPath = "/",
       method = common.Method.default,
       body = body,
-      headers = headers.toList.map { case Header(key, value)  => KVPair(key.toString, value.toString) }.toSet,
+      headers = headers.toList
+        .filterNot(header => systemHeaders.contains(header.key.toString))
+        .map { case Header(key, value) => KVPair(key.toString, value.toString) }
+        .toSet,
       queryParams = queryParams.flatMap { case (name, values) => values.map(value => KVPair(name, value)) }.toSet
     )
     path.encode.split("/").filter(_.nonEmpty).toList match {
