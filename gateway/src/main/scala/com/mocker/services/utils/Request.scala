@@ -4,13 +4,13 @@ import com.mocker.models.auth.JwtContent
 import com.mocker.services.AuthenticationService.jwtDecode
 import zio.ZIO
 import zio.http._
-import zio.http.Request
+import zio.http.{Request => ZRequest}
 import zio.http.model.Status
 import zio.json.DecoderOps
 
 object Request {
 
-  implicit class RequestOps(private val request: Request) extends AnyVal {
+  implicit class RequestOps(private val request: ZRequest) extends AnyVal {
 
     def getUser = {
       ZIO

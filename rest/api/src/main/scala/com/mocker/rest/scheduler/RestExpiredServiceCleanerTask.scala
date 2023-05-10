@@ -15,6 +15,7 @@ object RestExpiredServiceCleanerTask {
     for {
       dbProvider <- ZIO.service[DatabaseProvider]
       dbLayer = ZLayer.succeed(dbProvider)
+      _ <- zio.Console.printLine("Running task to clean services..").mapError(RestMockerException.internal)
       _ <- MySqlServiceActions().deleteExpired().asZIO(dbLayer).run
     } yield ()
   }
