@@ -4,6 +4,7 @@ import com.mocker.models.auth.{JwtContent, RefreshToken, User}
 import com.mocker.models.auth.requests.{AuthenticationRequest, RefreshTokenRequest}
 import com.mocker.models.auth.responses.AuthenticationResponse
 import com.mocker.repository.{AuthRepository, RefreshTokenRepository}
+import com.mocker.services.utils.Request.RequestOps
 import pdi.jwt.{Jwt, JwtAlgorithm, JwtClaim, JwtOptions}
 import zio._
 import zio.http.model.{Method, Status => HttpStatus}
@@ -52,28 +53,7 @@ case class AuthenticationService(authRepository: AuthRepository, refreshTokenRep
               .fromEither(requestE)
               .tapError(err => ZIO.logError(err))
               .orElseFail(Response.text("could not parse request1").setStatus(HttpStatus.BadRequest))
-            email <- ZIO
-              .fromOption {
-                req.headers
-                  .get("Authorization")
-                  .flatMap { h =>
-                    h.split(" ") match {
-                      case Array(_, token) => Some(token)
-                      case _               => None
-                    }
-                  }
-                  .flatMap(t => jwtDecode(t, shouldIgnoreTiming = true))
-                  .flatMap(_.content.fromJson[JwtContent].toOption)
-                  .map(_.user)
-              }
-              .orElseFail(
-                Response
-                  .text(
-                    s"could not parse auth header " +
-                      s"${req.headers.get("Authorization").map(_.split(" ").mkString(", "))}"
-                  )
-                  .setStatus(HttpStatus.BadRequest)
-              )
+            email <- req.getUser
             response <- refreshTokenRepository
               .findToken(request.refreshToken)
               .map {

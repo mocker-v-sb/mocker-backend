@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+package com.mocker.common;
+
+message Authorization {
+  string user = 1;
+}

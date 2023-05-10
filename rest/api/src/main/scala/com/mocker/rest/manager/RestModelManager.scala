@@ -20,16 +20,16 @@ case class RestModelManager(
 
   private val dbLayer = ZLayer.succeed(restMockerDbProvider)
 
-  def upsertModel(servicePath: String, model: Model): IO[RestMockerException, Unit] = {
+  def upsertModel(user: String, servicePath: String, model: Model): IO[RestMockerException, Unit] = {
     for {
-      service <- serviceManager.getService(servicePath)
+      service <- serviceManager.getService(user, servicePath)
       _ <- modelActions.upsert(model.copy(serviceId = service.id)).asZIO(dbLayer).run
     } yield ()
   }
 
-  def getModel(servicePath: String, modelId: Long): IO[RestMockerException, Model] = {
+  def getModel(user: String, servicePath: String, modelId: Long): IO[RestMockerException, Model] = {
     for {
-      service <- serviceManager.getService(servicePath)
+      service <- serviceManager.getService(user, servicePath)
       model <- checkModelExists(service, modelId)
     } yield model
   }
@@ -38,16 +38,16 @@ case class RestModelManager(
     modelActions.get(modelId).asZIO(dbLayer).run
   }
 
-  def getAllServiceModels(servicePath: String): IO[RestMockerException, Seq[Model]] = {
+  def getAllServiceModels(user: String, servicePath: String): IO[RestMockerException, Seq[Model]] = {
     for {
-      service <- serviceManager.getService(servicePath)
+      service <- serviceManager.getService(user, servicePath)
       models <- modelActions.getAll(service.id).asZIO(dbLayer).run
     } yield models
   }
 
-  def deleteModel(servicePath: String, modelId: Long): IO[RestMockerException, Unit] = {
+  def deleteModel(user: String, servicePath: String, modelId: Long): IO[RestMockerException, Unit] = {
     for {
-      service <- serviceManager.getService(servicePath)
+      service <- serviceManager.getService(user, servicePath)
       existingMocks <- mockManager.findByModel(service.id, modelId)
       _ <- if (existingMocks.nonEmpty)
         ZIO.fail(RestMockerException.modelInUse(servicePath, existingMocks))
@@ -56,9 +56,9 @@ case class RestModelManager(
     } yield ()
   }
 
-  def deleteAllModels(servicePath: String): IO[RestMockerException, Unit] = {
+  def deleteAllModels(user: String, servicePath: String): IO[RestMockerException, Unit] = {
     for {
-      service <- serviceManager.getService(servicePath)
+      service <- serviceManager.getService(user, servicePath)
       models <- modelActions.getAll(service.id).asZIO(dbLayer).run
       mocks <- mockManager.findByModels(service.id, models.map(_.id))
       _ <- mocks.toList match {

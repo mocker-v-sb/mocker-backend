@@ -1,16 +1,18 @@
 package com.mocker.services.rest
 
 import com.mocker.clients.RestMockerClientService
-import com.mocker.services.utils.Response._
 import com.mocker.models.rest.requests.mock._
 import com.mocker.models.rest.responses.mock.{GetAllServiceMocksResponse, GetMockResponse}
+import com.mocker.models.rest.utils.AuthUtils
 import com.mocker.rest.rest_service.ZioRestService.RestMockerClient
+import com.mocker.services.utils.Request._
+import com.mocker.services.utils.Response._
 import io.grpc.{Status => GrpcStatus}
+import zio.http._
 import zio.http.model.Method.{DELETE, GET, PATCH, POST}
 import zio.http.model.{Status => HttpStatus}
-import zio.http._
 import zio.json.{DecoderOps, EncoderOps}
-import zio.{Cause, Console, ZIO}
+import zio.{Cause, ZIO}
 
 object MockRestApiMockHandler {
 
@@ -18,11 +20,12 @@ object MockRestApiMockHandler {
     .collectZIO[Request] {
       case req @ POST -> !! / "rest" / "service" / servicePath / "mock" =>
         for {
+          auth <- req.getUser.map(AuthUtils.buildAuthorization)
           request <- req.body.asString
             .map(_.fromJson[CreateMockRequest].map(_.copy(servicePath = servicePath)))
             .tapError(err => ZIO.logErrorCause(Cause.fail(err)))
           protoResponse <- (request match {
-            case Right(request) => RestMockerClientService.createMock(request)
+            case Right(request) => RestMockerClientService.createMock(request)(auth)
             case Left(error)    => ZIO.logErrorCause(Cause.fail(error)) *> ZIO.fail(GrpcStatus.INVALID_ARGUMENT)
           }).either
           response <- protoResponse.toHttp
@@ -31,11 +34,12 @@ object MockRestApiMockHandler {
         mockId.toLongOption match {
           case Some(mockId) =>
             for {
+              auth <- req.getUser.map(AuthUtils.buildAuthorization)
               request <- req.body.asString
                 .map(_.fromJson[UpdateMockRequest].map(_.copy(servicePath = servicePath, mockId = mockId)))
                 .tapError(err => ZIO.logErrorCause(Cause.fail(err)))
               protoResponse <- (request match {
-                case Right(request) => RestMockerClientService.updateMock(request)
+                case Right(request) => RestMockerClientService.updateMock(request)(auth)
                 case Left(error)    => ZIO.logErrorCause(Cause.fail(error)) *> ZIO.fail(GrpcStatus.INVALID_ARGUMENT)
               }).either
               response <- protoResponse.toHttp
@@ -46,26 +50,34 @@ object MockRestApiMockHandler {
         mockId.toLongOption match {
           case Some(mockId) =>
             for {
-              protoResponse <- RestMockerClientService.deleteMock(DeleteMockRequest(servicePath, mockId)).either
+              auth <- req.getUser.map(AuthUtils.buildAuthorization)
+              protoResponse <- RestMockerClientService.deleteMock(DeleteMockRequest(servicePath, mockId))(auth).either
               response <- protoResponse.toHttp
             } yield response
           case None => ZIO.succeed(Response.status(HttpStatus.BadRequest))
         }
       case req @ DELETE -> !! / "rest" / "service" / servicePath / "mocks" =>
         for {
-          protoResponse <- RestMockerClientService.deleteServiceMocks(DeleteAllServiceMocksRequest(servicePath)).either
+          auth <- req.getUser.map(AuthUtils.buildAuthorization)
+          protoResponse <- RestMockerClientService
+            .deleteServiceMocks(DeleteAllServiceMocksRequest(servicePath))(auth)
+            .either
           response <- protoResponse.toHttp
         } yield response
       case req @ GET -> !! / "rest" / "service" / servicePath / "mocks" =>
         for {
-          protoResponse <- RestMockerClientService.getAllServiceMocks(GetAllServiceMocksRequest(servicePath)).either
+          auth <- req.getUser.map(AuthUtils.buildAuthorization)
+          protoResponse <- RestMockerClientService
+            .getAllServiceMocks(GetAllServiceMocksRequest(servicePath))(auth)
+            .either
           response <- protoResponse.withBody(GetAllServiceMocksResponse.fromMessage(_).toJson)
         } yield response
       case req @ GET -> !! / "rest" / "service" / servicePath / "mock" / mockId =>
         mockId.toLongOption match {
           case Some(mockId) =>
             for {
-              protoResponse <- RestMockerClientService.getMock(GetMockRequest(servicePath, mockId)).either
+              auth <- req.getUser.map(AuthUtils.buildAuthorization)
+              protoResponse <- RestMockerClientService.getMock(GetMockRequest(servicePath, mockId))(auth).either
               response <- protoResponse.withBody(GetMockResponse.fromMessage(_).toJson)
             } yield response
           case None => ZIO.succeed(Response.status(HttpStatus.BadRequest))
