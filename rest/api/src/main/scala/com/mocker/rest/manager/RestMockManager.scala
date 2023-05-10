@@ -20,17 +20,17 @@ case class RestMockManager(
 
   private val dbLayer = ZLayer.succeed(restMockerDbProvider)
 
-  def createMock(servicePath: String, mock: Mock): IO[RestMockerException, Unit] = {
+  def createMock(user: String, servicePath: String, mock: Mock): IO[RestMockerException, Unit] = {
     for {
-      service <- serviceManager.getService(servicePath)
+      service <- serviceManager.getService(user, servicePath)
       _ <- checkMockNotExists(service, mock)
       _ <- mockActions.upsert(mock.copy(serviceId = service.id)).asZIO(dbLayer).run
     } yield ()
   }
 
-  def getMock(servicePath: String, mockId: Long): IO[RestMockerException, Mock] = {
+  def getMock(user: String, servicePath: String, mockId: Long): IO[RestMockerException, Mock] = {
     for {
-      service <- serviceManager.getService(servicePath)
+      service <- serviceManager.getService(user, servicePath)
       mock <- checkMockExists(service, mockId)
     } yield mock
   }
@@ -39,9 +39,9 @@ case class RestMockManager(
     mockActions.getAll(serviceId).asZIO(dbLayer).run
   }
 
-  def getAllServiceMocks(servicePath: String): IO[RestMockerException, Seq[Mock]] = {
+  def getAllServiceMocks(user: String, servicePath: String): IO[RestMockerException, Seq[Mock]] = {
     for {
-      service <- serviceManager.getService(servicePath)
+      service <- serviceManager.getService(user, servicePath)
       mocks <- mockActions.getAll(service.id).asZIO(dbLayer).run
     } yield mocks
   }
@@ -58,9 +58,9 @@ case class RestMockManager(
       .map(_.flatten)
   }
 
-  def updateMock(servicePath: String, mockId: Long, patch: MockPatch): IO[RestMockerException, Unit] = {
+  def updateMock(user: String, servicePath: String, mockId: Long, patch: MockPatch): IO[RestMockerException, Unit] = {
     for {
-      currentMock <- getMock(servicePath, mockId)
+      currentMock <- getMock(user, servicePath, mockId)
       _ <- mockActions
         .upsert(
           currentMock.copy(
@@ -76,16 +76,16 @@ case class RestMockManager(
     } yield ()
   }
 
-  def deleteMock(servicePath: String, mockId: Long): IO[RestMockerException, Unit] = {
+  def deleteMock(user: String, servicePath: String, mockId: Long): IO[RestMockerException, Unit] = {
     for {
-      service <- serviceManager.getService(servicePath)
+      service <- serviceManager.getService(user, servicePath)
       _ <- mockActions.delete(service.id, mockId).asZIO(dbLayer).run
     } yield ()
   }
 
-  def deleteAllMocks(servicePath: String): IO[RestMockerException, Unit] = {
+  def deleteAllMocks(user: String, servicePath: String): IO[RestMockerException, Unit] = {
     for {
-      service <- serviceManager.getService(servicePath)
+      service <- serviceManager.getService(user, servicePath)
       _ <- mockActions.deleteAll(service.id).asZIO(dbLayer).run
     } yield ()
   }

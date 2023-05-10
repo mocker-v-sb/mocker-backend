@@ -23,15 +23,26 @@ case class RestServiceManager(
 
   private val dbLayer = ZLayer.succeed(restMockerDbProvider)
 
-  def createService(service: Service): IO[RestMockerException, Unit] = {
+  def createService(user: String, service: Service): IO[RestMockerException, Unit] = {
     for {
       _ <- checkServiceNotExists(service)
       _ <- validate(service)
-      _ <- serviceActions.upsert(service).asZIO(dbLayer).run
+      _ <- serviceActions.upsert(service.copy(owner = user)).asZIO(dbLayer).run
     } yield ()
   }
 
-  def getService(path: String): IO[RestMockerException, Service] = {
+  def getService(user: String, serviceId: Long): IO[RestMockerException, Service] = {
+    for {
+      dbService <- serviceActions.get(serviceId).asZIO(dbLayer).run
+      service <- dbService match {
+        case Some(service) => ZIO.succeed(service)
+        case None          => ZIO.fail(RestMockerException.serviceNotExists(serviceId))
+      }
+      _ <- checkServiceOwner(user, service)
+    } yield service
+  }
+
+  def getService(user: String, path: String, checkAuth: Boolean = true): IO[RestMockerException, Service] = {
     for {
       cachedService <- redisClient
         .get(getRedisKey(path))
@@ -45,50 +56,58 @@ case class RestServiceManager(
         case Some(service) => ZIO.succeed(service)
         case None          => getServiceFromDatabase(path)
       }
+      _ <- if (checkAuth)
+        checkServiceOwner(user, result)
+      else
+        ZIO.succeed()
     } yield result
   }
 
-  def updateService(servicePath: String, service: Service): IO[RestMockerException, Unit] = {
+  def updateService(user: String, servicePath: String, service: Service): IO[RestMockerException, Unit] = {
     for {
       _ <- if (servicePath != service.path)
         checkServiceNotExists(service)
       else
         ZIO.unit
-      currentService <- getService(servicePath)
+      currentService <- getService(user, servicePath)
       newService = service.copy(id = currentService.id, creationTime = currentService.creationTime)
       _ <- validate(newService)
       _ <- updateServiceState(servicePath, newService)
     } yield ()
   }
 
-  def deleteService(path: String): IO[RestMockerException, Unit] = {
+  def deleteService(user: String, path: String): IO[RestMockerException, Unit] = {
     for {
-      service <- getService(path)
+      service <- getService(user, path)
       _ <- redisClient.del(getRedisKey(path)).run
       _ <- serviceActions.delete(service.id).asZIO(dbLayer).run
     } yield ()
   }
 
-  def getServicesWithStats: IO[RestMockerException, Seq[ServiceStats]] = {
-    serviceActions.getWithStats.asZIO(dbLayer).run
+  def getServicesWithStats(user: String): IO[RestMockerException, Seq[ServiceStats]] = {
+    serviceActions.getWithStats(user).asZIO(dbLayer).run
   }
 
-  def searchServices(query: String): IO[RestMockerException, Seq[ServiceStats]] = {
-    serviceActions.search(query).asZIO(dbLayer).run
+  def searchServices(user: String, query: String): IO[RestMockerException, Seq[ServiceStats]] = {
+    serviceActions.search(user, query).asZIO(dbLayer).run
   }
 
-  def switchServiceProxy(servicePath: String, isProxyEnabled: Boolean): IO[RestMockerException, Unit] = {
+  def switchServiceProxy(user: String, servicePath: String, isProxyEnabled: Boolean): IO[RestMockerException, Unit] = {
     for {
-      service <- getService(servicePath)
+      service <- getService(user, servicePath)
       newService = service.copy(isProxyEnabled = isProxyEnabled)
       _ <- validate(newService)
       _ <- updateServiceState(servicePath, newService)
     } yield ()
   }
 
-  def switchServiceHistory(servicePath: String, isHistoryEnabled: Boolean): IO[RestMockerException, Unit] = {
+  def switchServiceHistory(
+      user: String,
+      servicePath: String,
+      isHistoryEnabled: Boolean
+  ): IO[RestMockerException, Unit] = {
     for {
-      service <- getService(servicePath)
+      service <- getService(user, servicePath)
       newService = service.copy(isHistoryEnabled = isHistoryEnabled)
       _ <- updateServiceState(servicePath, newService)
     } yield ()
@@ -112,6 +131,14 @@ case class RestServiceManager(
         case None => ZIO.fail(RestMockerException.serviceNotExists(path))
       }
     } yield service
+  }
+
+  private def checkServiceOwner(user: String, service: Service): IO[RestMockerException, Unit] = {
+    if (service.owner != user) {
+      ZIO.fail(RestMockerException.accessDenied(user, service.path))
+    } else {
+      ZIO.succeed()
+    }
   }
 
   private def updateServiceState(path: String, newService: Service) = {

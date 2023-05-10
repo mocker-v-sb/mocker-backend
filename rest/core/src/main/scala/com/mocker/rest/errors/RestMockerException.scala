@@ -10,6 +10,9 @@ object RestMockerException {
   def internal(throwable: Throwable): RestMockerException =
     RestMockerException(throwable.getMessage, Status.INTERNAL)
 
+  def accessDenied(user: String, servicePath: String): RestMockerException =
+    RestMockerException(s"Access denied for user $user for service $servicePath", Status.PERMISSION_DENIED)
+
   def cantGetProxiedResponse(throwable: Throwable): RestMockerException =
     RestMockerException(throwable.getMessage, Status.INTERNAL)
 
@@ -18,6 +21,9 @@ object RestMockerException {
 
   def serviceNotExists(path: String): RestMockerException =
     RestMockerException(s"Service with path $path does not exists", Status.NOT_FOUND)
+
+  def serviceNotExists(id: Long): RestMockerException =
+    RestMockerException(s"Service with id $id does not exists", Status.NOT_FOUND)
 
   def incorrectServicePath(servicePath: String): RestMockerException =
     RestMockerException(s"Path $servicePath for service is invalid", Status.INVALID_ARGUMENT)

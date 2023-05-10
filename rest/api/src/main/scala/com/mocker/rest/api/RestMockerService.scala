@@ -1,5 +1,6 @@
 package com.mocker.rest.api
 
+import com.mocker.common.auth.Authorization
 import com.mocker.common.paging.{Page, Paging}
 import com.mocker.rest.api.RequestConverters._
 import com.mocker.rest.api.ResponseConverters._
@@ -25,45 +26,60 @@ case class RestMockerService(
     restHistoryManager: RestHistoryManager
 ) extends RestMocker {
   override def createService(request: CreateService.Request): IO[Status, CreateService.Response] = {
-    restServiceManager
-      .createService(convertCreateServiceRequest(request))
-      .tapError(err => Console.printLineError(err.message).ignoreLogged)
-      .mapError(_.status)
-      .map(_ => CreateService.Response())
+    for {
+      user <- checkUserAuthorization(request.auth)
+      response <- restServiceManager
+        .createService(user, convertCreateServiceRequest(request))
+        .tapError(err => Console.printLineError(err.message).ignoreLogged)
+        .mapError(_.status)
+        .map(_ => CreateService.Response())
+    } yield response
   }
 
   override def createModel(request: CreateModel.Request): IO[Status, CreateModel.Response] = {
-    restModelManager
-      .upsertModel(request.servicePath, convertCreateModelRequest(request))
-      .tapError(err => Console.printLineError(err.message).ignoreLogged)
-      .mapError(_.status)
-      .map(_ => CreateModel.Response())
+    for {
+      user <- checkUserAuthorization(request.auth)
+      response <- restModelManager
+        .upsertModel(user, request.servicePath, convertCreateModelRequest(request))
+        .tapError(err => Console.printLineError(err.message).ignoreLogged)
+        .mapError(_.status)
+        .map(_ => CreateModel.Response())
+    } yield response
   }
 
   override def createMock(request: CreateMock.Request): IO[Status, CreateMock.Response] = {
-    restMockManager
-      .createMock(request.servicePath, convertCreateMockRequest(request))
-      .tapError(err => Console.printLineError(err.message).ignoreLogged)
-      .mapError(_.status)
-      .map(_ => CreateMock.Response())
+    for {
+      user <- checkUserAuthorization(request.auth)
+      response <- restMockManager
+        .createMock(user, request.servicePath, convertCreateMockRequest(request))
+        .tapError(err => Console.printLineError(err.message).ignoreLogged)
+        .mapError(_.status)
+        .map(_ => CreateMock.Response())
+    } yield response
   }
 
   override def createMockStaticResponse(
       request: CreateMockStaticResponse.Request
   ): IO[Status, CreateMockStaticResponse.Response] = {
-    restMockResponseManager
-      .createMockResponse(request.servicePath, request.mockId, convertCreateMockResponseRequest(request))
-      .tapError(err => Console.printLineError(err.message).ignoreLogged)
-      .mapError(_.status)
-      .map(_ => CreateMockStaticResponse.Response())
+    for {
+      user <- checkUserAuthorization(request.auth)
+      response <- restMockResponseManager
+        .createMockResponse(user, request.servicePath, request.mockId, convertCreateMockResponseRequest(request))
+        .tapError(err => Console.printLineError(err.message).ignoreLogged)
+        .mapError(_.status)
+        .map(_ => CreateMockStaticResponse.Response())
+    } yield response
   }
 
   override def getService(request: GetService.Request): IO[Status, GetService.Response] = {
-    restServiceManager
-      .getService(request.path)
-      .tapError(err => Console.printLineError(err.message).ignoreLogged)
-      .mapError(_.status)
-      .map(toGetServiceResponse)
+    for {
+      user <- checkUserAuthorization(request.auth)
+      response <- restServiceManager
+        .getService(user, request.path)
+        .tapError(err => Console.printLineError(err.message).ignoreLogged)
+        .mapError(_.status)
+        .map(toGetServiceResponse)
+    } yield response
   }
 
   override def getServiceResponseHistory(
@@ -101,6 +117,8 @@ case class RestMockerService(
       .tapError(err => Console.printLineError(err.message).ignoreLogged)
       .mapError(_.status)
     for {
+      user <- checkUserAuthorization(request.auth)
+      _ <- restServiceManager.getService(user, request.id).mapError(_.status)
       result <- itemsZ.zipPar(countZ)
       (items, count) = result
     } yield GetServiceResponseHistory.Response(
@@ -116,189 +134,255 @@ case class RestMockerService(
   }
 
   override def getAllServices(request: GetAllServices.Request): IO[Status, GetAllServices.Response] = {
-    restServiceManager.getServicesWithStats
-      .tapError(err => Console.printLineError(err.message).ignoreLogged)
-      .mapError(_.status)
-      .map(toGetAllServicesResponse)
+    for {
+      user <- checkUserAuthorization(request.auth)
+      response <- restServiceManager
+        .getServicesWithStats(user)
+        .tapError(err => Console.printLineError(err.message).ignoreLogged)
+        .mapError(_.status)
+        .map(toGetAllServicesResponse)
+    } yield response
   }
 
   override def searchServices(request: SearchServices.Request): IO[Status, SearchServices.Response] = {
-    restServiceManager
-      .searchServices(request.query)
-      .tapError(err => Console.printLineError(err.message).ignoreLogged)
-      .mapError(_.status)
-      .map(toSearchServicesResponse)
+    for {
+      user <- checkUserAuthorization(request.auth)
+      response <- restServiceManager
+        .searchServices(user, request.query)
+        .tapError(err => Console.printLineError(err.message).ignoreLogged)
+        .mapError(_.status)
+        .map(toSearchServicesResponse)
+    } yield response
   }
 
   override def switchServiceProxy(request: SwitchServiceProxy.Request): IO[Status, SwitchServiceProxy.Response] = {
-    restServiceManager
-      .switchServiceProxy(request.path, request.isProxyEnabled)
-      .tapError(err => Console.printLineError(err.message).ignoreLogged)
-      .mapError(_.status)
-      .map(_ => SwitchServiceProxy.Response())
+    for {
+      user <- checkUserAuthorization(request.auth)
+      response <- restServiceManager
+        .switchServiceProxy(user, request.path, request.isProxyEnabled)
+        .tapError(err => Console.printLineError(err.message).ignoreLogged)
+        .mapError(_.status)
+        .map(_ => SwitchServiceProxy.Response())
+    } yield response
   }
 
   override def switchServiceHistory(
       request: SwitchServiceHistory.Request
   ): IO[Status, SwitchServiceHistory.Response] = {
-    restServiceManager
-      .switchServiceHistory(request.path, request.isHistoryEnabled)
-      .tapError(err => Console.printLineError(err.message).ignoreLogged)
-      .mapError(_.status)
-      .map(_ => SwitchServiceHistory.Response())
+    for {
+      user <- checkUserAuthorization(request.auth)
+      response <- restServiceManager
+        .switchServiceHistory(user, request.path, request.isHistoryEnabled)
+        .tapError(err => Console.printLineError(err.message).ignoreLogged)
+        .mapError(_.status)
+        .map(_ => SwitchServiceHistory.Response())
+    } yield response
   }
 
   override def getModel(request: GetModel.Request): IO[Status, GetModel.Response] = {
-    restModelManager
-      .getModel(request.servicePath, request.modelId)
-      .tapError(err => Console.printLineError(err.message).ignoreLogged)
-      .mapError(_.status)
-      .map(toGetModelResponse)
+    for {
+      user <- checkUserAuthorization(request.auth)
+      response <- restModelManager
+        .getModel(user, request.servicePath, request.modelId)
+        .tapError(err => Console.printLineError(err.message).ignoreLogged)
+        .mapError(_.status)
+        .map(toGetModelResponse)
+    } yield response
   }
 
   override def getAllServiceModels(
       request: GetAllServiceModels.Request
   ): IO[Status, GetAllServiceModels.Response] = {
-    restModelManager
-      .getAllServiceModels(request.servicePath)
-      .tapError(err => Console.printLineError(err.message).ignoreLogged)
-      .mapError(_.status)
-      .map(toGetAllServiceModelsResponse)
+    for {
+      user <- checkUserAuthorization(request.auth)
+      response <- restModelManager
+        .getAllServiceModels(user, request.servicePath)
+        .tapError(err => Console.printLineError(err.message).ignoreLogged)
+        .mapError(_.status)
+        .map(toGetAllServiceModelsResponse)
+    } yield response
   }
 
   override def getMock(request: GetMock.Request): IO[Status, GetMock.Response] = {
-    restMockManager
-      .getMock(request.servicePath, request.mockId)
-      .tapError(err => Console.printLineError(err.message).ignoreLogged)
-      .mapError(_.status)
-      .map(toGetMockResponse)
+    for {
+      user <- checkUserAuthorization(request.auth)
+      response <- restMockManager
+        .getMock(user, request.servicePath, request.mockId)
+        .tapError(err => Console.printLineError(err.message).ignoreLogged)
+        .mapError(_.status)
+        .map(toGetMockResponse)
+    } yield response
   }
 
   override def getAllServiceMocks(request: GetAllServiceMocks.Request): IO[Status, GetAllServiceMocks.Response] = {
-    restMockManager
-      .getAllServiceMocks(request.servicePath)
-      .tapError(err => Console.printLineError(err.message).ignoreLogged)
-      .mapError(_.status)
-      .map(toGetAllServiceMocksResponse)
+    for {
+      user <- checkUserAuthorization(request.auth)
+      response <- restMockManager
+        .getAllServiceMocks(user, request.servicePath)
+        .tapError(err => Console.printLineError(err.message).ignoreLogged)
+        .mapError(_.status)
+        .map(toGetAllServiceMocksResponse)
+    } yield response
   }
 
   override def getMockStaticResponse(
       request: GetMockStaticResponse.Request
   ): IO[Status, GetMockStaticResponse.Response] = {
-    restMockResponseManager
-      .getMockResponse(request.servicePath, request.mockId, request.responseId)
-      .tapError(err => Console.printLineError(err.message).ignoreLogged)
-      .mapError(_.status)
-      .map(toGetMockStaticResponse)
+    for {
+      user <- checkUserAuthorization(request.auth)
+      response <- restMockResponseManager
+        .getMockResponse(user, request.servicePath, request.mockId, request.responseId)
+        .tapError(err => Console.printLineError(err.message).ignoreLogged)
+        .mapError(_.status)
+        .map(toGetMockStaticResponse)
+    } yield response
   }
 
   override def getAllMockStaticResponses(
       request: GetAllMockStaticResponses.Request
   ): IO[Status, GetAllMockStaticResponses.Response] = {
-    restMockResponseManager
-      .getAllMockResponses(request.servicePath, request.mockId)
-      .tapError(err => Console.printLineError(err.message).ignoreLogged)
-      .mapError(_.status)
-      .map { case (mock, responses) => toGetAllMockStaticResponses(mock, responses) }
+    for {
+      user <- checkUserAuthorization(request.auth)
+      response <- restMockResponseManager
+        .getAllMockResponses(user, request.servicePath, request.mockId)
+        .tapError(err => Console.printLineError(err.message).ignoreLogged)
+        .mapError(_.status)
+        .map { case (mock, responses) => toGetAllMockStaticResponses(mock, responses) }
+    } yield response
   }
 
   override def deleteService(request: DeleteService.Request): IO[Status, DeleteService.Response] = {
-    restServiceManager
-      .deleteService(request.servicePath)
-      .tapError(err => Console.printLineError(err.message).ignoreLogged)
-      .mapError(_.status)
-      .map(_ => DeleteService.Response())
+    for {
+      user <- checkUserAuthorization(request.auth)
+      response <- restServiceManager
+        .deleteService(user, request.servicePath)
+        .tapError(err => Console.printLineError(err.message).ignoreLogged)
+        .mapError(_.status)
+        .map(_ => DeleteService.Response())
+    } yield response
   }
 
   override def deleteModel(request: DeleteModel.Request): IO[Status, DeleteModel.Response] = {
-    restModelManager
-      .deleteModel(request.servicePath, request.modelId)
-      .tapError(err => Console.printLineError(err.message).ignoreLogged)
-      .mapError(_.status)
-      .map(_ => DeleteModel.Response())
+    for {
+      user <- checkUserAuthorization(request.auth)
+      response <- restModelManager
+        .deleteModel(user, request.servicePath, request.modelId)
+        .tapError(err => Console.printLineError(err.message).ignoreLogged)
+        .mapError(_.status)
+        .map(_ => DeleteModel.Response())
+    } yield response
   }
 
   override def deleteMock(request: DeleteMock.Request): IO[Status, DeleteMock.Response] = {
-    restMockManager
-      .deleteMock(request.servicePath, request.mockId)
-      .tapError(err => Console.printLineError(err.message).ignoreLogged)
-      .mapError(_.status)
-      .map(_ => DeleteMock.Response())
+    for {
+      user <- checkUserAuthorization(request.auth)
+      response <- restMockManager
+        .deleteMock(user, request.servicePath, request.mockId)
+        .tapError(err => Console.printLineError(err.message).ignoreLogged)
+        .mapError(_.status)
+        .map(_ => DeleteMock.Response())
+    } yield response
+
   }
 
   override def deleteMockStaticResponse(
       request: DeleteMockStaticResponse.Request
   ): IO[Status, DeleteMockStaticResponse.Response] = {
-    restMockResponseManager
-      .deleteMockStaticResponse(request.servicePath, request.mockId, request.responseId)
-      .tapError(err => Console.printLineError(err.message).ignoreLogged)
-      .mapError(_.status)
-      .map(_ => DeleteMockStaticResponse.Response())
+    for {
+      user <- checkUserAuthorization(request.auth)
+      response <- restMockResponseManager
+        .deleteMockStaticResponse(user, request.servicePath, request.mockId, request.responseId)
+        .tapError(err => Console.printLineError(err.message).ignoreLogged)
+        .mapError(_.status)
+        .map(_ => DeleteMockStaticResponse.Response())
+    } yield response
   }
 
   override def deleteAllModels(request: DeleteAllModels.Request): IO[Status, DeleteAllModels.Response] = {
-    restModelManager
-      .deleteAllModels(request.servicePath)
-      .tapError(err => Console.printLineError(err.message).ignoreLogged)
-      .mapError(_.status)
-      .map(_ => DeleteAllModels.Response())
+    for {
+      user <- checkUserAuthorization(request.auth)
+      response <- restModelManager
+        .deleteAllModels(user, request.servicePath)
+        .tapError(err => Console.printLineError(err.message).ignoreLogged)
+        .mapError(_.status)
+        .map(_ => DeleteAllModels.Response())
+    } yield response
   }
 
   override def deleteAllMocks(request: DeleteAllMocks.Request): IO[Status, DeleteAllMocks.Response] = {
-    restMockManager
-      .deleteAllMocks(request.servicePath)
-      .tapError(err => Console.printLineError(err.message).ignoreLogged)
-      .mapError(_.status)
-      .map(_ => DeleteAllMocks.Response())
+    for {
+      user <- checkUserAuthorization(request.auth)
+      response <- restMockManager
+        .deleteAllMocks(user, request.servicePath)
+        .tapError(err => Console.printLineError(err.message).ignoreLogged)
+        .mapError(_.status)
+        .map(_ => DeleteAllMocks.Response())
+    } yield response
   }
 
   override def deleteAllMockStatisResponses(
       request: DeleteAllMockStaticResponses.Request
   ): IO[Status, DeleteAllMockStaticResponses.Response] = {
-    restMockResponseManager
-      .deleteAllMockStaticResponses(request.servicePath, request.mockId)
-      .tapError(err => Console.printLineError(err.message).ignoreLogged)
-      .mapError(_.status)
-      .map(_ => DeleteAllMockStaticResponses.Response())
+    for {
+      user <- checkUserAuthorization(request.auth)
+      response <- restMockResponseManager
+        .deleteAllMockStaticResponses(user, request.servicePath, request.mockId)
+        .tapError(err => Console.printLineError(err.message).ignoreLogged)
+        .mapError(_.status)
+        .map(_ => DeleteAllMockStaticResponses.Response())
+    } yield response
   }
 
   override def updateService(request: UpdateService.Request): IO[Status, UpdateService.Response] = {
-    restServiceManager
-      .updateService(request.servicePath, convertUpdateServiceRequest(request))
-      .tapError(err => Console.printLineError(err.message).ignoreLogged)
-      .mapError(_.status)
-      .map(_ => UpdateService.Response())
+    for {
+      user <- checkUserAuthorization(request.auth)
+      response <- restServiceManager
+        .updateService(user, request.servicePath, convertUpdateServiceRequest(request))
+        .tapError(err => Console.printLineError(err.message).ignoreLogged)
+        .mapError(_.status)
+        .map(_ => UpdateService.Response())
+    } yield response
   }
 
   override def updateModel(request: UpdateModel.Request): IO[Status, UpdateModel.Response] = {
-    restModelManager
-      .upsertModel(request.servicePath, convertUpdateModelRequest(request))
-      .tapError(err => Console.printLineError(err.message).ignoreLogged)
-      .mapError(_.status)
-      .map(_ => UpdateModel.Response())
+    for {
+      user <- checkUserAuthorization(request.auth)
+      response <- restModelManager
+        .upsertModel(user, request.servicePath, convertUpdateModelRequest(request))
+        .tapError(err => Console.printLineError(err.message).ignoreLogged)
+        .mapError(_.status)
+        .map(_ => UpdateModel.Response())
+    } yield response
   }
 
   override def updateMock(request: UpdateMock.Request): IO[Status, UpdateMock.Response] = {
-    restMockManager
-      .updateMock(request.servicePath, request.mockId, convertUpdateMockRequest(request))
-      .tapError(err => Console.printLineError(err.message).ignoreLogged)
-      .mapError(_.status)
-      .map(_ => UpdateMock.Response())
+    for {
+      user <- checkUserAuthorization(request.auth)
+      response <- restMockManager
+        .updateMock(user, request.servicePath, request.mockId, convertUpdateMockRequest(request))
+        .tapError(err => Console.printLineError(err.message).ignoreLogged)
+        .mapError(_.status)
+        .map(_ => UpdateMock.Response())
+    } yield response
   }
 
   override def updateMockStaticResponse(
       request: UpdateMockStaticResponse.Request
   ): IO[Status, UpdateMockStaticResponse.Response] = {
-    restMockResponseManager
-      .updateMockStaticResponse(
-        request.servicePath,
-        request.mockId,
-        request.responseId,
-        convertUpdateMockResponseRequest(request)
-      )
-      .tapError(err => Console.printLineError(err.message).ignoreLogged)
-      .mapError(_.status)
-      .map(_ => UpdateMockStaticResponse.Response())
+    for {
+      user <- checkUserAuthorization(request.auth)
+      response <- restMockResponseManager
+        .updateMockStaticResponse(
+          user,
+          request.servicePath,
+          request.mockId,
+          request.responseId,
+          convertUpdateMockResponseRequest(request)
+        )
+        .tapError(err => Console.printLineError(err.message).ignoreLogged)
+        .mapError(_.status)
+        .map(_ => UpdateMockStaticResponse.Response())
+    } yield response
   }
 
   override def getResponse(request: GetResponse.Request): IO[Status, GetResponse.Response] = {
@@ -308,6 +392,14 @@ case class RestMockerService(
       .mapError(_.status)
       .map(toGetResponse)
   }
+
+  private def checkUserAuthorization(authorization: Option[Authorization]): IO[Status, String] = {
+    authorization match {
+      case Some(auth) => ZIO.succeed(auth.user)
+      case None       => ZIO.fail(Status.UNAUTHENTICATED)
+    }
+  }
+
 }
 
 object RestMockerService {

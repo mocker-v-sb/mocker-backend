@@ -3,19 +3,16 @@ package com.mocker.rest.manager
 import com.mocker.rest.dao.MockResponseActions
 import com.mocker.rest.dao.mysql.MySqlMockResponseActions
 import com.mocker.rest.errors.RestMockerException
-import com.mocker.rest.manager.RestMockResponseManager.getRedisKey
 import com.mocker.rest.model.{Mock, MockQuery, MockResponse}
 import com.mocker.rest.utils.Hash
-import com.mocker.rest.utils.Implicits.RedisImplicits._
 import com.mocker.rest.utils.RestMockerUtils._
 import com.mocker.rest.utils.ZIOSlick._
 import slick.dbio.DBIO
 import slick.interop.zio.DatabaseProvider
 import zio.redis.Redis
-import zio.{Console, IO, URLayer, ZIO, ZLayer}
+import zio.{IO, URLayer, ZIO, ZLayer}
 
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.DurationInt
 
 case class RestMockResponseManager(
     restMockerDbProvider: DatabaseProvider,
@@ -28,12 +25,13 @@ case class RestMockResponseManager(
   private val dbLayer = ZLayer.succeed(restMockerDbProvider)
 
   def createMockResponse(
+      user: String,
       servicePath: String,
       mockId: Long,
       mockResponse: MockResponse
   ): IO[RestMockerException, Unit] = {
     for {
-      service <- serviceManager.getService(servicePath)
+      service <- serviceManager.getService(user, servicePath)
       mock <- mockManager.checkMockExists(service, mockId)
       _ <- if (isMockResponseValid(mock, mockResponse))
         mockResponseActions.upsert(mockResponse).asZIO(dbLayer).run
@@ -42,17 +40,26 @@ case class RestMockResponseManager(
     } yield ()
   }
 
-  def getMockResponse(servicePath: String, mockId: Long, responseId: Long): IO[RestMockerException, MockResponse] = {
+  def getMockResponse(
+      user: String,
+      servicePath: String,
+      mockId: Long,
+      responseId: Long
+  ): IO[RestMockerException, MockResponse] = {
     for {
-      service <- serviceManager.getService(servicePath)
+      service <- serviceManager.getService(user, servicePath)
       mock <- mockManager.checkMockExists(service, mockId)
       mockResponse <- getMockResponseFromDatabase(service.path, mock, responseId)
     } yield mockResponse
   }
 
-  def getAllMockResponses(servicePath: String, mockId: Long): IO[RestMockerException, (Mock, Seq[MockResponse])] = {
+  def getAllMockResponses(
+      user: String,
+      servicePath: String,
+      mockId: Long
+  ): IO[RestMockerException, (Mock, Seq[MockResponse])] = {
     for {
-      service <- serviceManager.getService(servicePath)
+      service <- serviceManager.getService(user, servicePath)
       mock <- mockManager.checkMockExists(service, mockId)
       mockResponses <- mockResponseActions.getAll(mock.id).asZIO(dbLayer).run
     } yield (mock, mockResponses)
@@ -66,13 +73,14 @@ case class RestMockResponseManager(
   }
 
   def updateMockStaticResponse(
+      user: String,
       servicePath: String,
       mockId: Long,
       responseId: Long,
       mockResponse: MockResponse
   ): IO[RestMockerException, Unit] = {
     for {
-      mock <- mockManager.getMock(servicePath, mockId)
+      mock <- mockManager.getMock(user, servicePath, mockId)
       _ <- if (isMockResponseValid(mock, mockResponse)) {
         for {
           //oldResponse <- mockResponseActions.get(mockId, responseId).asZIO(dbLayer).run
@@ -84,17 +92,22 @@ case class RestMockResponseManager(
     } yield ()
   }
 
-  def deleteMockStaticResponse(servicePath: String, mockId: Long, responseId: Long): IO[RestMockerException, Unit] = {
+  def deleteMockStaticResponse(
+      user: String,
+      servicePath: String,
+      mockId: Long,
+      responseId: Long
+  ): IO[RestMockerException, Unit] = {
     for {
-      service <- serviceManager.getService(servicePath)
+      service <- serviceManager.getService(user, servicePath)
       mock <- mockManager.checkMockExists(service, mockId)
       _ <- mockResponseActions.delete(mock.id, responseId).asZIO(dbLayer).run
     } yield ()
   }
 
-  def deleteAllMockStaticResponses(servicePath: String, mockId: Long): IO[RestMockerException, Unit] = {
+  def deleteAllMockStaticResponses(user: String, servicePath: String, mockId: Long): IO[RestMockerException, Unit] = {
     for {
-      service <- serviceManager.getService(servicePath)
+      service <- serviceManager.getService(user, servicePath)
       mock <- mockManager.checkMockExists(service, mockId)
       _ <- mockResponseActions.deleteAll(mock.id).asZIO(dbLayer).run
     } yield ()

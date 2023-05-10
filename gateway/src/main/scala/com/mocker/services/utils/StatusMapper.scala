@@ -12,6 +12,8 @@ object StatusMapper {
     else if (grpcStatus.getCode == GrpcStatus.ALREADY_EXISTS.getCode) HttpStatus.Conflict
     else if (grpcStatus.getCode == GrpcStatus.INTERNAL.getCode) HttpStatus.InternalServerError
     else if (grpcStatus.getCode == GrpcStatus.UNIMPLEMENTED.getCode) HttpStatus.NotImplemented
+    else if (grpcStatus.getCode == GrpcStatus.UNAUTHENTICATED.getCode) HttpStatus.Unauthorized
+    else if (grpcStatus.getCode == GrpcStatus.PERMISSION_DENIED.getCode) HttpStatus.Forbidden
     else HttpStatus.InternalServerError // TODO: complete mapper
   }
 }

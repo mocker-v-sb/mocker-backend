@@ -1,6 +1,7 @@
 CREATE TABLE `service`
 (
     `id`              BIGINT(16)   NOT NULL AUTO_INCREMENT,
+    `owner`           VARCHAR(512) NOT NULL,
     `name`            VARCHAR(128) NOT NULL,
     `path`            VARCHAR(128) NOT NULL UNIQUE,
     `url`             VARCHAR(128) NULL,
