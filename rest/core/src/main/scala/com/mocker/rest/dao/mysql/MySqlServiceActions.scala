@@ -30,17 +30,18 @@ case class MySqlServiceActions()(implicit ec: ExecutionContext) extends ServiceA
 
   override def getWithStats(user: String): DBIO[Seq[ServiceStats]] = {
     sql"""SELECT service.*,
-           (SELECT COUNT(*) FROM mock where service.id = mock.service_id and service.owner = $user)   AS mock_count,
-           (SELECT COUNT(*) FROM model where service.id = model.service_id and service.owner = $user) AS model_count
-    FROM service;""".as[ServiceStats]
+           (SELECT COUNT(*) FROM mock where service.id = mock.service_id)   AS mock_count,
+           (SELECT COUNT(*) FROM model where service.id = model.service_id) AS model_count
+    FROM service WHERE service.owner = $user;""".as[ServiceStats]
   }
 
   override def search(user: String, query: String): DBIO[Seq[ServiceStats]] = {
     sql"""SELECT service.*,
-           (SELECT COUNT(*) FROM mock where service.id = mock.service_id and service.owner = $user)   AS mock_count,
-           (SELECT COUNT(*) FROM model where service.id = model.service_id and service.owner = $user) AS model_count
+           (SELECT COUNT(*) FROM mock where service.id = mock.service_id)   AS mock_count,
+           (SELECT COUNT(*) FROM model where service.id = model.service_id) AS model_count
     FROM service
-        WHERE service.path LIKE '%#$query%' OR service.name LIKE '%#$query%';""".as[ServiceStats]
+        WHERE (service.path LIKE '%#$query%' OR service.name LIKE '%#$query%') AND service.owner = $user;"""
+      .as[ServiceStats]
   }
 
   override def get(serviceId: Long): DBIO[Option[Service]] =
@@ -59,7 +60,7 @@ case class MySqlServiceActions()(implicit ec: ExecutionContext) extends ServiceA
     table.filter(_.id === serviceId).delete.map(_ => ())
 
   override def deleteExpired(): DBIO[Unit] =
-    sqlu"""DELETE FROM service WHERE expiration_time <= NOW();""".map(_ => ())
+    table.filter(_.expirationTime <= Instant.now()).delete.map(_ => ())
 }
 
 object MySqlServiceActions {
@@ -68,7 +69,6 @@ object MySqlServiceActions {
 
     def id: Rep[Long] = column[Long]("id", O.PrimaryKey, O.AutoInc)
     def name: Rep[String] = column[String]("name")
-    def owner: Rep[String] = column[String]("owner")
     def path: Rep[String] = column[String]("path", O.Unique)
     def url: Rep[Option[String]] = column[Option[String]]("url")
     def description: Rep[Option[String]] = column[Option[String]]("description")
@@ -77,12 +77,12 @@ object MySqlServiceActions {
     def expirationTime: Rep[Option[Instant]] = column("expiration_time")
     def isProxyEnabled: Rep[Boolean] = column[Boolean]("proxy_enabled", NotNull)
     def isHistoryEnabled: Rep[Boolean] = column[Boolean]("history_enabled", NotNull)
+    def owner: Rep[String] = column[String]("owner", NotNull)
 
     override def * : ProvenShape[Service] =
       (
         id,
         name,
-        owner,
         path,
         url,
         description,
@@ -90,7 +90,8 @@ object MySqlServiceActions {
         updateTime,
         expirationTime,
         isProxyEnabled,
-        isHistoryEnabled
+        isHistoryEnabled,
+        owner
       ) <>
         ((Service.apply _).tupled, Service.unapply)
   }

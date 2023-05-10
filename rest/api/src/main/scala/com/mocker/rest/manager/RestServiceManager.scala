@@ -70,7 +70,11 @@ case class RestServiceManager(
       else
         ZIO.unit
       currentService <- getService(user, servicePath)
-      newService = service.copy(id = currentService.id, creationTime = currentService.creationTime)
+      newService = service.copy(
+        id = currentService.id,
+        creationTime = currentService.creationTime,
+        owner = currentService.owner
+      )
       _ <- validate(newService)
       _ <- updateServiceState(servicePath, newService)
     } yield ()
@@ -135,7 +139,7 @@ case class RestServiceManager(
 
   private def checkServiceOwner(user: String, service: Service): IO[RestMockerException, Unit] = {
     if (service.owner != user) {
-      ZIO.fail(RestMockerException.accessDenied(user, service.path))
+      ZIO.fail(RestMockerException.accessDenied(user, service))
     } else {
       ZIO.succeed()
     }

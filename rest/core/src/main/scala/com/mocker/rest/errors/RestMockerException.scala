@@ -1,6 +1,6 @@
 package com.mocker.rest.errors
 
-import com.mocker.rest.model.Mock
+import com.mocker.rest.model.{Mock, Service}
 import io.grpc.Status
 
 case class RestMockerException(message: String, status: Status) extends RuntimeException(message)
@@ -10,8 +10,11 @@ object RestMockerException {
   def internal(throwable: Throwable): RestMockerException =
     RestMockerException(throwable.getMessage, Status.INTERNAL)
 
-  def accessDenied(user: String, servicePath: String): RestMockerException =
-    RestMockerException(s"Access denied for user $user for service $servicePath", Status.PERMISSION_DENIED)
+  def accessDenied(user: String, service: Service): RestMockerException =
+    RestMockerException(
+      s"Access denied for user $user for service ${service.path}, owner is ${service.owner}",
+      Status.PERMISSION_DENIED
+    )
 
   def cantGetProxiedResponse(throwable: Throwable): RestMockerException =
     RestMockerException(throwable.getMessage, Status.INTERNAL)
