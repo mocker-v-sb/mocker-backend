@@ -38,7 +38,7 @@ case class RestResponseManager(
 
   def getMockResponse(query: MockQuery): IO[RestMockerException, MockQueryResponse] = {
     for {
-      service <- serviceManager.getService(user = "", query.servicePath, checkAuth = false)
+      service <- serviceManager.getService(query.servicePath)
       result <- findMockResponse(service, query)
       /*cachedResponse <- redisClient
         .get(getRedisKey(service.path, query))
