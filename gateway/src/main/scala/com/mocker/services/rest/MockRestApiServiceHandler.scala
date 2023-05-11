@@ -138,13 +138,7 @@ object MockRestApiServiceHandler {
           protoResponse <- RestMockerClientService
             .checkServiceExistence(CheckServiceExistenceRequest(servicePath))
             .either
-          response <- {
-            protoResponse match {
-              case Right(ProtoCheckServiceExistence.Response(true, _)) =>
-                ZIO.succeed(Response.status(HttpStatus.Conflict))
-              case _ => ZIO.succeed(Response.status(HttpStatus.Ok))
-            }
-          }
+          response <- protoResponse.toHttp
         } yield response
     }
     .tapErrorZIO(err => ZIO.logErrorCause(Cause.fail(err)))
