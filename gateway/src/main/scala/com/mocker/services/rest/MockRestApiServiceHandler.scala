@@ -6,6 +6,7 @@ import com.mocker.models.rest.common.{Method, ResponseSource, ResponseTimeSort}
 import com.mocker.models.rest.requests.service._
 import com.mocker.models.rest.responses.service._
 import com.mocker.models.rest.utils.AuthUtils
+import com.mocker.rest.rest_service.{CheckServiceExistence => ProtoCheckServiceExistence}
 import com.mocker.rest.rest_service.ZioRestService.RestMockerClient
 import com.mocker.services.utils.Request.RequestOps
 import com.mocker.services.utils.Response._
@@ -130,6 +131,14 @@ object MockRestApiServiceHandler {
           auth <- req.getUser.map(AuthUtils.buildAuthorization)
           protoResponse <- RestMockerClientService.getService(GetServiceRequest(servicePath))(auth).either
           response <- protoResponse.withBody(GetServiceResponse.fromMessage(_).toJson)
+        } yield response
+      case req @ HEAD -> !! / "rest" / "service" / servicePath =>
+        for {
+          _ <- req.getUser
+          protoResponse <- RestMockerClientService
+            .checkServiceExistence(CheckServiceExistenceRequest(servicePath))
+            .either
+          response <- protoResponse.toHttp
         } yield response
     }
     .tapErrorZIO(err => ZIO.logErrorCause(Cause.fail(err)))

@@ -23,6 +23,10 @@ object RestMockerClientService {
     RestMockerClient.getService(request.toMessage.copy(auth = Some(auth)))
   }
 
+  def checkServiceExistence(request: CheckServiceExistenceRequest): Response[CheckServiceExistence.Response] = {
+    RestMockerClient.checkServiceExistence(request.toMessage)
+  }
+
   def getServiceResponseHistory(
       request: GetServiceResponseHistoryRequest
   )(auth: Authorization): Response[GetServiceResponseHistory.Response] = {

@@ -36,6 +36,15 @@ case class RestMockerService(
     } yield response
   }
 
+  override def checkServiceExistence(
+      request: CheckServiceExistence.Request
+  ): IO[Status, CheckServiceExistence.Response] = {
+    restServiceManager
+      .getService(request.path)
+      .mapError(_.status)
+      .map(_ => CheckServiceExistence.Response())
+  }
+
   override def createModel(request: CreateModel.Request): IO[Status, CreateModel.Response] = {
     for {
       user <- checkUserAuthorization(request.auth)

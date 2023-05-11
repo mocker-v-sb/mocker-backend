@@ -17,6 +17,7 @@ service RestMocker {
   rpc getResponse(GetResponse.Request) returns (GetResponse.Response);
 
   rpc createService(CreateService.Request) returns (CreateService.Response);
+  rpc checkServiceExistence(CheckServiceExistence.Request) returns (CheckServiceExistence.Response);
   rpc getService(GetService.Request) returns (GetService.Response);
   rpc getAllServices(GetAllServices.Request) returns (GetAllServices.Response);
   rpc getServiceResponseHistory(GetServiceResponseHistory.Request) returns (GetServiceResponseHistory.Response);
@@ -79,6 +80,15 @@ message CreateService {
     bool is_history_enabled = 7;
 
     .com.mocker.common.Authorization auth = 100;
+  }
+
+  message Response {}
+}
+
+message CheckServiceExistence {
+
+  message Request {
+    string path = 1;
   }
 
   message Response {}

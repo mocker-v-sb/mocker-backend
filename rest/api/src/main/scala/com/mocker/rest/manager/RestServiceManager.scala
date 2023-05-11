@@ -42,7 +42,7 @@ case class RestServiceManager(
     } yield service
   }
 
-  def getService(user: String, path: String, checkAuth: Boolean = true): IO[RestMockerException, Service] = {
+  def getService(path: String): IO[RestMockerException, Service] = {
     for {
       cachedService <- redisClient
         .get(getRedisKey(path))
@@ -56,11 +56,14 @@ case class RestServiceManager(
         case Some(service) => ZIO.succeed(service)
         case None          => getServiceFromDatabase(path)
       }
-      _ <- if (checkAuth)
-        checkServiceOwner(user, result)
-      else
-        ZIO.succeed()
     } yield result
+  }
+
+  def getService(user: String, path: String): IO[RestMockerException, Service] = {
+    for {
+      service <- getService(path)
+      _ <- checkServiceOwner(user, service)
+    } yield service
   }
 
   def updateService(user: String, servicePath: String, service: Service): IO[RestMockerException, Unit] = {
