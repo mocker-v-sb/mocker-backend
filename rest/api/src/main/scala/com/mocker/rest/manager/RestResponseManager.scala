@@ -16,6 +16,7 @@ import com.mocker.rest.utils.Implicits.RedisImplicits._
 import com.mocker.rest.utils.ZIOSlick._
 import slick.interop.zio.DatabaseProvider
 import zio.http._
+import zio.http.model.Header
 import zio.redis.Redis
 import zio.{Console, IO, URLayer, ZIO, ZLayer}
 
@@ -207,7 +208,7 @@ case class RestResponseManager(
             url = url,
             method = mockQuery.method.toZIOMethod
           )
-          .setHeaders(mockQuery.headers.toHttpHeaders)
+          .setHeaders(mockQuery.headers.toHttpHeaders ++ Header("redirect", "true"))
       )
     } yield proxiedRequest
   }
