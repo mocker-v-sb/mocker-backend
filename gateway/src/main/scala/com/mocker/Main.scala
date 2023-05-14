@@ -1,23 +1,22 @@
-package com.mocker.gateway
+package com.mocker
 
 import com.mocker.common.monitoring.tracing.JaegerTracer
 import com.mocker.common.utils.{Environment, ServerAddress}
 import com.mocker.mq.mq_service.ZioMqService.MqMockerClient
 import com.mocker.repository.impls.{AuthRepositoryImpl, RefreshTokenRepositoryImpl}
 import com.mocker.rest.rest_service.ZioRestService.RestMockerClient
-import com.mocker.services.{AuthenticationService, GraphQlMockerManager, MqMockerManager}
 import com.mocker.services.rest._
+import com.mocker.services.{AuthenticationService, GraphQlMockerManager, MqMockerManager}
 import io.grpc.ManagedChannelBuilder
 import io.opentelemetry.api.trace.Tracer
-import scalapb.zio_grpc.ZManagedChannel
-import zio._
 import zio.http.HttpAppMiddleware.{bearerAuth, cors}
-import zio.http._
 import zio.http.middleware.Cors.CorsConfig
 import zio.http.model.Method
+import zio.http.{Client, Server, ServerConfig}
 import zio.sql.ConnectionPool
 import zio.telemetry.opentelemetry.context.ContextStorage
 import zio.telemetry.opentelemetry.tracing.Tracing
+import zio.{ExitCode, Layer, Scope, ZIO, ZIOAppArgs, ZIOAppDefault, ZLayer}
 
 import java.util.Properties
 

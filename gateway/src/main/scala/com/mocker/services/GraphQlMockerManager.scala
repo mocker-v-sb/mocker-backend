@@ -19,13 +19,13 @@ case class GraphQlMockerManager(tracing: Tracing) {
   )
   lazy val protectedRoutes: Http[Client, Response, Request, Response] = Http
     .collectZIO[Request] {
-      case req @ _ -> "" /: "mocker" /: _ => proxy(req)
+      case req @ _ -> "" /: "graphql" /: _ => proxy(req)
     }
     .tapErrorZIO(err => ZIO.logErrorCause(Cause.fail(err)))
     .mapError(_ => Response.status(HttpStatus.InternalServerError))
   lazy val routes: Http[Client, Response, Request, Response] = Http
     .collectZIO[Request] {
-      case req @ _ -> "" /: "graphql" /: _ => proxy(req)
+      case req @ _ -> "" /: "mocker" /: _ => proxy(req)
     }
     .tapErrorZIO(err => ZIO.logErrorCause(Cause.fail(err)))
     .mapError(_ => Response.status(HttpStatus.InternalServerError))
