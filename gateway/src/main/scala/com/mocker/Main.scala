@@ -1,4 +1,4 @@
-package com.mocker.gateway
+package com.mocker
 
 import com.mocker.common.monitoring.tracing.JaegerTracer
 import com.mocker.common.utils.{Environment, ServerAddress}
